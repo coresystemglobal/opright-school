@@ -1,0 +1,6 @@
+node_modules
+dist/
+.env
+tests/.DS_Store
+tests/e2e/.DS_Store
+.DS_Store

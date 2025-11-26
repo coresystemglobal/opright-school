@@ -1,0 +1,939 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  connection_limit = 20
+  pool_timeout = 10
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+/// ─────────────────────────────────────────
+/// TENANCY & USERS
+/// ─────────────────────────────────────────
+
+model Tenant {
+  id         String   @id @default(uuid()) @db.Uuid
+  name       String
+  domain     String?  // custom domain (school.com)
+  subdomain  String?  // subdomain (greenwood)
+  config     Json?    // theme, settings
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  users      User[]
+  roles      Role[]
+  students   Student[]
+  teachers   Teacher[]
+  classes    Class[]
+  enrollments Enrollment[]
+  attendances Attendance[]
+  fees       Fee[]
+  payments   Payment[]
+  academicYears AcademicYear[]
+  terms      Term[]
+  subjects   Subject[]
+  grades     Grade[]
+  timetables Timetable[]
+  assignments Assignment[]
+  examinations Examination[]
+  examResults ExamResult[]
+  books Book[]
+  bookTransactions BookTransaction[]
+  buses Bus[]
+  busRoutes BusRoute[]
+  busAssignments BusAssignment[]
+  assets Asset[]
+  assetTransactions AssetTransaction[]
+  events Event[]
+  eventParticipants EventParticipant[]
+  disciplinaryRecords DisciplinaryRecord[]
+  healthRecords HealthRecord[]
+  medicalIncidents MedicalIncident[]
+  vaccinations Vaccination[]
+  hostelRooms HostelRoom[]
+  hostelAssignments HostelAssignment[]
+  mealPlans MealPlan[]
+  visitorLogs VisitorLog[]
+  activities Activity[]
+  activityEnrollments ActivityEnrollment[]
+  competitions Competition[]
+
+  @@unique([domain])
+  @@unique([subdomain])
+}
+
+model User {
+  id        String   @id @default(uuid())
+  tenantId  String   @db.Uuid
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  email     String   @unique
+  password  String
+  roleId    String?  @db.Uuid
+  role      Role?    @relation(fields: [roleId], references: [id])
+  firstName String?
+  lastName  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([tenantId])
+}
+
+model Role {
+  id          String   @id @default(uuid())
+  tenantId    String   @db.Uuid
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  
+  name        String
+  description String?
+  isSystem    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  users       User[]
+  permissions RolePermission[]
+
+  @@unique([tenantId, name])
+  @@index([tenantId])
+}
+
+model Permission {
+  id          String   @id @default(uuid())
+  
+  resource    String   // e.g., "students", "teachers", "classes"
+  action      String   // e.g., "create", "read", "update", "delete"
+  description String?
+  
+  roles       RolePermission[]
+
+  @@unique([resource, action])
+}
+
+model RolePermission {
+  id           String     @id @default(uuid())
+  roleId       String     @db.Uuid
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permissionId String     @db.Uuid
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+  
+  @@unique([roleId, permissionId])
+}
+
+enum UserRole {
+  ADMIN       // overall school admin
+  PRINCIPAL   // head of school
+  TEACHER
+  PARENT
+  STUDENT
+  STAFF
+}
+
+/// ─────────────────────────────────────────
+/// STUDENTS & TEACHERS
+/// ─────────────────────────────────────────
+
+model Student {
+  id        String   @id @default(uuid())
+  tenantId  String   @db.Uuid
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  firstName String
+  lastName  String
+  dob       DateTime?
+  guardian  Json?    // guardian details: name, phone, email
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  enrollments Enrollment[]
+  attendances Attendance[]
+  payments    Payment[]
+  grades      Grade[]
+  examResults ExamResult[]
+
+  @@index([tenantId])
+}
+
+model Teacher {
+  id        String   @id @default(uuid())
+  tenantId  String   @db.Uuid
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  firstName String
+  lastName  String
+  subject   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  classes   Class[]
+  subjects  Subject[]
+  timetables Timetable[]
+
+  @@index([tenantId])
+}
+
+/// ─────────────────────────────────────────
+/// CLASSES, ENROLLMENTS & ATTENDANCE
+/// ─────────────────────────────────────────
+
+model Class {
+  id        String   @id @default(uuid())
+  tenantId  String   @db.Uuid
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  name      String   // e.g. "Grade 5"
+  level     String?  // e.g. "Primary"
+  teacherId String?  // homeroom teacher
+  teacher   Teacher? @relation(fields: [teacherId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  enrollments Enrollment[]
+  subjects    Subject[]
+  timetables  Timetable[]
+
+  @@index([tenantId])
+}
+
+model Enrollment {
+  id        String   @id @default(uuid())
+  tenantId  String   @db.Uuid
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  studentId String
+  student   Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  classId   String
+  class     Class    @relation(fields: [classId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([studentId, classId]) // prevent duplicate enrollment
+  @@index([tenantId])
+}
+
+model Attendance {
+  id         String   @id @default(uuid())
+  tenantId   String   @db.Uuid
+  tenant     Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  studentId  String
+  student    Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  date       DateTime
+  status     AttendanceStatus
+  remarks    String?
+
+  createdAt  DateTime @default(now())
+
+  @@unique([studentId, date]) // 1 record per student per day
+  @@index([tenantId, date])
+}
+
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+  LATE
+  EXCUSED
+}
+
+/// ─────────────────────────────────────────
+/// FEES & PAYMENTS
+/// ─────────────────────────────────────────
+
+model Fee {
+  id        String   @id @default(uuid())
+  tenantId  String   @db.Uuid
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  name      String    // "Tuition Fee - Term 1"
+  amount    Float
+  dueDate   DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  payments  Payment[]
+
+  @@index([tenantId, dueDate])
+}
+
+model Payment {
+  id        String   @id @default(uuid())
+  tenantId  String   @db.Uuid
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  feeId     String
+  fee       Fee      @relation(fields: [feeId], references: [id], onDelete: Cascade)
+
+  studentId String
+  student   Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  amount    Float
+  method    String   // Paystack/Stripe/Flutterwave
+  status    PaymentStatus
+  createdAt DateTime @default(now())
+
+  @@index([tenantId])
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCESS
+  FAILED
+}
+
+/// ─────────────────────────────────────────
+/// ACADEMIC YEAR & TERMS
+/// ─────────────────────────────────────────
+
+model AcademicYear {
+  id        String   @id @default(uuid())
+  tenantId  String   @db.Uuid
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  name      String   // "2024/2025"
+  startDate DateTime
+  endDate   DateTime
+  isCurrent Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  terms     Term[]
+  subjects  Subject[]
+  timetables Timetable[]
+  assignments Assignment[]
+  examinations Examination[]
+
+  @@unique([tenantId, name])
+  @@index([tenantId, isCurrent])
+}
+
+model Term {
+  id             String       @id @default(uuid())
+  tenantId       String       @db.Uuid
+  tenant         Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  academicYearId String       @db.Uuid
+  academicYear   AcademicYear @relation(fields: [academicYearId], references: [id], onDelete: Cascade)
+
+  name           String       // "Term 1", "Semester 1"
+  startDate      DateTime
+  endDate        DateTime
+  isCurrent      Boolean      @default(false)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  assignments    Assignment[]
+  examinations   Examination[]
+
+  @@unique([academicYearId, name])
+  @@index([tenantId, isCurrent])
+}
+
+/// ─────────────────────────────────────────
+/// SUBJECTS
+/// ─────────────────────────────────────────
+
+model Subject {
+  id             String       @id @default(uuid())
+  tenantId       String       @db.Uuid
+  tenant         Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  academicYearId String       @db.Uuid
+  academicYear   AcademicYear @relation(fields: [academicYearId], references: [id], onDelete: Cascade)
+
+  name           String       // "Mathematics", "English"
+  code           String?      // "MATH101"
+  description    String?
+  classId        String       @db.Uuid
+  class          Class        @relation(fields: [classId], references: [id], onDelete: Cascade)
+  teacherId      String?      @db.Uuid
+  teacher        Teacher?     @relation(fields: [teacherId], references: [id], onDelete: SetNull)
+  
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  timetables     Timetable[]
+  assignments    Assignment[]
+  examinations   Examination[]
+  grades         Grade[]
+
+  @@unique([tenantId, academicYearId, classId, code])
+  @@index([tenantId, classId])
+}
+
+/// ─────────────────────────────────────────
+/// TIMETABLE/SCHEDULE
+/// ─────────────────────────────────────────
+
+model Timetable {
+  id             String       @id @default(uuid())
+  tenantId       String       @db.Uuid
+  tenant         Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  academicYearId String       @db.Uuid
+  academicYear   AcademicYear @relation(fields: [academicYearId], references: [id], onDelete: Cascade)
+
+  subjectId      String       @db.Uuid
+  subject        Subject      @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  classId        String       @db.Uuid
+  class          Class        @relation(fields: [classId], references: [id], onDelete: Cascade)
+  teacherId      String       @db.Uuid
+  teacher        Teacher      @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+
+  dayOfWeek      Int          // 0=Sunday, 1=Monday, ..., 6=Saturday
+  startTime      String       // "09:00"
+  endTime        String       // "10:00"
+  room           String?      // "Room 101"
+  
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@index([tenantId, classId, dayOfWeek])
+  @@index([tenantId, teacherId, dayOfWeek])
+}
+
+/// ─────────────────────────────────────────
+/// GRADEBOOK - ASSIGNMENTS & GRADES
+/// ─────────────────────────────────────────
+
+model Assignment {
+  id             String       @id @default(uuid())
+  tenantId       String       @db.Uuid
+  tenant         Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  academicYearId String       @db.Uuid
+  academicYear   AcademicYear @relation(fields: [academicYearId], references: [id], onDelete: Cascade)
+  termId         String       @db.Uuid
+  term           Term         @relation(fields: [termId], references: [id], onDelete: Cascade)
+  subjectId      String       @db.Uuid
+  subject        Subject      @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+
+  title          String
+  description    String?
+  maxScore       Float
+  weight         Float        @default(1.0) // weight in final grade calculation
+  dueDate        DateTime?
+  assignedDate   DateTime     @default(now())
+  
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  grades         Grade[]
+
+  @@index([tenantId, subjectId])
+}
+
+model Grade {
+  id           String     @id @default(uuid())
+  tenantId     String     @db.Uuid
+  tenant       Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  
+  studentId    String     @db.Uuid
+  student      Student    @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  subjectId    String     @db.Uuid
+  subject      Subject    @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  assignmentId String?    @db.Uuid
+  assignment   Assignment? @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+
+  score        Float
+  maxScore     Float
+  remarks      String?
+  gradedAt     DateTime   @default(now())
+  gradedBy     String?    // teacher ID
+  
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  @@unique([studentId, assignmentId])
+  @@index([tenantId, studentId, subjectId])
+}
+
+/// ─────────────────────────────────────────
+/// EXAMINATIONS
+/// ─────────────────────────────────────────
+
+model Examination {
+  id             String       @id @default(uuid())
+  tenantId       String       @db.Uuid
+  tenant         Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  academicYearId String       @db.Uuid
+  academicYear   AcademicYear @relation(fields: [academicYearId], references: [id], onDelete: Cascade)
+  termId         String       @db.Uuid
+  term           Term         @relation(fields: [termId], references: [id], onDelete: Cascade)
+  subjectId      String       @db.Uuid
+  subject        Subject      @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+
+  name           String       // "Mid-term Exam", "Final Exam"
+  examDate       DateTime
+  duration       Int?         // minutes
+  maxScore       Float
+  passingScore   Float?
+  room           String?
+  
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  results        ExamResult[]
+
+  @@index([tenantId, subjectId, examDate])
+}
+
+model ExamResult {
+  id            String      @id @default(uuid())
+  tenantId      String      @db.Uuid
+  tenant        Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  
+  examinationId String      @db.Uuid
+  examination   Examination @relation(fields: [examinationId], references: [id], onDelete: Cascade)
+  studentId     String      @db.Uuid
+  student       Student     @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  score         Float
+  grade         String?     // "A", "B", "C", etc.
+  remarks       String?
+  
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  @@unique([examinationId, studentId])
+  @@index([tenantId, studentId])
+}
+
+/// ─────────────────────────────────────────
+/// LIBRARY MANAGEMENT
+/// ─────────────────────────────────────────
+
+model Book {
+  id          String   @id @default(uuid())
+  tenantId    String   @db.Uuid
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  title       String
+  author      String
+  isbn        String?
+  genre       String?
+  totalCopies Int      @default(1)
+  available   Int      @default(1)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  transactions BookTransaction[]
+
+  @@index([tenantId, isbn])
+}
+
+model BookTransaction {
+  id          String    @id @default(uuid())
+  tenantId    String    @db.Uuid
+  tenant      Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  
+  bookId      String    @db.Uuid
+  book        Book      @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  borrowerId  String    @db.Uuid
+  borrowerType String   // "STUDENT" or "STAFF"
+  
+  borrowDate  DateTime  @default(now())
+  dueDate     DateTime
+  returnDate  DateTime?
+  fine        Float     @default(0)
+  status      BookStatus @default(BORROWED)
+  
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([tenantId, borrowerId])
+  @@index([tenantId, status])
+}
+
+enum BookStatus {
+  BORROWED
+  RETURNED
+  LOST
+  OVERDUE
+}
+
+/// ─────────────────────────────────────────
+/// TRANSPORT MANAGEMENT
+/// ─────────────────────────────────────────
+
+model Bus {
+  id          String   @id @default(uuid())
+  tenantId    String   @db.Uuid
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  busNumber   String
+  capacity    Int
+  driverName  String
+  driverPhone String?
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  routes      BusRoute[]
+
+  @@unique([tenantId, busNumber])
+  @@index([tenantId])
+}
+
+model BusRoute {
+  id          String   @id @default(uuid())
+  tenantId    String   @db.Uuid
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  
+  busId       String   @db.Uuid
+  bus         Bus      @relation(fields: [busId], references: [id], onDelete: Cascade)
+  
+  routeName   String
+  stops       Json     // [{name: "Stop 1", time: "07:00"}, ...]
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  assignments BusAssignment[]
+
+  @@index([tenantId, busId])
+}
+
+model BusAssignment {
+  id          String    @id @default(uuid())
+  tenantId    String    @db.Uuid
+  tenant      Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  
+  routeId     String    @db.Uuid
+  route       BusRoute  @relation(fields: [routeId], references: [id], onDelete: Cascade)
+  studentId   String    @db.Uuid
+  
+  pickupStop  String
+  dropStop    String
+  
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@unique([routeId, studentId])
+  @@index([tenantId, studentId])
+}
+
+/// ─────────────────────────────────────────
+/// INVENTORY MANAGEMENT
+/// ─────────────────────────────────────────
+
+model Asset {
+  id          String   @id @default(uuid())
+  tenantId    String   @db.Uuid
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  name        String
+  category    String   // "Furniture", "Equipment", "Lab Items"
+  quantity    Int      @default(1)
+  supplier    String?
+  purchaseDate DateTime?
+  cost        Float?
+  location    String?
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  transactions AssetTransaction[]
+
+  @@index([tenantId, category])
+}
+
+model AssetTransaction {
+  id          String   @id @default(uuid())
+  tenantId    String   @db.Uuid
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  
+  assetId     String   @db.Uuid
+  asset       Asset    @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  
+  type        AssetTransactionType
+  quantity    Int
+  remarks     String?
+  date        DateTime @default(now())
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([tenantId, assetId])
+}
+
+enum AssetTransactionType {
+  PURCHASE
+  ALLOCATION
+  MAINTENANCE
+  DISPOSAL
+}
+
+/// ─────────────────────────────────────────
+/// EVENT MANAGEMENT
+/// ─────────────────────────────────────────
+
+model Event {
+  id          String   @id @default(uuid())
+  tenantId    String   @db.Uuid
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  title       String
+  description String?
+  type        String   // "Sports", "Cultural", "Academic"
+  venue       String?
+  startDate   DateTime
+  endDate     DateTime?
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  participants EventParticipant[]
+
+  @@index([tenantId, startDate])
+}
+
+model EventParticipant {
+  id            String   @id @default(uuid())
+  tenantId      String   @db.Uuid
+  tenant        Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  
+  eventId       String   @db.Uuid
+  event         Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  
+  participantId String   @db.Uuid
+  participantType String // "STUDENT", "TEACHER", "STAFF"
+  role          String?  // "Participant", "Organizer"
+  
+  createdAt     DateTime @default(now())
+
+  @@unique([eventId, participantId])
+  @@index([tenantId, eventId])
+}
+
+/// ─────────────────────────────────────────
+/// DISCIPLINARY MANAGEMENT
+/// ─────────────────────────────────────────
+
+model DisciplinaryRecord {
+  id          String   @id @default(uuid())
+  tenantId    String   @db.Uuid
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  studentId   String   @db.Uuid
+  incidentDate DateTime
+  description String
+  severity    String   // "Minor", "Major", "Severe"
+  actionTaken String?
+  reportedBy  String?  // teacher/staff ID
+  status      String   @default("Open") // "Open", "Resolved", "Under Review"
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([tenantId, studentId])
+}
+
+/// ─────────────────────────────────────────
+/// HEALTH RECORDS
+/// ─────────────────────────────────────────
+
+model HealthRecord {
+  id          String   @id @default(uuid())
+  tenantId    String   @db.Uuid
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  studentId   String   @db.Uuid @unique
+  bloodGroup  String?
+  allergies   String?
+  conditions  String?
+  emergencyContact Json? // {name, phone, relation}
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  incidents   MedicalIncident[]
+  vaccinations Vaccination[]
+
+  @@index([tenantId, studentId])
+}
+
+model MedicalIncident {
+  id          String       @id @default(uuid())
+  tenantId    String       @db.Uuid
+  tenant      Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  
+  healthRecordId String    @db.Uuid
+  healthRecord HealthRecord @relation(fields: [healthRecordId], references: [id], onDelete: Cascade)
+  
+  date        DateTime     @default(now())
+  description String
+  treatment   String?
+  treatedBy   String?      // nurse/doctor name
+  
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  @@index([tenantId, healthRecordId])
+}
+
+model Vaccination {
+  id          String       @id @default(uuid())
+  tenantId    String       @db.Uuid
+  tenant      Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  
+  healthRecordId String    @db.Uuid
+  healthRecord HealthRecord @relation(fields: [healthRecordId], references: [id], onDelete: Cascade)
+  
+  vaccineName String
+  date        DateTime
+  nextDue     DateTime?
+  
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  @@index([tenantId, healthRecordId])
+}// Add to end of schema.prisma
+
+/// ─────────────────────────────────────────
+/// HOSTEL MANAGEMENT
+/// ─────────────────────────────────────────
+
+model HostelRoom {
+  id          String   @id @default(uuid())
+  tenantId    String   @db.Uuid
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  roomNumber  String
+  building    String
+  floor       Int
+  capacity    Int
+  occupied    Int      @default(0)
+  type        String   // "Single", "Double", "Dormitory"
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  assignments HostelAssignment[]
+
+  @@unique([tenantId, roomNumber, building])
+  @@index([tenantId])
+}
+
+model HostelAssignment {
+  id          String     @id @default(uuid())
+  tenantId    String     @db.Uuid
+  tenant      Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  
+  roomId      String     @db.Uuid
+  room        HostelRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  studentId   String     @db.Uuid
+  
+  startDate   DateTime
+  endDate     DateTime?
+  bedNumber   String?
+  status      String     @default("Active") // "Active", "Inactive"
+  
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@index([tenantId, studentId])
+  @@index([tenantId, roomId])
+}
+
+model MealPlan {
+  id          String   @id @default(uuid())
+  tenantId    String   @db.Uuid
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  studentId   String   @db.Uuid
+  planType    String   // "Full Board", "Half Board", "Breakfast Only"
+  startDate   DateTime
+  endDate     DateTime
+  specialDiet String?  // "Vegetarian", "Vegan", "Halal", etc.
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([tenantId, studentId])
+}
+
+model VisitorLog {
+  id          String   @id @default(uuid())
+  tenantId    String   @db.Uuid
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  studentId   String   @db.Uuid
+  visitorName String
+  relation    String
+  phone       String?
+  checkIn     DateTime @default(now())
+  checkOut    DateTime?
+  purpose     String?
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([tenantId, studentId])
+  @@index([tenantId, checkIn])
+}
+
+/// ─────────────────────────────────────────
+/// SPORTS & EXTRACURRICULAR
+/// ─────────────────────────────────────────
+
+model Activity {
+  id          String   @id @default(uuid())
+  tenantId    String   @db.Uuid
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  name        String
+  type        String   // "Sports", "Arts", "Music", "Clubs"
+  description String?
+  instructor  String?
+  schedule    Json?    // {day: "Monday", time: "15:00-17:00"}
+  maxCapacity Int?
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  enrollments ActivityEnrollment[]
+  competitions Competition[]
+
+  @@index([tenantId, type])
+}
+
+model ActivityEnrollment {
+  id          String   @id @default(uuid())
+  tenantId    String   @db.Uuid
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  
+  activityId  String   @db.Uuid
+  activity    Activity @relation(fields: [activityId], references: [id], onDelete: Cascade)
+  studentId   String   @db.Uuid
+  
+  enrollDate  DateTime @default(now())
+  status      String   @default("Active") // "Active", "Inactive"
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([activityId, studentId])
+  @@index([tenantId, studentId])
+}
+
+model Competition {
+  id          String   @id @default(uuid())
+  tenantId    String   @db.Uuid
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  
+  activityId  String   @db.Uuid
+  activity    Activity @relation(fields: [activityId], references: [id], onDelete: Cascade)
+  
+  name        String
+  date        DateTime
+  venue       String?
+  participants Json?   // [{studentId, position, score}]
+  results     Json?    // {winner, scores}
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([tenantId, activityId])
+  @@index([tenantId, date])
+}
