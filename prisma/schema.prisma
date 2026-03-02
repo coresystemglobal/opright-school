@@ -1,8 +1,7 @@
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
-  connection_limit = 20
-  pool_timeout = 10
+  url      = env("PRISMA_DATABASE_URL")
+  directUrl = env("DATABASE_URL")
 }
 
 generator client {
@@ -59,6 +58,14 @@ model Tenant {
   activities Activity[]
   activityEnrollments ActivityEnrollment[]
   competitions Competition[]
+  courses Course[]
+  courseEnrollments CourseEnrollment[]
+  lessons Lesson[]
+  quizzes Quiz[]
+  submissions Submission[]
+  liveClasses LiveClass[]
+  discussions Discussion[]
+  certificates Certificate[]
 
   @@unique([domain])
   @@unique([subdomain])
@@ -153,6 +160,7 @@ model Student {
   examResults ExamResult[]
 
   @@index([tenantId])
+  @@index([tenantId, lastName], map: "idx_student_tenant_name")
 }
 
 model Teacher {
@@ -169,6 +177,7 @@ model Teacher {
   classes   Class[]
   subjects  Subject[]
   timetables Timetable[]
+  courses Course[]
 
   @@index([tenantId])
 }
@@ -520,6 +529,7 @@ model Book {
   transactions BookTransaction[]
 
   @@index([tenantId, isbn])
+  @@index([tenantId, available], map: "idx_book_tenant_available")
 }
 
 model BookTransaction {
@@ -685,7 +695,7 @@ model Event {
 
   participants EventParticipant[]
 
-  @@index([tenantId, startDate])
+  @@index([tenantId, startDate], map: "idx_event_tenant_date")
 }
 
 model EventParticipant {
@@ -936,4 +946,312 @@ model Competition {
 
   @@index([tenantId, activityId])
   @@index([tenantId, date])
+}
+
+/// ─────────────────────────────────────────
+/// E-LEARNING SYSTEM
+/// ─────────────────────────────────────────
+
+model Course {
+  id          String   @id @default(uuid())
+  tenantId    String   @db.Uuid
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  title       String
+  description String?
+  thumbnail   String?
+  teacherId   String   @db.Uuid
+  subjectId   String?  @db.Uuid
+  subject     Subject? @relation(fields: [subjectId], references: [id], onDelete: SetNull)
+  
+  duration    Int?     // hours
+  level       String?  // "Beginner", "Intermediate", "Advanced"
+  prerequisites Json?  // [courseId1, courseId2]
+  isPublished Boolean  @default(false)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  modules     CourseModule[]
+  enrollments CourseEnrollment[]
+  discussions Discussion[]
+  certificates Certificate[]
+
+  @@index([tenantId, isPublished])
+  @@index([tenantId, teacherId])
+}
+
+model CourseModule {
+  id          String   @id @default(uuid())
+  courseId    String   @db.Uuid
+  course      Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  title       String
+  description String?
+  order       Int
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  lessons     Lesson[]
+
+  @@index([courseId, order])
+}
+
+model Lesson {
+  id          String       @id @default(uuid())
+  tenantId    String       @db.Uuid
+  tenant      Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  moduleId    String       @db.Uuid
+  module      CourseModule @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+
+  title       String
+  content     String?      // text content
+  type        LessonType
+  videoUrl    String?
+  duration    Int?         // minutes
+  resources   Json?        // [{name, url, type}]
+  order       Int
+  
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  progress    LessonProgress[]
+  quizzes     Quiz[]
+
+  @@index([tenantId, moduleId, order])
+}
+
+enum LessonType {
+  VIDEO
+  TEXT
+  PDF
+  QUIZ
+  ASSIGNMENT
+}
+
+model CourseEnrollment {
+  id          String   @id @default(uuid())
+  tenantId    String   @db.Uuid
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  
+  courseId    String   @db.Uuid
+  course      Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  studentId   String   @db.Uuid
+  
+  enrollDate  DateTime @default(now())
+  completedAt DateTime?
+  progress    Float    @default(0) // 0-100
+  status      EnrollmentStatus @default(ACTIVE)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  lessonProgress LessonProgress[]
+
+  @@unique([courseId, studentId])
+  @@index([tenantId, studentId])
+}
+
+enum EnrollmentStatus {
+  ACTIVE
+  COMPLETED
+  DROPPED
+}
+
+model LessonProgress {
+  id           String           @id @default(uuid())
+  enrollmentId String           @db.Uuid
+  enrollment   CourseEnrollment @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+  lessonId     String           @db.Uuid
+  lesson       Lesson           @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  completed    Boolean          @default(false)
+  timeSpent    Int              @default(0) // minutes
+  lastAccessed DateTime         @default(now())
+  
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+
+  @@unique([enrollmentId, lessonId])
+  @@index([enrollmentId])
+}
+
+model Quiz {
+  id          String   @id @default(uuid())
+  tenantId    String   @db.Uuid
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  lessonId    String?  @db.Uuid
+  lesson      Lesson?  @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  title       String
+  description String?
+  duration    Int?     // minutes
+  passingScore Float   @default(70)
+  questions   Json     // [{question, type, options, answer, points}]
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  attempts    QuizAttempt[]
+
+  @@index([tenantId, lessonId])
+}
+
+model QuizAttempt {
+  id          String   @id @default(uuid())
+  quizId      String   @db.Uuid
+  quiz        Quiz     @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  studentId   String   @db.Uuid
+
+  answers     Json     // [{questionId, answer}]
+  score       Float
+  passed      Boolean
+  startedAt   DateTime @default(now())
+  completedAt DateTime?
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([quizId, studentId])
+}
+
+model Submission {
+  id          String   @id @default(uuid())
+  tenantId    String   @db.Uuid
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  
+  assignmentId String  @db.Uuid
+  studentId   String   @db.Uuid
+  
+  content     String?
+  files       Json?    // [{name, url, size}]
+  submittedAt DateTime @default(now())
+  grade       Float?
+  feedback    String?
+  gradedAt    DateTime?
+  gradedBy    String?  // teacher ID
+  status      SubmissionStatus @default(SUBMITTED)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([assignmentId, studentId])
+  @@index([tenantId, studentId])
+  @@index([tenantId, assignmentId])
+}
+
+enum SubmissionStatus {
+  DRAFT
+  SUBMITTED
+  GRADED
+  LATE
+}
+
+model LiveClass {
+  id          String   @id @default(uuid())
+  tenantId    String   @db.Uuid
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  
+  title       String
+  description String?
+  teacherId   String   @db.Uuid
+  subjectId   String?  @db.Uuid
+  
+  scheduledAt DateTime
+  duration    Int      // minutes
+  meetingUrl  String?
+  meetingId   String?
+  platform    String   // "Zoom", "Google Meet", "Teams"
+  recordingUrl String?
+  
+  status      LiveClassStatus @default(SCHEDULED)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  attendance  LiveClassAttendance[]
+
+  @@index([tenantId, scheduledAt])
+  @@index([tenantId, teacherId])
+}
+
+enum LiveClassStatus {
+  SCHEDULED
+  LIVE
+  COMPLETED
+  CANCELLED
+}
+
+model LiveClassAttendance {
+  id          String    @id @default(uuid())
+  classId     String    @db.Uuid
+  class       LiveClass @relation(fields: [classId], references: [id], onDelete: Cascade)
+  studentId   String    @db.Uuid
+
+  joinedAt    DateTime?
+  leftAt      DateTime?
+  duration    Int?      // minutes
+  
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@unique([classId, studentId])
+  @@index([classId])
+}
+
+model Discussion {
+  id          String   @id @default(uuid())
+  tenantId    String   @db.Uuid
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  courseId    String   @db.Uuid
+  course      Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  title       String
+  content     String
+  authorId    String   @db.Uuid
+  authorType  String   // "STUDENT", "TEACHER"
+  isPinned    Boolean  @default(false)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  replies     DiscussionReply[]
+
+  @@index([tenantId, courseId])
+  @@index([tenantId, authorId])
+}
+
+model DiscussionReply {
+  id           String     @id @default(uuid())
+  discussionId String     @db.Uuid
+  discussion   Discussion @relation(fields: [discussionId], references: [id], onDelete: Cascade)
+
+  content      String
+  authorId     String     @db.Uuid
+  authorType   String     // "STUDENT", "TEACHER"
+  
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  @@index([discussionId])
+}
+
+model Certificate {
+  id          String   @id @default(uuid())
+  tenantId    String   @db.Uuid
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  courseId    String   @db.Uuid
+  course      Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  studentId   String   @db.Uuid
+
+  certificateNumber String @unique
+  issuedAt    DateTime @default(now())
+  fileUrl     String?
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([courseId, studentId])
+  @@index([tenantId, studentId])
 }
