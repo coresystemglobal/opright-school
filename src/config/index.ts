@@ -7,6 +7,11 @@ export const config = {
   redis: {
     url: process.env.REDIS_URL || 'redis://localhost:6379',
   },
+  brevo: {
+    apiKey: process.env.BREVO_API_KEY,
+    fromEmail: process.env.BREVO_FROM_EMAIL,
+    fromName: process.env.BREVO_FROM_NAME || 'School SaaS',
+  },
   jwt: {
     secret: process.env.JWT_SECRET!,
     expiresIn: '7d',
