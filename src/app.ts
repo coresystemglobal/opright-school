@@ -34,6 +34,7 @@ import uploadRoutes from "./routes/upload";
 import parentRoutes from "./routes/parent";
 import courseRoutes from "./routes/courses";
 import elearningRoutes from "./routes/elearning";
+import { CacheService } from "./utils/cache";
 
 const corsOrigins = process.env.CORS_ORIGIN
   ? process.env.CORS_ORIGIN.split(",").map((origin) => origin.trim()).filter(Boolean)
@@ -50,6 +51,11 @@ app.use(apiLimiter);
 app.use(loggingMiddleware);
 app.use(monitoringMiddleware);
 app.use(tenantMiddleware);
+
+app.get("/health", async (_req, res) => {
+  const cache = await CacheService.ping().then(() => 'ok').catch(() => 'unavailable');
+  res.json({ status: 'ok', cache });
+});
 
 app.use("/auth", authRoutes);
 app.use("/roles", roleRoutes);
