@@ -8,12 +8,11 @@ export const TransportService = {
   },
 
   async getBuses(tenantId: string) {
-    const cacheKey = `buses:${tenantId}`;
-    const cached = await CacheService.get(cacheKey);
+    const cached = await CacheService.get(tenantId, 'buses');
     if (cached) return cached;
     
     const buses = await prisma.bus.findMany({ where: { tenantId }, include: { routes: true } });
-    await CacheService.set(cacheKey, buses, 600);
+    await CacheService.set(tenantId, 'buses', buses, 600);
     return buses;
   },
 
@@ -22,15 +21,14 @@ export const TransportService = {
   },
 
   async getRoutes(tenantId: string, busId?: string) {
-    const cacheKey = `routes:${tenantId}:${busId || 'all'}`;
-    const cached = await CacheService.get(cacheKey);
+    const cached = await CacheService.get(tenantId, 'routes', busId || 'all');
     if (cached) return cached;
     
     const routes = await prisma.busRoute.findMany({
       where: { tenantId, ...(busId && { busId }) },
       include: { bus: true, assignments: true }
     });
-    await CacheService.set(cacheKey, routes, 600);
+    await CacheService.set(tenantId, 'routes', routes, 600, busId || 'all');
     return routes;
   },
 
