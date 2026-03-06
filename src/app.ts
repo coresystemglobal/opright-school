@@ -34,6 +34,7 @@ import uploadRoutes from "./routes/upload";
 import parentRoutes from "./routes/parent";
 import courseRoutes from "./routes/courses";
 import elearningRoutes from "./routes/elearning";
+import queueRoutes from "./routes/queue";
 import { CacheService } from "./utils/cache";
 
 const corsOrigins = process.env.CORS_ORIGIN
@@ -57,6 +58,7 @@ app.get("/health", async (_req, res) => {
   res.json({ status: 'ok', cache });
 });
 
+app.use("/queue", queueRoutes); // QStash webhooks — no auth
 app.use("/auth", authRoutes);
 app.use("/roles", roleRoutes);
 app.use("/students", authMiddleware, requireRole("ADMIN", "TEACHER"), studentRoutes);

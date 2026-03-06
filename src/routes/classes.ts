@@ -1,5 +1,8 @@
 import { Router } from "express";
 import { withTenant } from "../utils/withTenant";
+import { validate } from "../middleware/validate";
+import { apiLimiter } from "../middleware/rateLimiter";
+import { z } from "zod";
 
 const router = Router();
 
@@ -13,7 +16,17 @@ router.get("/", async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
-router.post("/", async (req, res, next) => {
+const classSchema = z.object({
+  name: z.string().min(1),
+  level: z.string().min(1),
+  teacherId: z.string().optional()
+});
+
+const enrollSchema = z.object({
+  studentId: z.string()
+});
+
+router.post("/", apiLimiter, validate(classSchema), async (req, res, next) => {
   try {
     const { name, level, teacherId } = req.body;
     const tenantId = req.tenantId!;
@@ -24,7 +37,7 @@ router.post("/", async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
-router.post("/:classId/enroll", async (req, res, next) => {
+router.post("/:classId/enroll", apiLimiter, validate(enrollSchema), async (req, res, next) => {
   try {
     const { studentId } = req.body;
     const { classId } = req.params;

@@ -1,9 +1,12 @@
 import { Router } from "express";
 import { withTenant } from "../utils/withTenant";
+import { validate } from "../middleware/validate";
+import { attendanceSchema } from "../utils/schemas";
+import { apiLimiter } from "../middleware/rateLimiter";
 
 const router = Router();
 
-router.post("/", async (req, res, next) => {
+router.post("/", apiLimiter, validate(attendanceSchema), async (req, res, next) => {
   try {
     const { studentId, date, status, remarks } = req.body;
     const tenantId = req.tenantId!;
