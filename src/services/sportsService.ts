@@ -8,15 +8,14 @@ export const SportsService = {
   },
 
   async getActivities(tenantId: string, type?: string) {
-    const cacheKey = `activities:${tenantId}:${type || 'all'}`;
-    const cached = await CacheService.get(cacheKey);
+    const cached = await CacheService.get(tenantId, 'activities', type || 'all');
     if (cached) return cached;
 
     const activities = await prisma.activity.findMany({
       where: { tenantId, ...(type && { type }) },
       include: { enrollments: true }
     });
-    await CacheService.set(cacheKey, activities, 600);
+    await CacheService.set(tenantId, 'activities', activities, 600, type || 'all');
     return activities;
   },
 
