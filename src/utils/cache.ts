@@ -1,22 +1,35 @@
-import Redis from 'ioredis';
+import { Redis } from '@upstash/redis';
 
-const redis = new Redis(process.env.REDIS_URL || 'redis://localhost:6379');
+const redis = new Redis({
+  url: process.env.UPSTASH_REDIS_REST_URL!,
+  token: process.env.UPSTASH_REDIS_REST_TOKEN!,
+});
+
+// Key format: smp:{tenantId}:{resource}:{id?}
+const key = (tenantId: string, resource: string, id?: string) =>
+  id ? `smp:${tenantId}:${resource}:${id}` : `smp:${tenantId}:${resource}`;
 
 export const CacheService = {
-  async get(key: string): Promise<any | null> {
-    const data = await redis.get(key);
-    return data ? JSON.parse(data) : null;
+  async get<T>(tenantId: string, resource: string, id?: string): Promise<T | null> {
+    return redis.get<T>(key(tenantId, resource, id));
   },
 
-  async set(key: string, data: any, ttl = 3600) {
-    await redis.setex(key, ttl, JSON.stringify(data));
+  async set(tenantId: string, resource: string, data: any, ttl = 300, id?: string) {
+    await redis.set(key(tenantId, resource, id), data, { ex: ttl });
   },
 
-  async del(key: string) {
-    await redis.del(key);
+  async del(tenantId: string, resource: string, id?: string) {
+    await redis.del(key(tenantId, resource, id));
   },
 
-  async clear() {
-    await redis.flushdb();
-  }
+  async invalidate(tenantId: string, resource: string) {
+    const keys = await redis.keys(`smp:${tenantId}:${resource}*`);
+    if (keys.length) await redis.del(...keys);
+  },
+
+  async ping() {
+    return redis.ping();
+  },
 };
+
+export default redis;
