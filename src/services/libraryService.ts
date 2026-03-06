@@ -8,12 +8,11 @@ export const LibraryService = {
   },
 
   async getBooks(tenantId: string, filters?: any) {
-    const cacheKey = `books:${tenantId}:${JSON.stringify(filters)}`;
-    const cached = await CacheService.get(cacheKey);
+    const cached = await CacheService.get(tenantId, 'books', JSON.stringify(filters));
     if (cached) return cached;
     
     const books = await prisma.book.findMany({ where: { tenantId, ...filters } });
-    await CacheService.set(cacheKey, books, 600);
+    await CacheService.set(tenantId, 'books', books, 600, JSON.stringify(filters));
     return books;
   },
 
@@ -52,8 +51,7 @@ export const LibraryService = {
   },
 
   async getStats(tenantId: string) {
-    const cacheKey = `library:stats:${tenantId}`;
-    const cached = await CacheService.get(cacheKey);
+    const cached = await CacheService.get(tenantId, 'library:stats');
     if (cached) return cached;
     
     const [total, borrowed, returned, lost] = await Promise.all([
@@ -63,7 +61,7 @@ export const LibraryService = {
       prisma.bookTransaction.count({ where: { tenantId, status: 'LOST' } })
     ]);
     const stats = { total, borrowed, returned, lost };
-    await CacheService.set(cacheKey, stats, 300);
+    await CacheService.set(tenantId, 'library:stats', stats, 300);
     return stats;
   }
 };

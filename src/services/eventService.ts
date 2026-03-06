@@ -28,8 +28,7 @@ export const EventService = {
   },
 
   async getUpcoming(tenantId: string) {
-    const cacheKey = `events:upcoming:${tenantId}`;
-    const cached = await CacheService.get(cacheKey);
+    const cached = await CacheService.get(tenantId, 'events:upcoming');
     if (cached) return cached;
     
     const events = await prisma.event.findMany({
@@ -37,7 +36,7 @@ export const EventService = {
       orderBy: { startDate: 'asc' },
       take: 10
     });
-    await CacheService.set(cacheKey, events, 300);
+    await CacheService.set(tenantId, 'events:upcoming', events, 300);
     return events;
   }
 };
