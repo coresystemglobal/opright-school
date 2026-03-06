@@ -16,8 +16,7 @@ export const HealthService = {
   },
 
   async getHealthRecord(tenantId: string, studentId: string) {
-    const cacheKey = `health:${tenantId}:${studentId}`;
-    const cached = await CacheService.get(cacheKey);
+    const cached = await CacheService.get(tenantId, 'health', studentId);
     if (cached) return cached;
     
     const record = await prisma.healthRecord.findUnique({
@@ -32,7 +31,7 @@ export const HealthService = {
       conditions: record.conditions ? EncryptionService.decrypt(record.conditions) : null,
       emergencyContact: record.emergencyContact ? JSON.parse(EncryptionService.decrypt(record.emergencyContact as string)) : null
     };
-    await CacheService.set(cacheKey, decrypted, 300);
+    await CacheService.set(tenantId, 'health', decrypted, 300, studentId);
     return decrypted;
   },
 
