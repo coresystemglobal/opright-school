@@ -1,21 +1,21 @@
 import { Request, Response } from 'express';
 import { z } from 'zod';
-import { AcademicYearService } from '../services/academicYearService';
-import { PrismaClient } from '@prisma/client';
+import { TermService } from '../services/termService';
+import prisma from '../prisma/client';
 
-const prisma = new PrismaClient();
-const service = new AcademicYearService(prisma);
+const service = new TermService(prisma);
 
 const createSchema = z.object({
   name: z.string().min(1),
+  academicYearId: z.string().uuid(),
   startDate: z.string().transform(s => new Date(s)),
   endDate: z.string().transform(s => new Date(s)),
   isCurrent: z.boolean().optional()
 });
 
-const updateSchema = createSchema.partial();
+const updateSchema = createSchema.omit({ academicYearId: true }).partial();
 
-export const academicYearController = {
+export const termController = {
   async create(req: Request, res: Response) {
     try {
       if (!req.tenantId) return res.status(400).json({ error: 'Tenant ID required' });
@@ -30,7 +30,8 @@ export const academicYearController = {
   async list(req: Request, res: Response) {
     try {
       if (!req.tenantId) return res.status(400).json({ error: 'Tenant ID required' });
-      const result = await service.list(req.tenantId);
+      const academicYearId = req.query.academicYearId as string | undefined;
+      const result = await service.list(req.tenantId, academicYearId);
       res.json(result);
     } catch (error) {
       res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });

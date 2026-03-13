@@ -1,8 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { RoleService } from '../services/roleService';
-import { PrismaClient } from '@prisma/client';
+import prisma from '../prisma/client';
 
-const prisma = new PrismaClient();
 const roleService = new RoleService(prisma);
 
 export function authorize(resource: string, action: string) {

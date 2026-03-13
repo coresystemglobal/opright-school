@@ -366,6 +366,7 @@ model Subject {
   assignments    Assignment[]
   examinations   Examination[]
   grades         Grade[]
+  courses        Course[]
 
   @@unique([tenantId, academicYearId, classId, code])
   @@index([tenantId, classId])
@@ -961,6 +962,7 @@ model Course {
   description String?
   thumbnail   String?
   teacherId   String   @db.Uuid
+  teacher     Teacher  @relation(fields: [teacherId], references: [id], onDelete: Cascade)
   subjectId   String?  @db.Uuid
   subject     Subject? @relation(fields: [subjectId], references: [id], onDelete: SetNull)
   

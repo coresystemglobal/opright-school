@@ -1,23 +1,24 @@
 import { Request, Response } from 'express';
 import { z } from 'zod';
-import { SubjectService } from '../services/subjectService';
-import { PrismaClient } from '@prisma/client';
+import { TimetableService } from '../services/timetableService';
+import prisma from '../prisma/client';
 
-const prisma = new PrismaClient();
-const service = new SubjectService(prisma);
+const service = new TimetableService(prisma);
 
 const createSchema = z.object({
-  name: z.string().min(1),
-  code: z.string().optional(),
-  description: z.string().optional(),
+  academicYearId: z.string().uuid(),
+  subjectId: z.string().uuid(),
   classId: z.string().uuid(),
-  teacherId: z.string().uuid().optional(),
-  academicYearId: z.string().uuid()
+  teacherId: z.string().uuid(),
+  dayOfWeek: z.number().min(0).max(6),
+  startTime: z.string().regex(/^\d{2}:\d{2}$/),
+  endTime: z.string().regex(/^\d{2}:\d{2}$/),
+  room: z.string().optional()
 });
 
-const updateSchema = createSchema.omit({ classId: true, academicYearId: true }).partial();
+const updateSchema = createSchema.omit({ academicYearId: true, subjectId: true, classId: true, teacherId: true }).partial();
 
-export const subjectController = {
+export const timetableController = {
   async create(req: Request, res: Response) {
     try {
       if (!req.tenantId) return res.status(400).json({ error: 'Tenant ID required' });
@@ -29,26 +30,24 @@ export const subjectController = {
     }
   },
 
-  async list(req: Request, res: Response) {
+  async listByClass(req: Request, res: Response) {
     try {
       if (!req.tenantId) return res.status(400).json({ error: 'Tenant ID required' });
-      const filters = {
-        classId: req.query.classId as string | undefined,
-        academicYearId: req.query.academicYearId as string | undefined,
-        teacherId: req.query.teacherId as string | undefined
-      };
-      const result = await service.list(req.tenantId, filters);
+      const classId = req.params.classId;
+      const academicYearId = req.query.academicYearId as string | undefined;
+      const result = await service.listByClass(req.tenantId, classId, academicYearId);
       res.json(result);
     } catch (error) {
       res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
     }
   },
 
-  async getById(req: Request, res: Response) {
+  async listByTeacher(req: Request, res: Response) {
     try {
       if (!req.tenantId) return res.status(400).json({ error: 'Tenant ID required' });
-      const result = await service.getById(req.tenantId, req.params.id);
-      if (!result) return res.status(404).json({ error: 'Subject not found' });
+      const teacherId = req.params.teacherId;
+      const academicYearId = req.query.academicYearId as string | undefined;
+      const result = await service.listByTeacher(req.tenantId, teacherId, academicYearId);
       res.json(result);
     } catch (error) {
       res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
@@ -71,17 +70,6 @@ export const subjectController = {
       if (!req.tenantId) return res.status(400).json({ error: 'Tenant ID required' });
       await service.delete(req.tenantId, req.params.id);
       res.status(204).send();
-    } catch (error) {
-      res.status(400).json({ error: error instanceof Error ? error.message : 'Unknown error' });
-    }
-  },
-
-  async assignTeacher(req: Request, res: Response) {
-    try {
-      if (!req.tenantId) return res.status(400).json({ error: 'Tenant ID required' });
-      const { teacherId } = z.object({ teacherId: z.string().uuid() }).parse(req.body);
-      const result = await service.assignTeacher(req.tenantId, req.params.id, teacherId);
-      res.json(result);
     } catch (error) {
       res.status(400).json({ error: error instanceof Error ? error.message : 'Unknown error' });
     }

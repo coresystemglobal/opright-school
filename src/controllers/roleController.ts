@@ -1,9 +1,8 @@
 import { Request, Response } from 'express';
 import { z } from 'zod';
 import { RoleService } from '../services/roleService';
-import { PrismaClient } from '@prisma/client';
+import prisma from '../prisma/client';
 
-const prisma = new PrismaClient();
 const roleService = new RoleService(prisma);
 
 const createRoleSchema = z.object({

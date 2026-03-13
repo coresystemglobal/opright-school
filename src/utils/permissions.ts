@@ -1,6 +1,4 @@
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import prisma from '../prisma/client';
 
 export async function hasPermission(userId: string, resource: string, action: string): Promise<boolean> {
   const user = await prisma.user.findUnique({

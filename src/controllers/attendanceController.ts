@@ -1,9 +1,9 @@
 import { Request, Response } from 'express';
 import { z } from 'zod';
 import { AttendanceService } from '../services/attendanceService';
-import { PrismaClient, AttendanceStatus } from '@prisma/client';
+import { AttendanceStatus } from '@prisma/client';
+import prisma from '../prisma/client';
 
-const prisma = new PrismaClient();
 const service = new AttendanceService(prisma);
 
 const markSchema = z.object({
