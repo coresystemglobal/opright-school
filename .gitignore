@@ -4,4 +4,3 @@ dist/
 tests/.DS_Store
 tests/e2e/.DS_Store
 .DS_Store
-smp-client
