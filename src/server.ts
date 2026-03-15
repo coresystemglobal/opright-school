@@ -22,7 +22,6 @@ const envSchema = z.object({
   S3_ACCESS_KEY_ID: z.string().optional(),
   S3_SECRET_ACCESS_KEY: z.string().optional(),
   S3_REGION: z.string().optional(),
-  STRIPE_SECRET_KEY: z.string().optional(),
   PAYSTACK_SECRET_KEY: z.string().optional(),
 });
 

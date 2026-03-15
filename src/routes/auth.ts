@@ -31,7 +31,7 @@ router.post("/login", authLimiter, validate(loginSchema), async (req, res, next)
       { expiresIn: "7d" }
     );
 
-    res.json({ token, user: { id: user.id, email: user.email, roleId: user.roleId, role: user.role } });
+    res.json({ token, user: { id: user.id, email: user.email, roleId: user.roleId, role: user.role, tenantId: user.tenantId } });
   } catch (e) { next(e); }
 });
 

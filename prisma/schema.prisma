@@ -280,7 +280,7 @@ model Payment {
   student   Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
 
   amount    Float
-  method    String   // Paystack/Stripe/Flutterwave
+  method    String   // Paystack/Flutterwave
   status    PaymentStatus
   createdAt DateTime @default(now())
 

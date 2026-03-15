@@ -23,9 +23,6 @@ export const config = {
     s3Bucket: process.env.S3_BUCKET!,
   },
   payments: {
-    stripe: {
-      secretKey: process.env.STRIPE_SECRET_KEY!,
-    },
     paystack: {
       secretKey: process.env.PAYSTACK_SECRET_KEY!,
     },
