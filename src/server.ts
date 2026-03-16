@@ -12,7 +12,12 @@ const envSchema = z.object({
   ENCRYPTION_KEY: z
     .string()
     .regex(/^[a-fA-F0-9]{64}$/, "ENCRYPTION_KEY must be a 64-character hex string"),
-  REDIS_URL: z.string().url("REDIS_URL must be a valid URL").optional(),
+  UPSTASH_REDIS_REST_URL: z.string().url("UPSTASH_REDIS_REST_URL must be a valid URL"),
+  UPSTASH_REDIS_REST_TOKEN: z.string().min(1, "UPSTASH_REDIS_REST_TOKEN is required"),
+  QSTASH_TOKEN: z.string().min(1, "QSTASH_TOKEN is required"),
+  QSTASH_CURRENT_SIGNING_KEY: z.string().min(1, "QSTASH_CURRENT_SIGNING_KEY is required"),
+  QSTASH_NEXT_SIGNING_KEY: z.string().min(1, "QSTASH_NEXT_SIGNING_KEY is required"),
+  APP_URL: z.string().url("APP_URL must be a valid URL"),
   CORS_ORIGIN: z.string().optional(),
   BREVO_API_KEY: z.string().optional(),
   BREVO_FROM_EMAIL: z.string().email().optional(),
@@ -38,18 +43,20 @@ if (!parsedEnv.success) {
 const env = parsedEnv.data;
 const port = env.PORT;
 
-async function startServer() {
+async function checkDatabase() {
   try {
-    await prisma.$connect();
-    console.log('Database connected successfully');
-    
-    app.listen(port, () => {
-      console.log(`Server listening on port ${port}`);
-    });
-  } catch (error) {
-    console.error('Database connection failed:', error);
-    process.exit(1);
+    await prisma.$queryRaw`SELECT 1`;
+    console.log('✔ Database connected');
+  } catch (err: any) {
+    console.error('✘ Database connection failed:', err.message);
   }
+}
+
+async function startServer() {
+  app.listen(port, async () => {
+    console.log(`✔ Server running on port ${port} [${env.NODE_ENV}]`);
+    await checkDatabase();
+  });
 }
 
 startServer();

@@ -67,6 +67,15 @@ npm run dev
 
 See [APP_GUIDE.md](APP_GUIDE.md) and [TIER2_MODULES.md](TIER2_MODULES.md) for complete API documentation.
 
+## API Documentation
+
+- Generate the latest machine-readable docs with `npm run docs:generate`
+- Swagger UI: `GET /docs`
+- OpenAPI spec: [`swagger/openapi.json`](/Users/stv/Documents/Github/smp/smp-server/docs/swagger/openapi.json)
+- Postman collection: [`postman/school-saas.postman_collection.json`](/Users/stv/Documents/Github/smp/smp-server/docs/postman/school-saas.postman_collection.json)
+
+The generated docs assume tenant resolution by hostname. In local development, use a tenant-aware base URL such as `http://demo.localhost:3000`.
+
 ## Environment Variables
 
 Copy `.env.example` to `.env` and update with your values:

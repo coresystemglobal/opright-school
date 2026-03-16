@@ -35,6 +35,7 @@ import parentRoutes from "./routes/parent";
 import courseRoutes from "./routes/courses";
 import elearningRoutes from "./routes/elearning";
 import queueRoutes from "./routes/queue";
+import docsRoutes from "./routes/docs";
 import { CacheService } from "./utils/cache";
 
 const corsOrigins = process.env.CORS_ORIGIN
@@ -51,13 +52,17 @@ app.use(express.json());
 app.use(apiLimiter);
 app.use(loggingMiddleware);
 app.use(monitoringMiddleware);
-app.use(tenantMiddleware);
 
 app.get("/health", async (_req, res) => {
-  const cache = await CacheService.ping().then(() => 'ok').catch(() => 'unavailable');
+  const cache = await Promise.race<string>([
+    CacheService.ping().then(() => "ok").catch(() => "unavailable"),
+    new Promise((resolve) => setTimeout(() => resolve("timeout"), 1500)),
+  ]);
   res.json({ status: 'ok', cache });
 });
 
+app.use("/docs", docsRoutes);
+app.use(tenantMiddleware);
 app.use("/queue", queueRoutes); // QStash webhooks — no auth
 app.use("/auth", authRoutes);
 app.use("/roles", roleRoutes);
