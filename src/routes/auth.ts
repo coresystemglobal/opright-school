@@ -9,6 +9,10 @@ import { NotificationService } from "../services/notificationService";
 
 const router = Router();
 
+function normalizeRoleName(roleName?: string | null) {
+  return roleName?.toUpperCase() ?? "STUDENT";
+}
+
 router.post("/login", authLimiter, validate(loginSchema), async (req, res, next) => {
   try {
     const { email, password } = req.body;
@@ -17,7 +21,14 @@ router.post("/login", authLimiter, validate(loginSchema), async (req, res, next)
     const user = await withTenant(tenantId, (tx) =>
       tx.user.findFirst({ 
         where: { email },
-        include: { role: true }
+        include: {
+          role: true,
+          tenant: {
+            select: {
+              subdomain: true,
+            },
+          },
+        }
       })
     );
 
@@ -25,13 +36,25 @@ router.post("/login", authLimiter, validate(loginSchema), async (req, res, next)
       return res.status(401).json({ error: "Invalid credentials" });
     }
 
+    const role = normalizeRoleName(user.role?.name);
+
     const token = jwt.sign(
-      { userId: user.id, tenantId, roleId: user.roleId },
+      { userId: user.id, tenantId, roleId: user.roleId, role },
       process.env.JWT_SECRET!,
       { expiresIn: "7d" }
     );
 
-    res.json({ token, user: { id: user.id, email: user.email, roleId: user.roleId, role: user.role, tenantId: user.tenantId } });
+    res.json({
+      token,
+      user: {
+        id: user.id,
+        email: user.email,
+        roleId: user.roleId,
+        role: user.role,
+        tenantId: user.tenantId,
+        tenantSubdomain: user.tenant?.subdomain ?? undefined,
+      },
+    });
   } catch (e) { next(e); }
 });
 

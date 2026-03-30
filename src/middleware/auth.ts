@@ -4,7 +4,7 @@ import { Request, Response, NextFunction } from 'express';
 declare global {
   namespace Express { 
     interface Request { 
-      user?: { userId: string; tenantId: string; role: string };
+      user?: { userId: string; tenantId: string; role: string; roleId?: string | null };
       tenantId?: string;
     } 
   }

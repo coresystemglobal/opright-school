@@ -36,6 +36,7 @@ import courseRoutes from "./routes/courses";
 import elearningRoutes from "./routes/elearning";
 import queueRoutes from "./routes/queue";
 import docsRoutes from "./routes/docs";
+import onboardingRoutes from "./routes/onboarding";
 import { CacheService } from "./utils/cache";
 
 const corsOrigins = process.env.CORS_ORIGIN
@@ -62,6 +63,7 @@ app.get("/health", async (_req, res) => {
 });
 
 app.use("/docs", docsRoutes);
+app.use("/onboarding", onboardingRoutes);
 app.use(tenantMiddleware);
 app.use("/queue", queueRoutes); // QStash webhooks — no auth
 app.use("/auth", authRoutes);
