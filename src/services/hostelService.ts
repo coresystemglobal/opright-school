@@ -32,5 +32,25 @@ export const HostelService = {
 
   async checkoutVisitor(tenantId: string, id: string) {
     return prisma.visitorLog.update({ where: { id }, data: { checkOut: new Date() } });
-  }
+  },
+
+  async getVisitors(tenantId: string, studentId?: string) {
+    return prisma.visitorLog.findMany({
+      where: { tenantId, ...(studentId ? { studentId } : {}) },
+      orderBy: { checkIn: 'desc' },
+    });
+  },
+
+  async getAssignments(tenantId: string, studentId?: string) {
+    return prisma.hostelAssignment.findMany({
+      where: { tenantId, ...(studentId ? { studentId } : {}) },
+      include: { room: true },
+    });
+  },
+
+  async getMealPlans(tenantId: string, studentId?: string) {
+    return prisma.mealPlan.findMany({
+      where: { tenantId, ...(studentId ? { studentId } : {}) },
+    });
+  },
 };

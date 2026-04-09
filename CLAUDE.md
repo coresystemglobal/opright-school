@@ -15,7 +15,7 @@ Multi-tenant SaaS school management platform backend (Express + TypeScript + Pri
 
 ### Prisma Schema Domains
 
-All models carry `tenantId: String @db.Uuid` with cascade delete and `@index([tenantId])`.
+All models carry `tenantId: String @db.Uuid` with cascade delete and `@index([tenantId])`. Note: `User.id` is plain `String` (not `@db.Uuid`); `User.tenantId` IS `@db.Uuid`. Exception: `Permission` has no `tenantId` — it is global (not tenant-scoped). `Role` has an `isSystem Boolean @default(false)` field. `Tenant` has `subdomain: String?` and `domain: String?` (each `@@unique`). **`Teacher` model has two distinct subject fields**: `subject: String?` (free-text specialty, e.g. "Mathematics") AND `subjects: Subject[]` (relation to the curriculum `Subject` model) — they are not the same thing.
 
 | Domain | Models |
 |--------|--------|
@@ -43,7 +43,7 @@ All models carry `tenantId: String @db.Uuid` with cascade delete and `@index([te
 
 All controllers follow a consistent structure:
 
-- Check `req.tenantId` at the top of every handler; return `400` if missing
+- Check `req.tenantId` at the top of every handler; return `400` if missing (exceptions: `roleController.assignRole` and `roleController.getPermissions` do not check tenantId — permissions are global)
 - Parse and validate the request with an inline Zod schema; return `400` on validation failure
 - Delegate to a `*Service` class instantiated with the shared `prisma` client at module level
 - HTTP status conventions: `201` for create, `204` for delete, `200` + JSON for reads/updates
@@ -55,11 +55,11 @@ All controllers follow a consistent structure:
 |---|---|
 | `roleController` | `createRole`, `getRoles`, `getRole`, `updateRole`, `deleteRole`, `getPermissions`, `assignRole` |
 | `academicYearController` | `create`, `list`, `getCurrent`, `update`, `delete` |
-| `termController` | `create`, `list` (filter: `?academicYearId`), `getCurrent`, `update`, `delete` |
-| `subjectController` | `create`, `list` (filter: `?classId&academicYearId&teacherId`), `getById`, `update`, `delete`, `assignTeacher` |
-| `timetableController` | `create`, `listByClass`, `listByTeacher`, `update`, `delete` |
-| `attendanceController` | `markAttendance`, `bulkMarkAttendance`, `getAttendance`, `getAttendanceStats`, `getClassAttendanceReport` |
-| `gradebookController` | `createAssignment`, `listAssignments`, `recordGrade`, `bulkRecordGrades`, `getStudentGrades`, `calculateSubjectAverage`, `getStudentReportCard`, `createExamination`, `recordExamResult`, `getExamResults` |
+| `termController` | `create` (schema: `name`, `academicYearId` UUID, `startDate`/`endDate` string→Date, `isCurrent?`), `list` (filter: `?academicYearId`), `getCurrent`, `update` (omits `academicYearId` — immutable; rest partial), `delete` |
+| `subjectController` | `create` (schema: `name`, `code?`, `description?`, `classId` UUID **required**, `teacherId` UUID optional, `academicYearId` UUID **required**), `list` (filters: `?classId&academicYearId&teacherId`), `getById`, `update` (omits `classId`/`academicYearId`, all partial), `delete`, `assignTeacher` (body: `{ teacherId: uuid }`) |
+| `timetableController` | `create` (schema: `academicYearId`, `subjectId`, `classId`, `teacherId` UUIDs; `dayOfWeek` 0–6; `startTime`/`endTime` HH:MM regex; `room?`), `listByClass` (`GET /timetable/class/:classId?academicYearId=`), `listByTeacher` (`GET /timetable/teacher/:teacherId?academicYearId=`), `update` (omits `academicYearId`, `subjectId`, `classId`, `teacherId` — all immutable; remaining fields partial), `delete` |
+| `attendanceController` | `markAttendance` (schema: `studentId` uuid, `date` string→Date, `status` enum, `remarks?`), `bulkMarkAttendance` (array of same), `getAttendance` (filters: `studentId?`, `classId?`, `date?`, `startDate?`, `endDate?`), `getAttendanceStats` (params: `studentId`; query: `startDate`, `endDate`), `getClassAttendanceReport` (params: `classId`; query: `date`) |
+| `gradebookController` | `createAssignment` (schema: `academicYearId`, `termId`, `subjectId` UUIDs, `title`, `description?`, `maxScore` positive, `weight?` positive, `dueDate?` string→Date), `listAssignments` (filters: `subjectId`, `termId`), `recordGrade` (schema: `studentId`, `subjectId` UUIDs, `assignmentId?` UUID, `score` min 0, `maxScore` positive, `remarks?`, `gradedBy?`), `bulkRecordGrades`, `getStudentGrades`, `calculateSubjectAverage`, `getStudentReportCard`, `createExamination` (schema: `academicYearId`, `termId`, `subjectId` UUIDs, `name`, `examDate` string→Date, `duration?` positive, `maxScore` positive, `passingScore?` positive, `room?`), `recordExamResult` (schema: `examinationId`, `studentId` UUIDs, `score` min 0, `grade?` string, `remarks?`), `getExamResults` |
 
 ### Authorization (RBAC)
 
@@ -88,8 +88,10 @@ const result = await withTenant(tenantId, (tx) => tx.student.findMany());
 
 ### Auth Routes
 
-- POST `/auth/login`: rate-limited via `authLimiter`, validates with `loginSchema`, uses `withTenant` for DB scoping, bcrypt password compare; JWT payload: `{ userId, tenantId, roleId }` (expires 7d); response: `{ token, user: { id, email, roleId, role, tenantId } }`
-- POST `/auth/register`: rate-limited via `authLimiter`, validates with `registerSchema`, creates user; sends welcome email via `NotificationService.sendEmail` fire-and-forget (`.catch` logged, never throws); response: `{ id, email, roleId }` (201)
+- POST `/auth/login`: rate-limited via `authLimiter`, validates with `loginSchema`, uses `withTenant` for DB scoping, bcrypt password compare
+  - JWT payload: `{ userId, tenantId, roleId, role }` where `role` = `normalizeRoleName(user.role?.name)` = `roleName.toUpperCase() ?? 'STUDENT'` (string, expires 7d)
+  - Response: `{ token, user: { id, email, roleId, role, tenantId, tenantSubdomain } }` where `role` is the **full Role object** `{ id, name, description? }` (not the normalized string)
+- POST `/auth/register`: rate-limited via `authLimiter`, validates with `registerSchema`, creates user + fetches tenant in the same `withTenant` transaction; sends welcome email via `NotificationService.sendEmail` fire-and-forget (`.catch` logged, never throws); response: `{ id, email, roleId }` (201)
 
 ### Standalone Permission Check
 
@@ -99,7 +101,7 @@ const result = await withTenant(tenantId, (tx) => tx.student.findMany());
 <!-- AUTO-MANAGED: environment -->
 ## Environment Variables
 
-Validated at startup by Zod schema in `src/server.ts`; process exits on failure.
+Validated at startup by Zod schema in `src/server.ts`; process exits on failure. DB connectivity is checked post-startup via `SELECT 1` but failure only logs — does not exit.
 
 **Required:**
 - `DATABASE_URL` — direct PostgreSQL URL (used by Prisma for migrations)
@@ -133,4 +135,5 @@ Validated at startup by Zod schema in `src/server.ts`; process exits on failure.
 - `src/services/timetableService.ts` - `TimetableService`: timetable entries; query by class or teacher
 - `src/services/gradebookService.ts` - `GradebookService`: assignments, grades (bulk), examinations, exam results, report cards
 - `src/services/attendanceService.ts` - `AttendanceService`: mark/bulk-mark attendance, stats, class reports; statuses: `PRESENT`, `ABSENT`, `LATE`, `EXCUSED`
+- `src/config/index.ts` - typed `config` object wrapping all env vars into structured groups: `database`, `upstash`, `brevo`, `jwt`, `storage`, `payments`; available as an alternative to reading `process.env` directly; `config.brevo.fromName` defaults to `'School SaaS'`
 <!-- END AUTO-MANAGED -->

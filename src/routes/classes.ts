@@ -50,4 +50,24 @@ router.post("/:classId/enroll", apiLimiter, validate(enrollSchema), async (req, 
   } catch (e) { next(e); }
 });
 
+router.put("/:id", validate(classSchema.partial()), async (req, res, next) => {
+  try {
+    const tenantId = req.tenantId!;
+    const updated = await withTenant(tenantId, (tx) =>
+      tx.class.update({ where: { id: req.params.id }, data: req.body })
+    );
+    res.json(updated);
+  } catch (e) { next(e); }
+});
+
+router.delete("/:id", async (req, res, next) => {
+  try {
+    const tenantId = req.tenantId!;
+    await withTenant(tenantId, (tx) =>
+      tx.class.delete({ where: { id: req.params.id } })
+    );
+    res.status(204).send();
+  } catch (e) { next(e); }
+});
+
 export default router;

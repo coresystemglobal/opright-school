@@ -29,6 +29,17 @@ router.post("/", async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
+router.get("/:id", async (req, res, next) => {
+  try {
+    const tenantId = req.tenantId!;
+    const teacher = await withTenant(tenantId, (tx) =>
+      tx.teacher.findUnique({ where: { id: req.params.id } })
+    );
+    if (!teacher) return res.status(404).json({ error: "Teacher not found" });
+    res.json(teacher);
+  } catch (e) { next(e); }
+});
+
 router.put("/:id", async (req, res, next) => {
   try {
     const tenantId = req.tenantId!;

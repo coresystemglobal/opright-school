@@ -2,15 +2,15 @@ import { Router } from "express";
 
 const router = Router();
 
-// TODO: Add Notice model to schema and implement routes
-// Notice feature is part of Tier 2 - Communication System
+// Notices/Announcements require a Notice model in the Prisma schema before these
+// routes can be implemented. Add the model and a migration, then implement here.
 
-router.post("/", async (req, res) => {
-  res.status(501).json({ error: "Notice feature not yet implemented" });
+router.post("/", (_req, res) => {
+  res.status(501).json({ error: "Not implemented — Notice model required in schema" });
 });
 
-router.get("/", async (req, res) => {
-  res.status(501).json({ error: "Notice feature not yet implemented" });
+router.get("/", (_req, res) => {
+  res.status(501).json({ error: "Not implemented — Notice model required in schema" });
 });
 
 export default router;
