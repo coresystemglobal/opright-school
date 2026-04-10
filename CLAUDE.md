@@ -2,6 +2,23 @@
 
 Multi-tenant SaaS school management platform backend (Express + TypeScript + Prisma + PostgreSQL).
 
+<!-- AUTO-MANAGED: build-commands -->
+## Build & Dev Commands
+
+- `npm run dev` — start dev server with hot reload (`tsx watch src/server.ts`)
+- `npm run build` — compile TypeScript to `dist/`
+- `npm start` — build + run production server
+- `npm test` / `npm run test:watch` — Jest test suite
+- `npm run db:generate` — regenerate Prisma client
+- `npm run db:push` — push schema to DB
+- `npm run db:migrate` — run Prisma migrations
+- `npm run db:setup` — `db:push` + `db:generate`
+- `npm run seed` — run idempotent demo seed (`prisma/seed.ts`)
+- `npm run seed:tier1` — run tier-1 seed (`src/utils/seedTier1.ts`)
+- `npm run docs:generate` — generate API docs (`scripts/generate-api-docs.ts`)
+- Load test scripts: `npm run load:basic`, `load:stress`, `load:spike`, `k6:load`, `k6:stress`, `k6:spike`
+<!-- END AUTO-MANAGED -->
+
 <!-- AUTO-MANAGED: architecture -->
 ## Architecture
 
@@ -90,7 +107,7 @@ const result = await withTenant(tenantId, (tx) => tx.student.findMany());
 
 - POST `/auth/login`: rate-limited via `authLimiter`, validates with `loginSchema`, uses `withTenant` for DB scoping, bcrypt password compare
   - JWT payload: `{ userId, tenantId, roleId, role }` where `role` = `normalizeRoleName(user.role?.name)` = `roleName.toUpperCase() ?? 'STUDENT'` (string, expires 7d)
-  - Response: `{ token, user: { id, email, roleId, role, tenantId, tenantSubdomain } }` where `role` is the **full Role object** `{ id, name, description? }` (not the normalized string)
+  - Response: `{ token, user: { id, email, firstName?, lastName?, roleId, role, tenantId, tenantSubdomain } }` where `role` is the **full Role object** `{ id, name, description? }` (not the normalized string)
 - POST `/auth/register`: rate-limited via `authLimiter`, validates with `registerSchema`, creates user + fetches tenant in the same `withTenant` transaction; sends welcome email via `NotificationService.sendEmail` fire-and-forget (`.catch` logged, never throws); response: `{ id, email, roleId }` (201)
 
 ### Standalone Permission Check
@@ -119,7 +136,7 @@ Validated at startup by Zod schema in `src/server.ts`; process exits on failure.
 - `PORT` (default: `3000`), `NODE_ENV` (`development`|`production`|`test`)
 - `CORS_ORIGIN`
 - `BREVO_API_KEY`, `BREVO_FROM_EMAIL`, `BREVO_FROM_NAME`
-- `S3_BUCKET`, `S3_ENDPOINT`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, `S3_REGION`
+- `S3_BUCKET`, `S3_ENDPOINT`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, `S3_REGION` (S3-compatible storage; dev uses Cloudflare R2 endpoint)
 - `PAYSTACK_SECRET_KEY`
 <!-- END AUTO-MANAGED -->
 
@@ -136,5 +153,6 @@ Validated at startup by Zod schema in `src/server.ts`; process exits on failure.
 - `src/services/gradebookService.ts` - `GradebookService`: assignments, grades (bulk), examinations, exam results, report cards
 - `src/services/attendanceService.ts` - `AttendanceService`: mark/bulk-mark attendance, stats, class reports; statuses: `PRESENT`, `ABSENT`, `LATE`, `EXCUSED`
 - `src/config/index.ts` - typed `config` object wrapping all env vars into structured groups: `database`, `upstash`, `brevo`, `jwt`, `storage`, `payments`; available as an alternative to reading `process.env` directly; `config.brevo.fromName` defaults to `'School SaaS'`
-- `prisma/seed.ts` - idempotent demo seed (`npm run seed`); creates subdomain `greenwood` (Greenwood Academy) with: 6 system roles (Admin/Principal/Teacher/Staff/Parent/Student, all `isSystem: true`); admin user `admin@greenwood.edu` / `Admin@1234` (Grace Adeyemi) and teacher user `teacher@greenwood.edu` / `Teacher@1234` (Samuel Okafor); academic year `2025/2026` with 3 terms; 4 classes (Primary 1, Primary 3, JSS 1, SS 1); 3 teachers; 8 students with enrollments; 13 subjects; 5 timetable slots for JSS 1; attendance records; 1 assignment + grades; 1 fee + payment; 4 events; skips any domain that already exists
+- `prisma/seed.ts` - idempotent demo seed (`npm run seed`); creates subdomain `greenwood` (Greenwood Academy) with: 6 system roles (Admin/Principal/Teacher/Staff/Parent/Student, all `isSystem: true`); 4 demo users: admin `admin@greenwood.edu`/`Admin@1234` (Grace Adeyemi), teacher `teacher@greenwood.edu`/`Teacher@1234` (Samuel Okafor), parent `parent@greenwood.edu`/`Parent@1234` (Funke Obi — linked to student Emeka Obi via `guardian.email`), student `student@greenwood.edu`/`Student@1234` (Chisom Nkem); academic year `2025/2026` with 3 terms; 4 classes (Primary 1, Primary 3, JSS 1, SS 1); 3 teachers; 8 students with enrollments; 13 subjects; 5 timetable slots for JSS 1; attendance records; 1 assignment + grades; 1 fee + payment; 5 events; library (6 books), hostel (4 rooms + assignments), transport (2 buses + routes), inventory (6 assets), sports (4 activities), health (4 records), 3 courses, disciplinary (2 records); skips any domain that already exists. Role default permissions: Admin=all; Principal=read-only (students/teachers/classes/attendance/fees/payments/roles); Teacher=students+classes read + attendance CRUD; Staff=students/classes/fees/payments/attendance read; Parent+Student=none
+- `src/utils/seedTier1.ts` - alternative tier-1 seed (`npm run seed:tier1`); separate from the demo seed
 <!-- END AUTO-MANAGED -->

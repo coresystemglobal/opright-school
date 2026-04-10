@@ -49,6 +49,8 @@ router.post("/login", authLimiter, validate(loginSchema), async (req, res, next)
       user: {
         id: user.id,
         email: user.email,
+        firstName: user.firstName ?? undefined,
+        lastName: user.lastName ?? undefined,
         roleId: user.roleId,
         role: user.role,
         tenantId: user.tenantId,
