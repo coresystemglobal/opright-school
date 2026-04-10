@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { z } from "zod";
 import prisma from "../prisma/client";
 import { HealthService } from "../services/healthService";
+import { uuidSchema } from "../utils/validation";
 
 const service = new HealthService(prisma);
 
@@ -32,6 +33,14 @@ const recordVaccinationSchema = z.object({
   nextDue: z.coerce.date().optional(),
 });
 
+const studentIdParamSchema = z.object({
+  studentId: uuidSchema,
+});
+
+const healthRecordIdParamSchema = z.object({
+  healthRecordId: uuidSchema,
+});
+
 export const healthController = {
   async createHealthRecord(req: Request, res: Response) {
     try {
@@ -55,7 +64,8 @@ export const healthController = {
         return res.status(400).json({ error: "Tenant ID required" });
       }
 
-      const record = await service.getHealthRecord(req.tenantId, req.params.studentId);
+      const { studentId } = studentIdParamSchema.parse(req.params);
+      const record = await service.getHealthRecord(req.tenantId, studentId);
       res.json(record);
     } catch (error) {
       res.status(500).json({
@@ -71,9 +81,10 @@ export const healthController = {
       }
 
       const data = updateHealthRecordSchema.parse(req.body);
+      const { studentId } = studentIdParamSchema.parse(req.params);
       const record = await service.updateHealthRecord(
         req.tenantId,
-        req.params.studentId,
+        studentId,
         data
       );
       res.json(record);
@@ -106,10 +117,8 @@ export const healthController = {
         return res.status(400).json({ error: "Tenant ID required" });
       }
 
-      const incidents = await service.getIncidents(
-        req.tenantId,
-        req.params.healthRecordId
-      );
+      const { healthRecordId } = healthRecordIdParamSchema.parse(req.params);
+      const incidents = await service.getIncidents(req.tenantId, healthRecordId);
       res.json(incidents);
     } catch (error) {
       res.status(500).json({
@@ -140,10 +149,8 @@ export const healthController = {
         return res.status(400).json({ error: "Tenant ID required" });
       }
 
-      const vaccinations = await service.getVaccinations(
-        req.tenantId,
-        req.params.healthRecordId
-      );
+      const { healthRecordId } = healthRecordIdParamSchema.parse(req.params);
+      const vaccinations = await service.getVaccinations(req.tenantId, healthRecordId);
       res.json(vaccinations);
     } catch (error) {
       res.status(500).json({

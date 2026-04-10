@@ -1,11 +1,16 @@
-import { Router } from 'express';
+import { Router, NextFunction } from 'express';
 import multer from 'multer';
+import { z } from 'zod';
 import { StorageService } from '../utils/storage';
 
 const router = Router();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } });
 
-router.post('/', upload.single('file'), async (req, res) => {
+const keyParamSchema = z.object({
+  key: z.string().min(1),
+});
+
+router.post('/', upload.single('file'), async (req, res, next: NextFunction) => {
   try {
     if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
 
@@ -13,26 +18,28 @@ router.post('/', upload.single('file'), async (req, res) => {
     const url = await StorageService.upload(key, req.file.buffer, req.file.mimetype);
     
     res.json({ url, key });
-  } catch (error: any) {
-    res.status(500).json({ error: error.message });
+  } catch (error) {
+    next(error);
   }
 });
 
-router.get('/signed-url/:key', async (req, res) => {
+router.get('/signed-url/:key', async (req, res, next: NextFunction) => {
   try {
-    const url = await StorageService.getSignedUrl(req.params.key);
+    const { key } = keyParamSchema.parse(req.params);
+    const url = await StorageService.getSignedUrl(key);
     res.json({ url });
-  } catch (error: any) {
-    res.status(500).json({ error: error.message });
+  } catch (error) {
+    next(error);
   }
 });
 
-router.delete('/:key', async (req, res) => {
+router.delete('/:key', async (req, res, next: NextFunction) => {
   try {
-    await StorageService.delete(req.params.key);
+    const { key } = keyParamSchema.parse(req.params);
+    await StorageService.delete(key);
     res.json({ success: true });
-  } catch (error: any) {
-    res.status(500).json({ error: error.message });
+  } catch (error) {
+    next(error);
   }
 });
 

@@ -2,6 +2,11 @@ import { Request, Response } from "express";
 import { z } from "zod";
 import prisma from "../prisma/client";
 import { DisciplinaryService } from "../services/disciplinaryService";
+import {
+  idParamSchema,
+  optionalStringSchema,
+  optionalUuidSchema,
+} from "../utils/validation";
 
 const service = new DisciplinaryService(prisma);
 
@@ -16,6 +21,11 @@ const createRecordSchema = z.object({
 });
 
 const updateRecordSchema = createRecordSchema.partial();
+
+const recordsQuerySchema = z.object({
+  studentId: optionalUuidSchema,
+  status: optionalStringSchema,
+});
 
 export const disciplinaryController = {
   async createRecord(req: Request, res: Response) {
@@ -40,10 +50,7 @@ export const disciplinaryController = {
         return res.status(400).json({ error: "Tenant ID required" });
       }
 
-      const studentId =
-        typeof req.query.studentId === "string" ? req.query.studentId : undefined;
-      const status =
-        typeof req.query.status === "string" ? req.query.status : undefined;
+      const { studentId, status } = recordsQuerySchema.parse(req.query);
       const records = await service.getRecords(req.tenantId, studentId, status);
       res.json(records);
     } catch (error) {
@@ -60,7 +67,8 @@ export const disciplinaryController = {
       }
 
       const data = updateRecordSchema.parse(req.body);
-      const record = await service.updateRecord(req.tenantId, req.params.id, data);
+      const { id } = idParamSchema.parse(req.params);
+      const record = await service.updateRecord(req.tenantId, id, data);
       res.json(record);
     } catch (error) {
       res.status(400).json({

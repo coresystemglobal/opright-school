@@ -3,6 +3,10 @@ import { Request, Response } from "express";
 import { z } from "zod";
 import prisma from "../prisma/client";
 import { SportsService } from "../services/sportsService";
+import {
+  optionalStringSchema,
+  optionalUuidSchema,
+} from "../utils/validation";
 
 const service = new SportsService(prisma);
 
@@ -28,6 +32,14 @@ const createCompetitionSchema = z.object({
   venue: z.string().optional(),
   participants: z.unknown().optional(),
   results: z.unknown().optional(),
+});
+
+const activitiesQuerySchema = z.object({
+  type: optionalStringSchema,
+});
+
+const competitionsQuerySchema = z.object({
+  activityId: optionalUuidSchema,
 });
 
 export const sportsController = {
@@ -56,7 +68,7 @@ export const sportsController = {
         return res.status(400).json({ error: "Tenant ID required" });
       }
 
-      const type = typeof req.query.type === "string" ? req.query.type : undefined;
+      const { type } = activitiesQuerySchema.parse(req.query);
       const activities = await service.getActivities(req.tenantId, type);
       res.json(activities);
     } catch (error) {
@@ -108,8 +120,7 @@ export const sportsController = {
         return res.status(400).json({ error: "Tenant ID required" });
       }
 
-      const activityId =
-        typeof req.query.activityId === "string" ? req.query.activityId : undefined;
+      const { activityId } = competitionsQuerySchema.parse(req.query);
       const competitions = await service.getCompetitions(req.tenantId, activityId);
       res.json(competitions);
     } catch (error) {

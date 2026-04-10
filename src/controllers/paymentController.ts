@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { z } from "zod";
 import prisma from "../prisma/client";
 import { PaymentService } from "../services/paymentService";
+import { uuidSchema } from "../utils/validation";
 
 const service = new PaymentService(prisma);
 
@@ -16,6 +17,10 @@ const paymentSchema = z.object({
   studentId: z.string().uuid(),
   amount: z.coerce.number().positive(),
   method: z.string().min(1),
+});
+
+const studentIdParamSchema = z.object({
+  studentId: uuidSchema,
 });
 
 export const paymentController = {
@@ -57,10 +62,8 @@ export const paymentController = {
         return res.status(400).json({ error: "Tenant ID required" });
       }
 
-      const payments = await service.getStudentPayments(
-        req.tenantId,
-        req.params.studentId
-      );
+      const { studentId } = studentIdParamSchema.parse(req.params);
+      const payments = await service.getStudentPayments(req.tenantId, studentId);
       res.json(payments);
     } catch (error) {
       res.status(500).json({

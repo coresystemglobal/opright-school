@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { z } from "zod";
 import prisma from "../prisma/client";
 import { ClassService } from "../services/classService";
+import { idParamSchema, uuidSchema } from "../utils/validation";
 
 const service = new ClassService(prisma);
 
@@ -15,6 +16,10 @@ const updateSchema = createSchema.partial();
 
 const enrollSchema = z.object({
   studentId: z.string().uuid(),
+});
+
+const classIdParamSchema = z.object({
+  classId: uuidSchema,
 });
 
 export const classController = {
@@ -56,9 +61,10 @@ export const classController = {
       }
 
       const data = enrollSchema.parse(req.body);
+      const { classId } = classIdParamSchema.parse(req.params);
       const enrollment = await service.enrollStudent(
         req.tenantId,
-        req.params.classId,
+        classId,
         data.studentId
       );
       res.status(201).json(enrollment);
@@ -76,7 +82,8 @@ export const classController = {
       }
 
       const data = updateSchema.parse(req.body);
-      const updated = await service.update(req.tenantId, req.params.id, data);
+      const { id } = idParamSchema.parse(req.params);
+      const updated = await service.update(req.tenantId, id, data);
       res.json(updated);
     } catch (error) {
       res.status(400).json({
@@ -91,7 +98,8 @@ export const classController = {
         return res.status(400).json({ error: "Tenant ID required" });
       }
 
-      await service.delete(req.tenantId, req.params.id);
+      const { id } = idParamSchema.parse(req.params);
+      await service.delete(req.tenantId, id);
       res.status(204).send();
     } catch (error) {
       res.status(400).json({

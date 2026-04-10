@@ -1,15 +1,22 @@
-import { PrismaClient, IdSequenceType } from "@prisma/client";
+import { PrismaClient } from "@prisma/client";
+
+const ID_SEQUENCE_TYPE = {
+  STUDENT: "STUDENT",
+  CANDIDATE: "CANDIDATE",
+} as const;
+
+type IdSequenceType = (typeof ID_SEQUENCE_TYPE)[keyof typeof ID_SEQUENCE_TYPE];
 
 export class StudentIdService {
   constructor(private prisma: PrismaClient) {}
 
   async generateStudentId(tenantId: string, schoolCode: string): Promise<string> {
-    const seq = await this.nextSequence(tenantId, IdSequenceType.STUDENT);
+    const seq = await this.nextSequence(tenantId, ID_SEQUENCE_TYPE.STUDENT);
     return this.format(schoolCode, seq);
   }
 
   async generateCandidateId(tenantId: string, schoolCode: string): Promise<string> {
-    const seq = await this.nextSequence(tenantId, IdSequenceType.CANDIDATE);
+    const seq = await this.nextSequence(tenantId, ID_SEQUENCE_TYPE.CANDIDATE);
     const year = new Date().getFullYear() % 100;
     const yy = String(year).padStart(2, "0");
     const nn = String(seq).padStart(4, "0");

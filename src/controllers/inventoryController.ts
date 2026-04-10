@@ -3,6 +3,10 @@ import { Request, Response } from "express";
 import { z } from "zod";
 import prisma from "../prisma/client";
 import { InventoryService } from "../services/inventoryService";
+import {
+  optionalStringSchema,
+  optionalUuidSchema,
+} from "../utils/validation";
 
 const service = new InventoryService(prisma);
 
@@ -22,6 +26,14 @@ const recordTransactionSchema = z.object({
   quantity: z.coerce.number().int().positive(),
   remarks: z.string().min(1).optional(),
   date: z.coerce.date().optional(),
+});
+
+const assetsQuerySchema = z.object({
+  category: optionalStringSchema,
+});
+
+const transactionsQuerySchema = z.object({
+  assetId: optionalUuidSchema,
 });
 
 export const inventoryController = {
@@ -47,8 +59,7 @@ export const inventoryController = {
         return res.status(400).json({ error: "Tenant ID required" });
       }
 
-      const category =
-        typeof req.query.category === "string" ? req.query.category : undefined;
+      const { category } = assetsQuerySchema.parse(req.query);
       const assets = await service.getAssets(req.tenantId, category);
       res.json(assets);
     } catch (error) {
@@ -80,7 +91,7 @@ export const inventoryController = {
         return res.status(400).json({ error: "Tenant ID required" });
       }
 
-      const assetId = typeof req.query.assetId === "string" ? req.query.assetId : undefined;
+      const { assetId } = transactionsQuerySchema.parse(req.query);
       const transactions = await service.getTransactions(req.tenantId, assetId);
       res.json(transactions);
     } catch (error) {

@@ -3,6 +3,11 @@ import { z } from 'zod';
 import { AttendanceService } from '../services/attendanceService';
 import { AttendanceStatus } from '@prisma/client';
 import prisma from '../prisma/client';
+import {
+  optionalDateSchema,
+  optionalUuidSchema,
+  uuidSchema,
+} from '../utils/validation';
 
 const service = new AttendanceService(prisma);
 
@@ -14,6 +19,31 @@ const markSchema = z.object({
 });
 
 const bulkMarkSchema = z.array(markSchema);
+
+const attendanceQuerySchema = z.object({
+  studentId: optionalUuidSchema,
+  classId: optionalUuidSchema,
+  date: optionalDateSchema,
+  startDate: optionalDateSchema,
+  endDate: optionalDateSchema,
+});
+
+const studentIdParamSchema = z.object({
+  studentId: uuidSchema,
+});
+
+const attendanceStatsQuerySchema = z.object({
+  startDate: z.coerce.date(),
+  endDate: z.coerce.date(),
+});
+
+const classReportParamsSchema = z.object({
+  classId: uuidSchema,
+});
+
+const classReportQuerySchema = z.object({
+  date: z.coerce.date(),
+});
 
 export const attendanceController = {
   async markAttendance(req: Request, res: Response) {
@@ -41,13 +71,7 @@ export const attendanceController = {
   async getAttendance(req: Request, res: Response) {
     try {
       if (!req.tenantId) return res.status(400).json({ error: 'Tenant ID required' });
-      const filters = {
-        studentId: req.query.studentId as string | undefined,
-        classId: req.query.classId as string | undefined,
-        date: req.query.date ? new Date(req.query.date as string) : undefined,
-        startDate: req.query.startDate ? new Date(req.query.startDate as string) : undefined,
-        endDate: req.query.endDate ? new Date(req.query.endDate as string) : undefined
-      };
+      const filters = attendanceQuerySchema.parse(req.query);
       const result = await service.getAttendance(req.tenantId, filters);
       res.json(result);
     } catch (error) {
@@ -58,7 +82,8 @@ export const attendanceController = {
   async getStudentAttendance(req: Request, res: Response) {
     try {
       if (!req.tenantId) return res.status(400).json({ error: "Tenant ID required" });
-      const result = await service.getStudentAttendance(req.tenantId, req.params.studentId);
+      const { studentId } = studentIdParamSchema.parse(req.params);
+      const result = await service.getStudentAttendance(req.tenantId, studentId);
       res.json(result);
     } catch (error) {
       res.status(500).json({ error: error instanceof Error ? error.message : "Unknown error" });
@@ -68,9 +93,8 @@ export const attendanceController = {
   async getAttendanceStats(req: Request, res: Response) {
     try {
       if (!req.tenantId) return res.status(400).json({ error: 'Tenant ID required' });
-      const { studentId } = req.params;
-      const startDate = new Date(req.query.startDate as string);
-      const endDate = new Date(req.query.endDate as string);
+      const { studentId } = studentIdParamSchema.parse(req.params);
+      const { startDate, endDate } = attendanceStatsQuerySchema.parse(req.query);
       const result = await service.getAttendanceStats(req.tenantId, studentId, startDate, endDate);
       res.json(result);
     } catch (error) {
@@ -81,8 +105,8 @@ export const attendanceController = {
   async getClassAttendanceReport(req: Request, res: Response) {
     try {
       if (!req.tenantId) return res.status(400).json({ error: 'Tenant ID required' });
-      const { classId } = req.params;
-      const date = new Date(req.query.date as string);
+      const { classId } = classReportParamsSchema.parse(req.params);
+      const { date } = classReportQuerySchema.parse(req.query);
       const result = await service.getClassAttendanceReport(req.tenantId, classId, date);
       res.json(result);
     } catch (error) {

@@ -3,6 +3,7 @@ import { Request, Response } from "express";
 import { z } from "zod";
 import prisma from "../prisma/client";
 import { TransportService } from "../services/transportService";
+import { optionalUuidSchema } from "../utils/validation";
 
 const service = new TransportService(prisma);
 
@@ -24,6 +25,14 @@ const assignStudentSchema = z.object({
   studentId: z.string().uuid(),
   pickupStop: z.string().min(1),
   dropStop: z.string().min(1),
+});
+
+const routesQuerySchema = z.object({
+  busId: optionalUuidSchema,
+});
+
+const assignmentsQuerySchema = z.object({
+  studentId: optionalUuidSchema,
 });
 
 export const transportController = {
@@ -83,7 +92,7 @@ export const transportController = {
         return res.status(400).json({ error: "Tenant ID required" });
       }
 
-      const busId = typeof req.query.busId === "string" ? req.query.busId : undefined;
+      const { busId } = routesQuerySchema.parse(req.query);
       const routes = await service.getRoutes(req.tenantId, busId);
       res.json(routes);
     } catch (error) {
@@ -115,8 +124,7 @@ export const transportController = {
         return res.status(400).json({ error: "Tenant ID required" });
       }
 
-      const studentId =
-        typeof req.query.studentId === "string" ? req.query.studentId : undefined;
+      const { studentId } = assignmentsQuerySchema.parse(req.query);
       const assignments = await service.getAssignments(req.tenantId, studentId);
       res.json(assignments);
     } catch (error) {

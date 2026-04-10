@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { z } from 'zod';
 import { GradebookService } from '../services/gradebookService';
 import prisma from '../prisma/client';
+import { optionalUuidSchema, uuidSchema } from '../utils/validation';
 
 const service = new GradebookService(prisma);
 
@@ -48,6 +49,35 @@ const examResultSchema = z.object({
   remarks: z.string().optional()
 });
 
+const listAssignmentsQuerySchema = z.object({
+  subjectId: optionalUuidSchema,
+  termId: optionalUuidSchema,
+});
+
+const studentIdParamSchema = z.object({
+  studentId: uuidSchema,
+});
+
+const studentGradesQuerySchema = z.object({
+  subjectId: optionalUuidSchema,
+  assignmentId: optionalUuidSchema,
+});
+
+const subjectAverageParamsSchema = z.object({
+  studentId: uuidSchema,
+  subjectId: uuidSchema,
+});
+
+const reportCardParamsSchema = z.object({
+  studentId: uuidSchema,
+  termId: uuidSchema,
+});
+
+const examResultsQuerySchema = z.object({
+  examinationId: optionalUuidSchema,
+  studentId: optionalUuidSchema,
+});
+
 export const gradebookController = {
   async createAssignment(req: Request, res: Response) {
     try {
@@ -63,10 +93,7 @@ export const gradebookController = {
   async listAssignments(req: Request, res: Response) {
     try {
       if (!req.tenantId) return res.status(400).json({ error: 'Tenant ID required' });
-      const filters = {
-        subjectId: req.query.subjectId as string | undefined,
-        termId: req.query.termId as string | undefined
-      };
+      const filters = listAssignmentsQuerySchema.parse(req.query);
       const result = await service.listAssignments(req.tenantId, filters);
       res.json(result);
     } catch (error) {
@@ -99,11 +126,8 @@ export const gradebookController = {
   async getStudentGrades(req: Request, res: Response) {
     try {
       if (!req.tenantId) return res.status(400).json({ error: 'Tenant ID required' });
-      const { studentId } = req.params;
-      const filters = {
-        subjectId: req.query.subjectId as string | undefined,
-        assignmentId: req.query.assignmentId as string | undefined
-      };
+      const { studentId } = studentIdParamSchema.parse(req.params);
+      const filters = studentGradesQuerySchema.parse(req.query);
       const result = await service.getStudentGrades(req.tenantId, studentId, filters);
       res.json(result);
     } catch (error) {
@@ -114,7 +138,7 @@ export const gradebookController = {
   async calculateSubjectAverage(req: Request, res: Response) {
     try {
       if (!req.tenantId) return res.status(400).json({ error: 'Tenant ID required' });
-      const { studentId, subjectId } = req.params;
+      const { studentId, subjectId } = subjectAverageParamsSchema.parse(req.params);
       const result = await service.calculateSubjectAverage(req.tenantId, studentId, subjectId);
       res.json({ average: result });
     } catch (error) {
@@ -125,7 +149,7 @@ export const gradebookController = {
   async getStudentReportCard(req: Request, res: Response) {
     try {
       if (!req.tenantId) return res.status(400).json({ error: 'Tenant ID required' });
-      const { studentId, termId } = req.params;
+      const { studentId, termId } = reportCardParamsSchema.parse(req.params);
       const result = await service.getStudentReportCard(req.tenantId, studentId, termId);
       res.json(result);
     } catch (error) {
@@ -158,10 +182,7 @@ export const gradebookController = {
   async getExamResults(req: Request, res: Response) {
     try {
       if (!req.tenantId) return res.status(400).json({ error: 'Tenant ID required' });
-      const filters = {
-        examinationId: req.query.examinationId as string | undefined,
-        studentId: req.query.studentId as string | undefined
-      };
+      const filters = examResultsQuerySchema.parse(req.query);
       const result = await service.getExamResults(req.tenantId, filters);
       res.json(result);
     } catch (error) {

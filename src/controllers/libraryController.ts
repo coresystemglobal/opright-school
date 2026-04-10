@@ -3,6 +3,12 @@ import { Request, Response } from "express";
 import { z } from "zod";
 import prisma from "../prisma/client";
 import { LibraryService } from "../services/libraryService";
+import {
+  optionalNumberSchema,
+  optionalStringSchema,
+  optionalUuidSchema,
+  uuidSchema,
+} from "../utils/validation";
 
 const service = new LibraryService(prisma);
 
@@ -29,6 +35,24 @@ const returnBookSchema = z.object({
   fine: z.coerce.number().nonnegative().optional(),
 });
 
+const transactionIdParamSchema = z.object({
+  id: uuidSchema,
+});
+
+const listBooksQuerySchema = z.object({
+  title: optionalStringSchema,
+  author: optionalStringSchema,
+  isbn: optionalStringSchema,
+  genre: optionalStringSchema,
+  available: optionalNumberSchema,
+});
+
+const transactionsQuerySchema = z.object({
+  bookId: optionalUuidSchema,
+  borrowerId: optionalUuidSchema,
+  status: z.nativeEnum(BookStatus).optional(),
+});
+
 export const libraryController = {
   async createBook(req: Request, res: Response) {
     try {
@@ -52,19 +76,7 @@ export const libraryController = {
         return res.status(400).json({ error: "Tenant ID required" });
       }
 
-      const filters = {
-        title: typeof req.query.title === "string" ? req.query.title : undefined,
-        author:
-          typeof req.query.author === "string" ? req.query.author : undefined,
-        isbn: typeof req.query.isbn === "string" ? req.query.isbn : undefined,
-        genre:
-          typeof req.query.genre === "string" ? req.query.genre : undefined,
-        available:
-          typeof req.query.available === "string"
-            ? Number(req.query.available)
-            : undefined,
-      };
-
+      const filters = listBooksQuerySchema.parse(req.query);
       const books = await service.getBooks(req.tenantId, filters);
       res.json(books);
     } catch (error) {
@@ -97,9 +109,10 @@ export const libraryController = {
       }
 
       const data = returnBookSchema.parse(req.body);
+      const { id } = transactionIdParamSchema.parse(req.params);
       const transaction = await service.returnBook(
         req.tenantId,
-        req.params.id,
+        id,
         data.fine ?? 0
       );
       res.json(transaction);
@@ -116,19 +129,7 @@ export const libraryController = {
         return res.status(400).json({ error: "Tenant ID required" });
       }
 
-      const filters = {
-        bookId:
-          typeof req.query.bookId === "string" ? req.query.bookId : undefined,
-        borrowerId:
-          typeof req.query.borrowerId === "string"
-            ? req.query.borrowerId
-            : undefined,
-        status:
-          typeof req.query.status === "string"
-            ? (req.query.status as BookStatus)
-            : undefined,
-      };
-
+      const filters = transactionsQuerySchema.parse(req.query);
       const transactions = await service.getTransactions(req.tenantId, filters);
       res.json(transactions);
     } catch (error) {

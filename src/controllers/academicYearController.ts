@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { z } from 'zod';
 import { AcademicYearService } from '../services/academicYearService';
 import prisma from '../prisma/client';
+import { idParamSchema } from '../utils/validation';
 
 const service = new AcademicYearService(prisma);
 
@@ -50,7 +51,8 @@ export const academicYearController = {
     try {
       if (!req.tenantId) return res.status(400).json({ error: 'Tenant ID required' });
       const data = updateSchema.parse(req.body);
-      const result = await service.update(req.tenantId, req.params.id, data);
+      const { id } = idParamSchema.parse(req.params);
+      const result = await service.update(req.tenantId, id, data);
       res.json(result);
     } catch (error) {
       res.status(400).json({ error: error instanceof Error ? error.message : 'Unknown error' });
@@ -60,7 +62,8 @@ export const academicYearController = {
   async delete(req: Request, res: Response) {
     try {
       if (!req.tenantId) return res.status(400).json({ error: 'Tenant ID required' });
-      await service.delete(req.tenantId, req.params.id);
+      const { id } = idParamSchema.parse(req.params);
+      await service.delete(req.tenantId, id);
       res.status(204).send();
     } catch (error) {
       res.status(400).json({ error: error instanceof Error ? error.message : 'Unknown error' });

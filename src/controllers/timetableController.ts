@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { z } from 'zod';
 import { TimetableService } from '../services/timetableService';
 import prisma from '../prisma/client';
+import { idParamSchema, optionalUuidSchema, uuidSchema } from '../utils/validation';
 
 const service = new TimetableService(prisma);
 
@@ -18,6 +19,18 @@ const createSchema = z.object({
 
 const updateSchema = createSchema.omit({ academicYearId: true, subjectId: true, classId: true, teacherId: true }).partial();
 
+const classIdParamSchema = z.object({
+  classId: uuidSchema,
+});
+
+const teacherIdParamSchema = z.object({
+  teacherId: uuidSchema,
+});
+
+const listQuerySchema = z.object({
+  academicYearId: optionalUuidSchema,
+});
+
 export const timetableController = {
   async create(req: Request, res: Response) {
     try {
@@ -33,8 +46,8 @@ export const timetableController = {
   async listByClass(req: Request, res: Response) {
     try {
       if (!req.tenantId) return res.status(400).json({ error: 'Tenant ID required' });
-      const classId = req.params.classId;
-      const academicYearId = req.query.academicYearId as string | undefined;
+      const { classId } = classIdParamSchema.parse(req.params);
+      const { academicYearId } = listQuerySchema.parse(req.query);
       const result = await service.listByClass(req.tenantId, classId, academicYearId);
       res.json(result);
     } catch (error) {
@@ -45,8 +58,8 @@ export const timetableController = {
   async listByTeacher(req: Request, res: Response) {
     try {
       if (!req.tenantId) return res.status(400).json({ error: 'Tenant ID required' });
-      const teacherId = req.params.teacherId;
-      const academicYearId = req.query.academicYearId as string | undefined;
+      const { teacherId } = teacherIdParamSchema.parse(req.params);
+      const { academicYearId } = listQuerySchema.parse(req.query);
       const result = await service.listByTeacher(req.tenantId, teacherId, academicYearId);
       res.json(result);
     } catch (error) {
@@ -58,7 +71,8 @@ export const timetableController = {
     try {
       if (!req.tenantId) return res.status(400).json({ error: 'Tenant ID required' });
       const data = updateSchema.parse(req.body);
-      const result = await service.update(req.tenantId, req.params.id, data);
+      const { id } = idParamSchema.parse(req.params);
+      const result = await service.update(req.tenantId, id, data);
       res.json(result);
     } catch (error) {
       res.status(400).json({ error: error instanceof Error ? error.message : 'Unknown error' });
@@ -68,7 +82,8 @@ export const timetableController = {
   async delete(req: Request, res: Response) {
     try {
       if (!req.tenantId) return res.status(400).json({ error: 'Tenant ID required' });
-      await service.delete(req.tenantId, req.params.id);
+      const { id } = idParamSchema.parse(req.params);
+      await service.delete(req.tenantId, id);
       res.status(204).send();
     } catch (error) {
       res.status(400).json({ error: error instanceof Error ? error.message : 'Unknown error' });

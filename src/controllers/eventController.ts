@@ -2,6 +2,10 @@ import { Request, Response } from "express";
 import { z } from "zod";
 import prisma from "../prisma/client";
 import { EventService } from "../services/eventService";
+import {
+  optionalStringSchema,
+  uuidSchema,
+} from "../utils/validation";
 
 const service = new EventService(prisma);
 
@@ -18,6 +22,15 @@ const addParticipantSchema = z.object({
   participantId: z.string().uuid(),
   participantType: z.string().min(1),
   role: z.string().optional(),
+});
+
+const eventIdParamSchema = z.object({
+  id: uuidSchema,
+});
+
+const listQuerySchema = z.object({
+  type: optionalStringSchema,
+  venue: optionalStringSchema,
 });
 
 export const eventController = {
@@ -43,10 +56,7 @@ export const eventController = {
         return res.status(400).json({ error: "Tenant ID required" });
       }
 
-      const filters = {
-        type: typeof req.query.type === "string" ? req.query.type : undefined,
-        venue: typeof req.query.venue === "string" ? req.query.venue : undefined,
-      };
+      const filters = listQuerySchema.parse(req.query);
 
       const events = await service.getEvents(req.tenantId, filters);
       res.json(events);
@@ -79,9 +89,10 @@ export const eventController = {
       }
 
       const data = addParticipantSchema.parse(req.body);
+      const { id } = eventIdParamSchema.parse(req.params);
       const participant = await service.addParticipant(req.tenantId, {
         ...data,
-        eventId: req.params.id,
+        eventId: id,
       });
       res.status(201).json(participant);
     } catch (error) {
@@ -97,7 +108,8 @@ export const eventController = {
         return res.status(400).json({ error: "Tenant ID required" });
       }
 
-      const participants = await service.getParticipants(req.tenantId, req.params.id);
+      const { id } = eventIdParamSchema.parse(req.params);
+      const participants = await service.getParticipants(req.tenantId, id);
       res.json(participants);
     } catch (error) {
       res.status(500).json({

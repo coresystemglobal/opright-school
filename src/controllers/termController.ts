@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { z } from 'zod';
 import { TermService } from '../services/termService';
 import prisma from '../prisma/client';
+import { idParamSchema, optionalUuidSchema } from '../utils/validation';
 
 const service = new TermService(prisma);
 
@@ -14,6 +15,10 @@ const createSchema = z.object({
 });
 
 const updateSchema = createSchema.omit({ academicYearId: true }).partial();
+
+const listQuerySchema = z.object({
+  academicYearId: optionalUuidSchema,
+});
 
 export const termController = {
   async create(req: Request, res: Response) {
@@ -30,7 +35,7 @@ export const termController = {
   async list(req: Request, res: Response) {
     try {
       if (!req.tenantId) return res.status(400).json({ error: 'Tenant ID required' });
-      const academicYearId = req.query.academicYearId as string | undefined;
+      const { academicYearId } = listQuerySchema.parse(req.query);
       const result = await service.list(req.tenantId, academicYearId);
       res.json(result);
     } catch (error) {
@@ -52,7 +57,8 @@ export const termController = {
     try {
       if (!req.tenantId) return res.status(400).json({ error: 'Tenant ID required' });
       const data = updateSchema.parse(req.body);
-      const result = await service.update(req.tenantId, req.params.id, data);
+      const { id } = idParamSchema.parse(req.params);
+      const result = await service.update(req.tenantId, id, data);
       res.json(result);
     } catch (error) {
       res.status(400).json({ error: error instanceof Error ? error.message : 'Unknown error' });
@@ -62,7 +68,8 @@ export const termController = {
   async delete(req: Request, res: Response) {
     try {
       if (!req.tenantId) return res.status(400).json({ error: 'Tenant ID required' });
-      await service.delete(req.tenantId, req.params.id);
+      const { id } = idParamSchema.parse(req.params);
+      await service.delete(req.tenantId, id);
       res.status(204).send();
     } catch (error) {
       res.status(400).json({ error: error instanceof Error ? error.message : 'Unknown error' });

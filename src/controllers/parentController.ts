@@ -1,8 +1,13 @@
 import { Request, Response } from "express";
+import { z } from "zod";
 import { ParentService } from "../services/parentService";
-import { validate } from "../middleware/validate";
 import { parentSchema } from "../utils/schemas";
 import prisma from "../prisma/client";
+import { uuidSchema } from "../utils/validation";
+
+const studentIdParamSchema = z.object({
+  studentId: uuidSchema,
+});
 
 export class ParentController {
   static async getChildren(req: Request, res: Response) {
@@ -16,7 +21,8 @@ export class ParentController {
 
   static async getChildAttendance(req: Request, res: Response) {
     try {
-      const attendance = await ParentService.getChildAttendance(req.tenantId!, req.params.studentId);
+      const { studentId } = studentIdParamSchema.parse(req.params);
+      const attendance = await ParentService.getChildAttendance(req.tenantId!, studentId);
       res.json(attendance);
     } catch (error: any) {
       res.status(400).json({ error: error.message });
@@ -25,7 +31,8 @@ export class ParentController {
 
   static async getChildGrades(req: Request, res: Response) {
     try {
-      const grades = await ParentService.getChildGrades(req.tenantId!, req.params.studentId);
+      const { studentId } = studentIdParamSchema.parse(req.params);
+      const grades = await ParentService.getChildGrades(req.tenantId!, studentId);
       res.json(grades);
     } catch (error: any) {
       res.status(400).json({ error: error.message });
@@ -34,7 +41,8 @@ export class ParentController {
 
   static async getChildPayments(req: Request, res: Response) {
     try {
-      const payments = await ParentService.getChildPayments(req.tenantId!, req.params.studentId);
+      const { studentId } = studentIdParamSchema.parse(req.params);
+      const payments = await ParentService.getChildPayments(req.tenantId!, studentId);
       res.json(payments);
     } catch (error: any) {
       res.status(400).json({ error: error.message });
@@ -43,10 +51,8 @@ export class ParentController {
 
   static async createParent(req: Request, res: Response) {
     try {
-      const parsed = parentSchema.safeParse(req.body);
-      if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() });
-
-      const parent = await ParentService.createParent(req.tenantId!, parsed.data, prisma);
+      const data = parentSchema.parse(req.body);
+      const parent = await ParentService.createParent(req.tenantId!, data, prisma);
       res.status(201).json(parent);
     } catch (error: any) {
       res.status(400).json({ error: error.message });

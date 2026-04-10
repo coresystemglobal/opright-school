@@ -2,6 +2,10 @@ import { Request, Response } from "express";
 import { z } from "zod";
 import prisma from "../prisma/client";
 import { HostelService } from "../services/hostelService";
+import {
+  optionalUuidSchema,
+  uuidSchema,
+} from "../utils/validation";
 
 const service = new HostelService(prisma);
 
@@ -38,6 +42,14 @@ const logVisitorSchema = z.object({
   phone: z.string().optional(),
   checkIn: z.coerce.date().optional(),
   purpose: z.string().optional(),
+});
+
+const visitorIdParamSchema = z.object({
+  id: uuidSchema,
+});
+
+const studentQuerySchema = z.object({
+  studentId: optionalUuidSchema,
 });
 
 export const hostelController = {
@@ -126,7 +138,8 @@ export const hostelController = {
         return res.status(400).json({ error: "Tenant ID required" });
       }
 
-      const log = await service.checkoutVisitor(req.tenantId, req.params.id);
+      const { id } = visitorIdParamSchema.parse(req.params);
+      const log = await service.checkoutVisitor(req.tenantId, id);
       res.json(log);
     } catch (error) {
       res.status(400).json({
@@ -141,8 +154,7 @@ export const hostelController = {
         return res.status(400).json({ error: "Tenant ID required" });
       }
 
-      const studentId =
-        typeof req.query.studentId === "string" ? req.query.studentId : undefined;
+      const { studentId } = studentQuerySchema.parse(req.query);
       const logs = await service.getVisitors(req.tenantId, studentId);
       res.json(logs);
     } catch (error) {
@@ -158,8 +170,7 @@ export const hostelController = {
         return res.status(400).json({ error: "Tenant ID required" });
       }
 
-      const studentId =
-        typeof req.query.studentId === "string" ? req.query.studentId : undefined;
+      const { studentId } = studentQuerySchema.parse(req.query);
       const assignments = await service.getAssignments(req.tenantId, studentId);
       res.json(assignments);
     } catch (error) {
@@ -175,8 +186,7 @@ export const hostelController = {
         return res.status(400).json({ error: "Tenant ID required" });
       }
 
-      const studentId =
-        typeof req.query.studentId === "string" ? req.query.studentId : undefined;
+      const { studentId } = studentQuerySchema.parse(req.query);
       const plans = await service.getMealPlans(req.tenantId, studentId);
       res.json(plans);
     } catch (error) {

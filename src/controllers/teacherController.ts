@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { z } from "zod";
 import prisma from "../prisma/client";
 import { TeacherService } from "../services/teacherService";
+import { idParamSchema } from "../utils/validation";
 
 const service = new TeacherService(prisma);
 
@@ -51,7 +52,8 @@ export const teacherController = {
         return res.status(400).json({ error: "Tenant ID required" });
       }
 
-      const teacher = await service.getById(req.tenantId, req.params.id);
+      const { id } = idParamSchema.parse(req.params);
+      const teacher = await service.getById(req.tenantId, id);
       if (!teacher) {
         return res.status(404).json({ error: "Teacher not found" });
       }
@@ -71,7 +73,8 @@ export const teacherController = {
       }
 
       const data = updateSchema.parse(req.body);
-      const teacher = await service.update(req.tenantId, req.params.id, data);
+      const { id } = idParamSchema.parse(req.params);
+      const teacher = await service.update(req.tenantId, id, data);
       res.json(teacher);
     } catch (error) {
       res.status(400).json({
@@ -86,7 +89,8 @@ export const teacherController = {
         return res.status(400).json({ error: "Tenant ID required" });
       }
 
-      await service.delete(req.tenantId, req.params.id);
+      const { id } = idParamSchema.parse(req.params);
+      await service.delete(req.tenantId, id);
       res.status(204).send();
     } catch (error) {
       res.status(400).json({
