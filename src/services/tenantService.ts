@@ -207,7 +207,9 @@ async function seedSchoolDefaults(db: DbClient, tenantId: string, schoolType: Sc
 }
 
 export class TenantService {
-  static async createTenant(data: {
+  constructor(private prisma: PrismaClient) {}
+
+  async createTenant(data: {
     name: string;
     subdomain: string;
     adminEmail: string;
@@ -216,7 +218,7 @@ export class TenantService {
   }) {
     const hashedPassword = await bcrypt.hash(data.adminPassword, 12);
     
-    return prisma.tenant.create({
+    return this.prisma.tenant.create({
       data: {
         name: data.name,
         subdomain: data.subdomain,
@@ -237,11 +239,11 @@ export class TenantService {
     });
   }
 
-  static async createSchool(data: CreateSchoolInput) {
+  async createSchool(data: CreateSchoolInput) {
     const hashedPassword = await bcrypt.hash(data.adminPassword, 12);
     const { firstName, lastName } = splitName(data.adminName);
 
-    return prisma.$transaction(async (tx) => {
+    return this.prisma.$transaction(async (tx) => {
       const tenant = await tx.tenant.create({
         data: {
           name: data.schoolName,
@@ -299,8 +301,8 @@ export class TenantService {
     });
   }
 
-  static async getTenant(subdomain: string) {
-    return prisma.tenant.findUnique({
+  async getTenant(subdomain: string) {
+    return this.prisma.tenant.findUnique({
       where: { subdomain },
       include: {
         users: {
@@ -310,3 +312,5 @@ export class TenantService {
     });
   }
 }
+
+export type { CreateSchoolInput };

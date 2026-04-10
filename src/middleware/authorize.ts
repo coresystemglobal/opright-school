@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { RoleService } from '../services/roleService';
+import { RoleService } from "../modules/roles/service";
 import prisma from '../prisma/client';
 
 const roleService = new RoleService(prisma);
