@@ -2,9 +2,26 @@ import prisma from '../prisma/client';
 import { NotificationService } from './notificationService';
 import { CacheService } from '../utils/cache';
 
+/** Normalize a datetime string from HTML datetime-local inputs (e.g. "2026-04-17T13:00")
+ *  to a full ISO-8601 string that Prisma/PostgreSQL accepts. */
+function toISODate(value: string | undefined): Date | undefined {
+  if (!value) return undefined;
+  // Append seconds if the string ends at HH:MM (16 chars) without seconds
+  const normalized = value.length === 16 ? `${value}:00` : value;
+  const date = new Date(normalized);
+  if (isNaN(date.getTime())) throw new Error(`Invalid date: ${value}`);
+  return date;
+}
+
 export const EventService = {
   async createEvent(tenantId: string, data: any) {
-    return prisma.event.create({ data: { ...data, tenantId } });
+    const payload = {
+      ...data,
+      tenantId,
+      startDate: toISODate(data.startDate),
+      ...(data.endDate ? { endDate: toISODate(data.endDate) } : {}),
+    };
+    return prisma.event.create({ data: payload });
   },
 
   async getEvents(tenantId: string, filters?: any) {

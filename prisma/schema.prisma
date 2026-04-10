@@ -89,7 +89,7 @@ model User {
 }
 
 model Role {
-  id          String   @id @default(uuid())
+  id          String   @id @default(uuid()) @db.Uuid
   tenantId    String   @db.Uuid
   tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   
@@ -107,7 +107,7 @@ model Role {
 }
 
 model Permission {
-  id          String   @id @default(uuid())
+  id          String   @id @default(uuid()) @db.Uuid
   
   resource    String   // e.g., "students", "teachers", "classes"
   action      String   // e.g., "create", "read", "update", "delete"
@@ -119,7 +119,7 @@ model Permission {
 }
 
 model RolePermission {
-  id           String     @id @default(uuid())
+  id           String     @id @default(uuid()) @db.Uuid
   roleId       String     @db.Uuid
   role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
   permissionId String     @db.Uuid
@@ -142,7 +142,7 @@ enum UserRole {
 /// ─────────────────────────────────────────
 
 model Student {
-  id        String   @id @default(uuid())
+  id        String   @id @default(uuid()) @db.Uuid
   tenantId  String   @db.Uuid
   tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
@@ -164,7 +164,7 @@ model Student {
 }
 
 model Teacher {
-  id        String   @id @default(uuid())
+  id        String   @id @default(uuid()) @db.Uuid
   tenantId  String   @db.Uuid
   tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
@@ -187,13 +187,13 @@ model Teacher {
 /// ─────────────────────────────────────────
 
 model Class {
-  id        String   @id @default(uuid())
+  id        String   @id @default(uuid()) @db.Uuid
   tenantId  String   @db.Uuid
   tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   name      String   // e.g. "Grade 5"
   level     String?  // e.g. "Primary"
-  teacherId String?  // homeroom teacher
+  teacherId String?  @db.Uuid  // homeroom teacher
   teacher   Teacher? @relation(fields: [teacherId], references: [id])
 
   createdAt DateTime @default(now())
@@ -207,14 +207,14 @@ model Class {
 }
 
 model Enrollment {
-  id        String   @id @default(uuid())
+  id        String   @id @default(uuid()) @db.Uuid
   tenantId  String   @db.Uuid
   tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
-  studentId String
+  studentId  String  @db.Uuid
   student   Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
 
-  classId   String
+  classId  String  @db.Uuid
   class     Class    @relation(fields: [classId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
@@ -224,11 +224,11 @@ model Enrollment {
 }
 
 model Attendance {
-  id         String   @id @default(uuid())
+  id         String   @id @default(uuid()) @db.Uuid
   tenantId   String   @db.Uuid
   tenant     Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
-  studentId  String
+  studentId  String  @db.Uuid
   student    Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
 
   date       DateTime
@@ -253,7 +253,7 @@ enum AttendanceStatus {
 /// ─────────────────────────────────────────
 
 model Fee {
-  id        String   @id @default(uuid())
+  id        String   @id @default(uuid()) @db.Uuid
   tenantId  String   @db.Uuid
   tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
@@ -269,14 +269,14 @@ model Fee {
 }
 
 model Payment {
-  id        String   @id @default(uuid())
+  id        String   @id @default(uuid()) @db.Uuid
   tenantId  String   @db.Uuid
   tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
-  feeId     String
+  feeId  String  @db.Uuid
   fee       Fee      @relation(fields: [feeId], references: [id], onDelete: Cascade)
 
-  studentId String
+  studentId  String  @db.Uuid
   student   Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
 
   amount    Float
@@ -298,7 +298,7 @@ enum PaymentStatus {
 /// ─────────────────────────────────────────
 
 model AcademicYear {
-  id        String   @id @default(uuid())
+  id        String   @id @default(uuid()) @db.Uuid
   tenantId  String   @db.Uuid
   tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
@@ -320,7 +320,7 @@ model AcademicYear {
 }
 
 model Term {
-  id             String       @id @default(uuid())
+  id             String       @id @default(uuid()) @db.Uuid
   tenantId       String       @db.Uuid
   tenant         Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   academicYearId String       @db.Uuid
@@ -345,7 +345,7 @@ model Term {
 /// ─────────────────────────────────────────
 
 model Subject {
-  id             String       @id @default(uuid())
+  id             String       @id @default(uuid()) @db.Uuid
   tenantId       String       @db.Uuid
   tenant         Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   academicYearId String       @db.Uuid
@@ -377,7 +377,7 @@ model Subject {
 /// ─────────────────────────────────────────
 
 model Timetable {
-  id             String       @id @default(uuid())
+  id             String       @id @default(uuid()) @db.Uuid
   tenantId       String       @db.Uuid
   tenant         Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   academicYearId String       @db.Uuid
@@ -407,7 +407,7 @@ model Timetable {
 /// ─────────────────────────────────────────
 
 model Assignment {
-  id             String       @id @default(uuid())
+  id             String       @id @default(uuid()) @db.Uuid
   tenantId       String       @db.Uuid
   tenant         Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   academicYearId String       @db.Uuid
@@ -433,7 +433,7 @@ model Assignment {
 }
 
 model Grade {
-  id           String     @id @default(uuid())
+  id           String     @id @default(uuid()) @db.Uuid
   tenantId     String     @db.Uuid
   tenant       Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   
@@ -462,7 +462,7 @@ model Grade {
 /// ─────────────────────────────────────────
 
 model Examination {
-  id             String       @id @default(uuid())
+  id             String       @id @default(uuid()) @db.Uuid
   tenantId       String       @db.Uuid
   tenant         Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   academicYearId String       @db.Uuid
@@ -488,7 +488,7 @@ model Examination {
 }
 
 model ExamResult {
-  id            String      @id @default(uuid())
+  id            String      @id @default(uuid()) @db.Uuid
   tenantId      String      @db.Uuid
   tenant        Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   
@@ -513,7 +513,7 @@ model ExamResult {
 /// ─────────────────────────────────────────
 
 model Book {
-  id          String   @id @default(uuid())
+  id          String   @id @default(uuid()) @db.Uuid
   tenantId    String   @db.Uuid
   tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
@@ -534,7 +534,7 @@ model Book {
 }
 
 model BookTransaction {
-  id          String    @id @default(uuid())
+  id          String    @id @default(uuid()) @db.Uuid
   tenantId    String    @db.Uuid
   tenant      Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   
@@ -568,7 +568,7 @@ enum BookStatus {
 /// ─────────────────────────────────────────
 
 model Bus {
-  id          String   @id @default(uuid())
+  id          String   @id @default(uuid()) @db.Uuid
   tenantId    String   @db.Uuid
   tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
@@ -587,7 +587,7 @@ model Bus {
 }
 
 model BusRoute {
-  id          String   @id @default(uuid())
+  id          String   @id @default(uuid()) @db.Uuid
   tenantId    String   @db.Uuid
   tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   
@@ -606,7 +606,7 @@ model BusRoute {
 }
 
 model BusAssignment {
-  id          String    @id @default(uuid())
+  id          String    @id @default(uuid()) @db.Uuid
   tenantId    String    @db.Uuid
   tenant      Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   
@@ -629,7 +629,7 @@ model BusAssignment {
 /// ─────────────────────────────────────────
 
 model Asset {
-  id          String   @id @default(uuid())
+  id          String   @id @default(uuid()) @db.Uuid
   tenantId    String   @db.Uuid
   tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
@@ -650,7 +650,7 @@ model Asset {
 }
 
 model AssetTransaction {
-  id          String   @id @default(uuid())
+  id          String   @id @default(uuid()) @db.Uuid
   tenantId    String   @db.Uuid
   tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   
@@ -680,7 +680,7 @@ enum AssetTransactionType {
 /// ─────────────────────────────────────────
 
 model Event {
-  id          String   @id @default(uuid())
+  id          String   @id @default(uuid()) @db.Uuid
   tenantId    String   @db.Uuid
   tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
@@ -700,7 +700,7 @@ model Event {
 }
 
 model EventParticipant {
-  id            String   @id @default(uuid())
+  id            String   @id @default(uuid()) @db.Uuid
   tenantId      String   @db.Uuid
   tenant        Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   
@@ -722,7 +722,7 @@ model EventParticipant {
 /// ─────────────────────────────────────────
 
 model DisciplinaryRecord {
-  id          String   @id @default(uuid())
+  id          String   @id @default(uuid()) @db.Uuid
   tenantId    String   @db.Uuid
   tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
@@ -745,7 +745,7 @@ model DisciplinaryRecord {
 /// ─────────────────────────────────────────
 
 model HealthRecord {
-  id          String   @id @default(uuid())
+  id          String   @id @default(uuid()) @db.Uuid
   tenantId    String   @db.Uuid
   tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
@@ -765,7 +765,7 @@ model HealthRecord {
 }
 
 model MedicalIncident {
-  id          String       @id @default(uuid())
+  id          String       @id @default(uuid()) @db.Uuid
   tenantId    String       @db.Uuid
   tenant      Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   
@@ -784,7 +784,7 @@ model MedicalIncident {
 }
 
 model Vaccination {
-  id          String       @id @default(uuid())
+  id          String       @id @default(uuid()) @db.Uuid
   tenantId    String       @db.Uuid
   tenant      Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   
@@ -806,7 +806,7 @@ model Vaccination {
 /// ─────────────────────────────────────────
 
 model HostelRoom {
-  id          String   @id @default(uuid())
+  id          String   @id @default(uuid()) @db.Uuid
   tenantId    String   @db.Uuid
   tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
@@ -827,7 +827,7 @@ model HostelRoom {
 }
 
 model HostelAssignment {
-  id          String     @id @default(uuid())
+  id          String     @id @default(uuid()) @db.Uuid
   tenantId    String     @db.Uuid
   tenant      Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   
@@ -848,7 +848,7 @@ model HostelAssignment {
 }
 
 model MealPlan {
-  id          String   @id @default(uuid())
+  id          String   @id @default(uuid()) @db.Uuid
   tenantId    String   @db.Uuid
   tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
@@ -865,7 +865,7 @@ model MealPlan {
 }
 
 model VisitorLog {
-  id          String   @id @default(uuid())
+  id          String   @id @default(uuid()) @db.Uuid
   tenantId    String   @db.Uuid
   tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
@@ -889,7 +889,7 @@ model VisitorLog {
 /// ─────────────────────────────────────────
 
 model Activity {
-  id          String   @id @default(uuid())
+  id          String   @id @default(uuid()) @db.Uuid
   tenantId    String   @db.Uuid
   tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
@@ -910,7 +910,7 @@ model Activity {
 }
 
 model ActivityEnrollment {
-  id          String   @id @default(uuid())
+  id          String   @id @default(uuid()) @db.Uuid
   tenantId    String   @db.Uuid
   tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   
@@ -929,7 +929,7 @@ model ActivityEnrollment {
 }
 
 model Competition {
-  id          String   @id @default(uuid())
+  id          String   @id @default(uuid()) @db.Uuid
   tenantId    String   @db.Uuid
   tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   
@@ -954,7 +954,7 @@ model Competition {
 /// ─────────────────────────────────────────
 
 model Course {
-  id          String   @id @default(uuid())
+  id          String   @id @default(uuid()) @db.Uuid
   tenantId    String   @db.Uuid
   tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
@@ -984,7 +984,7 @@ model Course {
 }
 
 model CourseModule {
-  id          String   @id @default(uuid())
+  id          String   @id @default(uuid()) @db.Uuid
   courseId    String   @db.Uuid
   course      Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
 
@@ -1001,7 +1001,7 @@ model CourseModule {
 }
 
 model Lesson {
-  id          String       @id @default(uuid())
+  id          String       @id @default(uuid()) @db.Uuid
   tenantId    String       @db.Uuid
   tenant      Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   moduleId    String       @db.Uuid
@@ -1033,7 +1033,7 @@ enum LessonType {
 }
 
 model CourseEnrollment {
-  id          String   @id @default(uuid())
+  id          String   @id @default(uuid()) @db.Uuid
   tenantId    String   @db.Uuid
   tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   
@@ -1062,7 +1062,7 @@ enum EnrollmentStatus {
 }
 
 model LessonProgress {
-  id           String           @id @default(uuid())
+  id           String           @id @default(uuid()) @db.Uuid
   enrollmentId String           @db.Uuid
   enrollment   CourseEnrollment @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
   lessonId     String           @db.Uuid
@@ -1080,7 +1080,7 @@ model LessonProgress {
 }
 
 model Quiz {
-  id          String   @id @default(uuid())
+  id          String   @id @default(uuid()) @db.Uuid
   tenantId    String   @db.Uuid
   tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   lessonId    String?  @db.Uuid
@@ -1101,7 +1101,7 @@ model Quiz {
 }
 
 model QuizAttempt {
-  id          String   @id @default(uuid())
+  id          String   @id @default(uuid()) @db.Uuid
   quizId      String   @db.Uuid
   quiz        Quiz     @relation(fields: [quizId], references: [id], onDelete: Cascade)
   studentId   String   @db.Uuid
@@ -1119,7 +1119,7 @@ model QuizAttempt {
 }
 
 model Submission {
-  id          String   @id @default(uuid())
+  id          String   @id @default(uuid()) @db.Uuid
   tenantId    String   @db.Uuid
   tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   
@@ -1151,7 +1151,7 @@ enum SubmissionStatus {
 }
 
 model LiveClass {
-  id          String   @id @default(uuid())
+  id          String   @id @default(uuid()) @db.Uuid
   tenantId    String   @db.Uuid
   tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   
@@ -1163,7 +1163,7 @@ model LiveClass {
   scheduledAt DateTime
   duration    Int      // minutes
   meetingUrl  String?
-  meetingId   String?
+  meetingId  String?  @db.Uuid
   platform    String   // "Zoom", "Google Meet", "Teams"
   recordingUrl String?
   
@@ -1186,7 +1186,7 @@ enum LiveClassStatus {
 }
 
 model LiveClassAttendance {
-  id          String    @id @default(uuid())
+  id          String    @id @default(uuid()) @db.Uuid
   classId     String    @db.Uuid
   class       LiveClass @relation(fields: [classId], references: [id], onDelete: Cascade)
   studentId   String    @db.Uuid
@@ -1203,7 +1203,7 @@ model LiveClassAttendance {
 }
 
 model Discussion {
-  id          String   @id @default(uuid())
+  id          String   @id @default(uuid()) @db.Uuid
   tenantId    String   @db.Uuid
   tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   courseId    String   @db.Uuid
@@ -1225,7 +1225,7 @@ model Discussion {
 }
 
 model DiscussionReply {
-  id           String     @id @default(uuid())
+  id           String     @id @default(uuid()) @db.Uuid
   discussionId String     @db.Uuid
   discussion   Discussion @relation(fields: [discussionId], references: [id], onDelete: Cascade)
 
@@ -1240,7 +1240,7 @@ model DiscussionReply {
 }
 
 model Certificate {
-  id          String   @id @default(uuid())
+  id          String   @id @default(uuid()) @db.Uuid
   tenantId    String   @db.Uuid
   tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   courseId    String   @db.Uuid

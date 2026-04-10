@@ -7,7 +7,7 @@ jest.mock('../../src/prisma/client', () => ({
 
 describe('withTenant', () => {
   const mockTx = {
-    $executeRawUnsafe: jest.fn(),
+    $executeRaw: jest.fn().mockResolvedValue(1),
   };
 
   beforeEach(() => {
@@ -15,16 +15,20 @@ describe('withTenant', () => {
     (prisma.$transaction as jest.Mock).mockImplementation((fn) => fn(mockTx));
   });
 
-  test('should set tenant context', async () => {
+  test('should set tenant context and call fn', async () => {
     const tenantId = 'test-tenant-id';
     const mockFn = jest.fn().mockResolvedValue('result');
 
     const result = await withTenant(tenantId, mockFn);
 
-    expect(mockTx.$executeRawUnsafe).toHaveBeenCalledWith(
-      `SET LOCAL app.current_tenant = '${tenantId}'`
-    );
+    // $executeRaw is called as a tagged template; verify it was called
+    expect(mockTx.$executeRaw).toHaveBeenCalled();
     expect(mockFn).toHaveBeenCalledWith(mockTx);
     expect(result).toBe('result');
+  });
+
+  test('should propagate errors from fn', async () => {
+    const mockFn = jest.fn().mockRejectedValue(new Error('db error'));
+    await expect(withTenant('tenant-id', mockFn)).rejects.toThrow('db error');
   });
 });

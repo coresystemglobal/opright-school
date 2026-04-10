@@ -15,7 +15,7 @@ Multi-tenant SaaS school management platform backend (Express + TypeScript + Pri
 
 ### Prisma Schema Domains
 
-All models carry `tenantId: String @db.Uuid` with cascade delete and `@index([tenantId])`. Note: `User.id` is plain `String` (not `@db.Uuid`); `User.tenantId` IS `@db.Uuid`. Exception: `Permission` has no `tenantId` — it is global (not tenant-scoped). `Role` has an `isSystem Boolean @default(false)` field. `Tenant` has `subdomain: String?` and `domain: String?` (each `@@unique`). **`Teacher` model has two distinct subject fields**: `subject: String?` (free-text specialty, e.g. "Mathematics") AND `subjects: Subject[]` (relation to the curriculum `Subject` model) — they are not the same thing.
+All models carry `tenantId: String @db.Uuid` with cascade delete and `@index([tenantId])`. Note: `User.id` is plain `String` (not `@db.Uuid`); `User.tenantId` IS `@db.Uuid`. Exception: `Permission` has no `tenantId` — it is global (not tenant-scoped). `Role` has an `isSystem Boolean @default(false)` field. `Tenant` has `subdomain: String?` and `domain: String?` (each `@@unique`). **`Teacher` model has two distinct subject fields**: `subject: String?` (free-text specialty, e.g. "Mathematics") AND `subjects: Subject[]` (relation to the curriculum `Subject` model) — they are not the same thing. `Attendance` has `@@unique([studentId, date])` — enforces 1 record per student per day. `Timetable.teacherId` is **non-nullable** (required at creation); `Subject.teacherId` is nullable (optional). `AcademicYear` has `@@unique([tenantId, name])`; `Subject` has `@@unique([tenantId, academicYearId, classId, code])`.
 
 | Domain | Models |
 |--------|--------|
@@ -54,7 +54,7 @@ All controllers follow a consistent structure:
 | Controller | Methods |
 |---|---|
 | `roleController` | `createRole`, `getRoles`, `getRole`, `updateRole`, `deleteRole`, `getPermissions`, `assignRole` |
-| `academicYearController` | `create`, `list`, `getCurrent`, `update`, `delete` |
+| `academicYearController` | `create` (schema: `name`, `startDate`/`endDate` string→Date, `isCurrent?`), `list`, `getCurrent`, `update` (all fields partial), `delete` |
 | `termController` | `create` (schema: `name`, `academicYearId` UUID, `startDate`/`endDate` string→Date, `isCurrent?`), `list` (filter: `?academicYearId`), `getCurrent`, `update` (omits `academicYearId` — immutable; rest partial), `delete` |
 | `subjectController` | `create` (schema: `name`, `code?`, `description?`, `classId` UUID **required**, `teacherId` UUID optional, `academicYearId` UUID **required**), `list` (filters: `?classId&academicYearId&teacherId`), `getById`, `update` (omits `classId`/`academicYearId`, all partial), `delete`, `assignTeacher` (body: `{ teacherId: uuid }`) |
 | `timetableController` | `create` (schema: `academicYearId`, `subjectId`, `classId`, `teacherId` UUIDs; `dayOfWeek` 0–6; `startTime`/`endTime` HH:MM regex; `room?`), `listByClass` (`GET /timetable/class/:classId?academicYearId=`), `listByTeacher` (`GET /timetable/teacher/:teacherId?academicYearId=`), `update` (omits `academicYearId`, `subjectId`, `classId`, `teacherId` — all immutable; remaining fields partial), `delete` |
@@ -136,4 +136,5 @@ Validated at startup by Zod schema in `src/server.ts`; process exits on failure.
 - `src/services/gradebookService.ts` - `GradebookService`: assignments, grades (bulk), examinations, exam results, report cards
 - `src/services/attendanceService.ts` - `AttendanceService`: mark/bulk-mark attendance, stats, class reports; statuses: `PRESENT`, `ABSENT`, `LATE`, `EXCUSED`
 - `src/config/index.ts` - typed `config` object wrapping all env vars into structured groups: `database`, `upstash`, `brevo`, `jwt`, `storage`, `payments`; available as an alternative to reading `process.env` directly; `config.brevo.fromName` defaults to `'School SaaS'`
+- `prisma/seed.ts` - idempotent demo seed (`npm run seed`); creates subdomain `greenwood` (Greenwood Academy) with: 6 system roles (Admin/Principal/Teacher/Staff/Parent/Student, all `isSystem: true`); admin user `admin@greenwood.edu` / `Admin@1234` (Grace Adeyemi) and teacher user `teacher@greenwood.edu` / `Teacher@1234` (Samuel Okafor); academic year `2025/2026` with 3 terms; 4 classes (Primary 1, Primary 3, JSS 1, SS 1); 3 teachers; 8 students with enrollments; 13 subjects; 5 timetable slots for JSS 1; attendance records; 1 assignment + grades; 1 fee + payment; 4 events; skips any domain that already exists
 <!-- END AUTO-MANAGED -->

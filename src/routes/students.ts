@@ -21,8 +21,11 @@ router.get("/", async (req, res, next) => {
 router.post("/", async (req, res, next) => {
   try {
     const tenantId = req.tenantId!;
+    const { dob, ...rest } = req.body;
+    const data: any = { ...rest, tenantId };
+    if (dob) data.dob = new Date(dob);
     const student = await withTenant(tenantId, (tx) =>
-      tx.student.create({ data: { ...req.body, tenantId } })
+      tx.student.create({ data })
     );
     await CacheService.invalidate(tenantId, "students");
     res.status(201).json(student);
