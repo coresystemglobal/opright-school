@@ -49,7 +49,10 @@ export class CandidateService {
     applicationData: object;
     status: "PENDING" | "ADMITTED" | "REJECTED";
   }>) {
-    return this.prisma.candidate.update({ where: { id }, data: data as any });
+    return this.prisma.candidate.update({
+      where: { id, tenantId },
+      data: data as any,
+    });
   }
 
   async admit(tenantId: string, id: string) {

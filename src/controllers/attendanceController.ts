@@ -55,6 +55,16 @@ export const attendanceController = {
     }
   },
 
+  async getStudentAttendance(req: Request, res: Response) {
+    try {
+      if (!req.tenantId) return res.status(400).json({ error: "Tenant ID required" });
+      const result = await service.getStudentAttendance(req.tenantId, req.params.studentId);
+      res.json(result);
+    } catch (error) {
+      res.status(500).json({ error: error instanceof Error ? error.message : "Unknown error" });
+    }
+  },
+
   async getAttendanceStats(req: Request, res: Response) {
     try {
       if (!req.tenantId) return res.status(400).json({ error: 'Tenant ID required' });

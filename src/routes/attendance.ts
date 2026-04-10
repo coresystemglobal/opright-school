@@ -1,44 +1,9 @@
 import { Router } from "express";
-import { withTenant } from "../utils/withTenant";
-import { validate } from "../middleware/validate";
-import { attendanceSchema } from "../utils/schemas";
-import { apiLimiter } from "../middleware/rateLimiter";
+import { attendanceController } from "../controllers/attendanceController";
 
 const router = Router();
 
-router.post("/", apiLimiter, validate(attendanceSchema), async (req, res, next) => {
-  try {
-    const { studentId, date, status, remarks } = req.body;
-    const tenantId = req.tenantId!;
-    
-    const attendance = await withTenant(tenantId, (tx) =>
-      tx.attendance.create({ 
-        data: { 
-          tenantId, 
-          studentId, 
-          date: new Date(date), 
-          status: status as any,
-          remarks 
-        } 
-      })
-    );
-    res.status(201).json(attendance);
-  } catch (e) { next(e); }
-});
-
-router.get("/student/:studentId", async (req, res, next) => {
-  try {
-    const { studentId } = req.params;
-    const tenantId = req.tenantId!;
-    
-    const attendance = await withTenant(tenantId, (tx) =>
-      tx.attendance.findMany({ 
-        where: { studentId },
-        orderBy: { date: "desc" }
-      })
-    );
-    res.json(attendance);
-  } catch (e) { next(e); }
-});
+router.post("/", attendanceController.markAttendance);
+router.get("/student/:studentId", attendanceController.getStudentAttendance);
 
 export default router;

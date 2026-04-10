@@ -1,36 +1,86 @@
-import prisma from '../prisma/client';
+import {
+  AssetTransactionType,
+  PrismaClient,
+} from "@prisma/client";
 
-export const InventoryService = {
-  async createAsset(tenantId: string, data: any) {
-    return prisma.asset.create({ data: { ...data, tenantId } });
-  },
+type CreateAssetData = {
+  name: string;
+  category: string;
+  quantity?: number;
+  supplier?: string;
+  purchaseDate?: Date;
+  cost?: number;
+  location?: string;
+};
 
-  async getAssets(tenantId: string, category?: string) {
-    return prisma.asset.findMany({
-      where: { tenantId, ...(category && { category }) },
-      include: { transactions: { orderBy: { date: 'desc' }, take: 5 } }
-    });
-  },
+type RecordTransactionData = {
+  assetId: string;
+  type: AssetTransactionType;
+  quantity: number;
+  remarks?: string;
+  date?: Date;
+};
 
-  async recordTransaction(tenantId: string, data: any) {
-    const asset = await prisma.asset.findUnique({ where: { id: data.assetId } });
-    if (!asset) throw new Error('Asset not found');
+export class InventoryService {
+  constructor(private prisma: PrismaClient) {}
 
-    const newQty = data.type === 'PURCHASE' ? asset.quantity + data.quantity :
-                   data.type === 'DISPOSAL' ? asset.quantity - data.quantity : asset.quantity;
-
-    const [transaction] = await prisma.$transaction([
-      prisma.assetTransaction.create({ data: { ...data, tenantId } }),
-      prisma.asset.update({ where: { id: data.assetId }, data: { quantity: newQty } })
-    ]);
-    return transaction;
-  },
-
-  async getTransactions(tenantId: string, assetId?: string) {
-    return prisma.assetTransaction.findMany({
-      where: { tenantId, ...(assetId && { assetId }) },
-      include: { asset: true },
-      orderBy: { date: 'desc' }
+  async createAsset(tenantId: string, data: CreateAssetData) {
+    return this.prisma.asset.create({
+      data: { ...data, tenantId },
     });
   }
-};
+
+  async getAssets(tenantId: string, category?: string) {
+    return this.prisma.asset.findMany({
+      where: { tenantId, ...(category ? { category } : {}) },
+      include: {
+        transactions: {
+          orderBy: { date: "desc" },
+          take: 5,
+        },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+  }
+
+  async recordTransaction(tenantId: string, data: RecordTransactionData) {
+    const asset = await this.prisma.asset.findFirst({
+      where: { id: data.assetId, tenantId },
+    });
+
+    if (!asset) {
+      throw new Error("Asset not found");
+    }
+
+    const newQuantity =
+      data.type === AssetTransactionType.PURCHASE
+        ? asset.quantity + data.quantity
+        : data.type === AssetTransactionType.DISPOSAL
+          ? asset.quantity - data.quantity
+          : asset.quantity;
+
+    if (newQuantity < 0) {
+      throw new Error("Asset quantity cannot be negative");
+    }
+
+    const [transaction] = await this.prisma.$transaction([
+      this.prisma.assetTransaction.create({
+        data: { ...data, tenantId },
+      }),
+      this.prisma.asset.update({
+        where: { id: data.assetId, tenantId },
+        data: { quantity: newQuantity },
+      }),
+    ]);
+
+    return transaction;
+  }
+
+  async getTransactions(tenantId: string, assetId?: string) {
+    return this.prisma.assetTransaction.findMany({
+      where: { tenantId, ...(assetId ? { assetId } : {}) },
+      include: { asset: true },
+      orderBy: { date: "desc" },
+    });
+  }
+}

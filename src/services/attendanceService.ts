@@ -46,6 +46,13 @@ export class AttendanceService {
     });
   }
 
+  async getStudentAttendance(tenantId: string, studentId: string) {
+    return this.prisma.attendance.findMany({
+      where: { tenantId, studentId },
+      orderBy: { date: "desc" },
+    });
+  }
+
   async getAttendanceStats(tenantId: string, studentId: string, startDate: Date, endDate: Date) {
     const records = await this.prisma.attendance.findMany({
       where: {

@@ -1,39 +1,88 @@
-import prisma from '../prisma/client';
-import { NotificationService } from './notificationService';
-import { CacheService } from '../utils/cache';
+import { Prisma, PrismaClient } from "@prisma/client";
+import { CacheService } from "../utils/cache";
+import { NotificationService } from "./notificationService";
 
-export const SportsService = {
-  async createActivity(tenantId: string, data: any) {
-    return prisma.activity.create({ data: { ...data, tenantId } });
-  },
+type CreateActivityData = {
+  name: string;
+  type: string;
+  description?: string;
+  instructor?: string;
+  schedule?: Prisma.InputJsonValue;
+  maxCapacity?: number;
+};
+
+type EnrollStudentData = {
+  activityId: string;
+  studentId: string;
+  status?: string;
+};
+
+type CreateCompetitionData = {
+  activityId: string;
+  name: string;
+  date: Date;
+  venue?: string;
+  participants?: Prisma.InputJsonValue;
+  results?: Prisma.InputJsonValue;
+};
+
+export class SportsService {
+  constructor(private prisma: PrismaClient) {}
+
+  async createActivity(tenantId: string, data: CreateActivityData) {
+    const activity = await this.prisma.activity.create({
+      data: { ...data, tenantId },
+    });
+
+    await CacheService.invalidate(tenantId, "activities");
+    return activity;
+  }
 
   async getActivities(tenantId: string, type?: string) {
-    const cached = await CacheService.get(tenantId, 'activities', type || 'all');
+    const cacheKey = type ?? "all";
+    const cached = await CacheService.get(tenantId, "activities", cacheKey);
     if (cached) return cached;
 
-    const activities = await prisma.activity.findMany({
-      where: { tenantId, ...(type && { type }) },
-      include: { enrollments: true }
+    const activities = await this.prisma.activity.findMany({
+      where: { tenantId, ...(type ? { type } : {}) },
+      include: { enrollments: true },
+      orderBy: { createdAt: "desc" },
     });
-    await CacheService.set(tenantId, 'activities', activities, 600, type || 'all');
+
+    await CacheService.set(tenantId, "activities", activities, 600, cacheKey);
     return activities;
-  },
+  }
 
-  async enrollStudent(tenantId: string, data: any) {
-    const enrollment = await prisma.activityEnrollment.create({ data: { ...data, tenantId }, include: { activity: true } });
-    await NotificationService.notify(tenantId, data.studentId, `Enrolled in ${enrollment.activity.name}`, 'sports');
-    return enrollment;
-  },
-
-  async createCompetition(tenantId: string, data: any) {
-    return prisma.competition.create({ data: { ...data, tenantId } });
-  },
-
-  async getCompetitions(tenantId: string, activityId?: string) {
-    return prisma.competition.findMany({
-      where: { tenantId, ...(activityId && { activityId }) },
+  async enrollStudent(tenantId: string, data: EnrollStudentData) {
+    const enrollment = await this.prisma.activityEnrollment.create({
+      data: { ...data, tenantId },
       include: { activity: true },
-      orderBy: { date: 'desc' }
+    });
+
+    await Promise.all([
+      CacheService.invalidate(tenantId, "activities"),
+      NotificationService.notify(
+        tenantId,
+        data.studentId,
+        `Enrolled in ${enrollment.activity.name}`,
+        "sports"
+      ),
+    ]);
+
+    return enrollment;
+  }
+
+  async createCompetition(tenantId: string, data: CreateCompetitionData) {
+    return this.prisma.competition.create({
+      data: { ...data, tenantId },
     });
   }
-};
+
+  async getCompetitions(tenantId: string, activityId?: string) {
+    return this.prisma.competition.findMany({
+      where: { tenantId, ...(activityId ? { activityId } : {}) },
+      include: { activity: true },
+      orderBy: { date: "desc" },
+    });
+  }
+}

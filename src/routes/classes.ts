@@ -1,73 +1,12 @@
 import { Router } from "express";
-import { withTenant } from "../utils/withTenant";
-import { validate } from "../middleware/validate";
-import { apiLimiter } from "../middleware/rateLimiter";
-import { z } from "zod";
+import { classController } from "../controllers/classController";
 
 const router = Router();
 
-router.get("/", async (req, res, next) => {
-  try {
-    const tenantId = req.tenantId!;
-    const classes = await withTenant(tenantId, (tx) =>
-      tx.class.findMany({ orderBy: { createdAt: "desc" } })
-    );
-    res.json(classes);
-  } catch (e) { next(e); }
-});
-
-const classSchema = z.object({
-  name: z.string().min(1),
-  level: z.string().min(1),
-  teacherId: z.string().optional()
-});
-
-const enrollSchema = z.object({
-  studentId: z.string()
-});
-
-router.post("/", apiLimiter, validate(classSchema), async (req, res, next) => {
-  try {
-    const { name, level, teacherId } = req.body;
-    const tenantId = req.tenantId!;
-    const newClass = await withTenant(tenantId, (tx) =>
-      tx.class.create({ data: { tenantId, name, level, teacherId } })
-    );
-    res.status(201).json(newClass);
-  } catch (e) { next(e); }
-});
-
-router.post("/:classId/enroll", apiLimiter, validate(enrollSchema), async (req, res, next) => {
-  try {
-    const { studentId } = req.body;
-    const { classId } = req.params;
-    const tenantId = req.tenantId!;
-    
-    const enrollment = await withTenant(tenantId, (tx) =>
-      tx.enrollment.create({ data: { tenantId, studentId, classId } })
-    );
-    res.status(201).json(enrollment);
-  } catch (e) { next(e); }
-});
-
-router.put("/:id", validate(classSchema.partial()), async (req, res, next) => {
-  try {
-    const tenantId = req.tenantId!;
-    const updated = await withTenant(tenantId, (tx) =>
-      tx.class.update({ where: { id: req.params.id }, data: req.body })
-    );
-    res.json(updated);
-  } catch (e) { next(e); }
-});
-
-router.delete("/:id", async (req, res, next) => {
-  try {
-    const tenantId = req.tenantId!;
-    await withTenant(tenantId, (tx) =>
-      tx.class.delete({ where: { id: req.params.id } })
-    );
-    res.status(204).send();
-  } catch (e) { next(e); }
-});
+router.get("/", classController.list);
+router.post("/", classController.create);
+router.post("/:classId/enroll", classController.enrollStudent);
+router.put("/:id", classController.update);
+router.delete("/:id", classController.delete);
 
 export default router;
