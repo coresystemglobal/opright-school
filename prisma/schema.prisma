@@ -17,6 +17,7 @@ model Tenant {
   name       String
   domain     String?  // custom domain (school.com)
   subdomain  String?  // subdomain (greenwood)
+  schoolCode String?  // short uppercase code for student IDs (e.g. "GWD")
   config     Json?    // theme, settings
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
@@ -66,26 +67,35 @@ model Tenant {
   liveClasses LiveClass[]
   discussions Discussion[]
   certificates Certificate[]
+  idSequences  IdSequence[]
+  parents      Parent[]
+  candidates   Candidate[]
 
   @@unique([domain])
   @@unique([subdomain])
+  @@unique([schoolCode])
 }
 
 model User {
-  id        String   @id @default(uuid())
-  tenantId  String   @db.Uuid
-  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  id          String   @id @default(uuid())
+  tenantId    String   @db.Uuid
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
-  email     String   @unique
-  password  String
-  roleId    String?  @db.Uuid
-  role      Role?    @relation(fields: [roleId], references: [id])
-  firstName String?
-  lastName  String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  email       String?  @unique  // null for students (they login with studentCode)
+  studentCode String?           // e.g. "GWD250042" — set for student accounts
+  password    String
+  roleId      String?  @db.Uuid
+  role        Role?    @relation(fields: [roleId], references: [id])
+  firstName   String?
+  lastName    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  student     Student?  // back-relation
+  parent      Parent?   // back-relation
 
   @@index([tenantId])
+  @@index([studentCode])
 }
 
 model Role {
@@ -138,27 +148,119 @@ enum UserRole {
 }
 
 /// ─────────────────────────────────────────
-/// STUDENTS & TEACHERS
+/// ID SEQUENCES
 /// ─────────────────────────────────────────
 
-model Student {
+enum IdSequenceType {
+  STUDENT
+  CANDIDATE
+}
+
+model IdSequence {
+  id        String         @id @default(uuid()) @db.Uuid
+  tenantId  String         @db.Uuid
+  tenant    Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  type      IdSequenceType
+  year      Int
+  lastSeq   Int            @default(0)
+
+  @@unique([tenantId, type, year])
+  @@index([tenantId])
+}
+
+/// ─────────────────────────────────────────
+/// PARENTS
+/// ─────────────────────────────────────────
+
+model Parent {
   id        String   @id @default(uuid()) @db.Uuid
   tenantId  String   @db.Uuid
   tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
+  userId    String   @unique  // FK to User (parent's login account)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   firstName String
   lastName  String
-  dob       DateTime?
-  guardian  Json?    // guardian details: name, phone, email
+  phone     String?
+  email     String?
+
+  students  StudentParent[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([tenantId])
+}
+
+model StudentParent {
+  studentId String  @db.Uuid
+  parentId  String  @db.Uuid
+  student   Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  parent    Parent  @relation(fields: [parentId], references: [id], onDelete: Cascade)
+
+  @@id([studentId, parentId])
+}
+
+/// ─────────────────────────────────────────
+/// CANDIDATES (applicants)
+/// ─────────────────────────────────────────
+
+enum CandidateStatus {
+  PENDING
+  ADMITTED
+  REJECTED
+}
+
+model Candidate {
+  id              String          @id @default(uuid()) @db.Uuid
+  tenantId        String          @db.Uuid
+  tenant          Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  candidateCode   String          // e.g. "GWDC250001"
+  firstName       String
+  lastName        String
+  dob             DateTime?
+  applicationData Json?           // flexible application fields
+  status          CandidateStatus @default(PENDING)
+  admittedAt      DateTime?
+  studentId       String?         @db.Uuid  // set when admitted
+
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  @@unique([tenantId, candidateCode])
+  @@index([tenantId])
+}
+
+/// ─────────────────────────────────────────
+/// STUDENTS & TEACHERS
+/// ─────────────────────────────────────────
+
+model Student {
+  id          String   @id @default(uuid()) @db.Uuid
+  tenantId    String   @db.Uuid
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  studentCode String?  // e.g. "GWD250042" — unique per tenant
+  userId      String?  @unique  // FK to User (login account)
+  user        User?    @relation(fields: [userId], references: [id])
+
+  firstName   String
+  lastName    String
+  dob         DateTime?
+  guardian    Json?    // legacy guardian JSON — kept for migration compatibility
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   enrollments Enrollment[]
   attendances Attendance[]
   payments    Payment[]
   grades      Grade[]
   examResults ExamResult[]
+  parents     StudentParent[]
 
+  @@unique([tenantId, studentCode])
   @@index([tenantId])
   @@index([tenantId, lastName], map: "idx_student_tenant_name")
 }

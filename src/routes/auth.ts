@@ -3,9 +3,11 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { withTenant } from "../utils/withTenant";
 import { validate } from "../middleware/validate";
-import { loginSchema, registerSchema } from "../utils/schemas";
+import { loginSchema, registerSchema, studentLoginSchema } from "../utils/schemas";
 import { authLimiter } from "../middleware/rateLimiter";
 import { NotificationService } from "../services/notificationService";
+import { StudentIdService } from "../services/studentIdService";
+import prisma from "../prisma/client";
 
 const router = Router();
 
@@ -74,15 +76,72 @@ router.post("/register", authLimiter, validate(registerSchema), async (req, res,
       return [newUser, tenantData];
     });
 
-    void NotificationService.sendEmail(
-      user.email,
-      `Welcome to ${tenant?.name || "School Software"}`,
-      `Hi ${firstName || "there"},\nYour account has been created successfully at ${tenant?.name || "our school"}.`
-    ).catch((err) => {
-      console.error(`Failed to send welcome email to ${user.email}:`, err);
-    });
+    if (user.email) {
+      void NotificationService.sendEmail(
+        user.email,
+        `Welcome to ${tenant?.name || "School Software"}`,
+        `Hi ${firstName || "there"},\nYour account has been created successfully at ${tenant?.name || "our school"}.`
+      ).catch((err) => {
+        console.error(`Failed to send welcome email to ${user.email}:`, err);
+      });
+    }
 
     res.status(201).json({ id: user.id, email: user.email, roleId: user.roleId });
+  } catch (e) { next(e); }
+});
+
+// Student login — resolves tenant from the school code prefix in the student ID
+router.post("/student-login", authLimiter, validate(studentLoginSchema), async (req, res, next) => {
+  try {
+    const { studentId, password } = req.body;
+    const upperStudentId = studentId.toUpperCase();
+
+    // Extract school code prefix (e.g. "GWD250042" → "GWD")
+    const schoolCode = StudentIdService.extractSchoolCode(upperStudentId);
+    if (!schoolCode) {
+      return res.status(400).json({ error: "Invalid student ID format" });
+    }
+
+    // Resolve tenant from school code (no tenant middleware header needed)
+    const tenant = await prisma.tenant.findFirst({
+      where: { schoolCode: { equals: schoolCode, mode: "insensitive" } },
+    });
+    if (!tenant) {
+      return res.status(401).json({ error: "Invalid credentials" });
+    }
+
+    // Find the User account for this student
+    const user = await withTenant(tenant.id, (tx) =>
+      tx.user.findFirst({
+        where: { tenantId: tenant.id, studentCode: upperStudentId },
+        include: { role: true },
+      })
+    );
+
+    if (!user || !await bcrypt.compare(password, user.password)) {
+      return res.status(401).json({ error: "Invalid credentials" });
+    }
+
+    const role = normalizeRoleName(user.role?.name);
+    const token = jwt.sign(
+      { userId: user.id, tenantId: tenant.id, roleId: user.roleId, role },
+      process.env.JWT_SECRET!,
+      { expiresIn: "7d" }
+    );
+
+    res.json({
+      token,
+      user: {
+        id: user.id,
+        studentCode: user.studentCode,
+        firstName: user.firstName ?? undefined,
+        lastName: user.lastName ?? undefined,
+        roleId: user.roleId,
+        role: user.role,
+        tenantId: tenant.id,
+        tenantSubdomain: tenant.subdomain ?? undefined,
+      },
+    });
   } catch (e) { next(e); }
 });
 

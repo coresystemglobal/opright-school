@@ -57,3 +57,27 @@ export const paymentSchema = z.object({
   type: z.string(),
   description: z.string().optional()
 });
+
+// Student login — studentId + 6-char minimum password (no email required)
+export const studentLoginSchema = z.object({
+  studentId: z.string().min(6),
+  password: z.string().min(6),
+});
+
+// Parent creation / update (admin-initiated)
+export const parentSchema = z.object({
+  firstName: z.string().min(1),
+  lastName: z.string().min(1),
+  email: z.string().email().optional(),
+  phone: z.string().optional(),
+  password: z.string().min(8),
+  studentIds: z.array(z.string().uuid()).optional(),
+});
+
+// Candidate (applicant) creation
+export const candidateSchema = z.object({
+  firstName: z.string().min(1),
+  lastName: z.string().min(1),
+  dob: z.string().optional().transform(s => s ? new Date(s) : undefined),
+  applicationData: z.record(z.unknown()).optional(),
+});

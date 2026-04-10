@@ -21,6 +21,7 @@ async function main() {
       data: {
         name: 'Greenwood Academy',
         subdomain: DEMO_SUBDOMAIN,
+        schoolCode: 'GWD',
         config: {
           country: 'NG',
           schoolType: 'PRIMARY_SECONDARY',
@@ -41,6 +42,11 @@ async function main() {
     console.log(`  ✓ Tenant created: ${tenant.name} (${tenant.id})`);
   } else {
     console.log(`  · Tenant exists:  ${tenant.name} (${tenant.id})`);
+    // Patch schoolCode on existing tenant if missing (cast needed until prisma generate runs)
+    if (!(tenant as any).schoolCode) {
+      tenant = await prisma.tenant.update({ where: { id: tenant.id }, data: { schoolCode: 'GWD' } as any });
+      console.log('  ✓ Patched schoolCode → GWD on existing tenant');
+    }
   }
 
   const tid = tenant.id;
@@ -270,6 +276,29 @@ async function main() {
         data: { guardian: { ...guardian, email: 'parent@greenwood.edu' } },
       });
       console.log('  ✓ Patched guardian.email on Emeka Obi → parent@greenwood.edu');
+    }
+  }
+
+  // ── 7b. Parent model record for Funke Obi ─────────────────────────────────
+  const parentUser = await prisma.user.findFirst({ where: { tenantId: tid, email: 'parent@greenwood.edu' } });
+  const emekaObiStudent = students.find(s => s.firstName === 'Emeka' && s.lastName === 'Obi');
+  if (parentUser && emekaObiStudent) {
+    const parentRecordExists = await (prisma as any).parent.findFirst({ where: { userId: parentUser.id } });
+    if (!parentRecordExists) {
+      await (prisma as any).parent.create({
+        data: {
+          tenantId: tid,
+          userId: parentUser.id,
+          firstName: 'Funke',
+          lastName: 'Obi',
+          email: 'parent@greenwood.edu',
+          phone: '0803000001',
+          students: { create: [{ studentId: emekaObiStudent.id }] },
+        },
+      });
+      console.log('  ✓ Parent record created for Funke Obi → linked to Emeka Obi');
+    } else {
+      console.log('  · Parent record exists for Funke Obi');
     }
   }
 

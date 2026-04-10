@@ -32,6 +32,7 @@ import hostelRoutes from "./routes/hostel";
 import sportsRoutes from "./routes/sports";
 import uploadRoutes from "./routes/upload";
 import parentRoutes from "./routes/parent";
+import candidateRoutes from "./routes/candidates";
 import courseRoutes from "./routes/courses";
 import elearningRoutes from "./routes/elearning";
 import queueRoutes from "./routes/queue";
@@ -91,6 +92,8 @@ app.use("/hostel", authMiddleware, requireRole("ADMIN", "STAFF"), hostelRoutes);
 app.use("/sports", authMiddleware, requireRole("ADMIN", "TEACHER"), sportsRoutes);
 app.use("/upload", authMiddleware, uploadRoutes);
 app.use("/parent", authMiddleware, requireRole("PARENT"), parentRoutes);
+app.use("/parents", authMiddleware, requireRole("ADMIN"), parentRoutes);
+app.use("/candidates", authMiddleware, requireRole("ADMIN"), candidateRoutes);
 app.use("/courses", authMiddleware, requireRole("ADMIN", "TEACHER"), courseRoutes);
 app.use("/elearning", authMiddleware, elearningRoutes);
 
