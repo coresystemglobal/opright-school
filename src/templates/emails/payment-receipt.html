@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Payment Receipt – {{receiptNumber}}</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Space+Grotesk:wght@500;700&display=swap');
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background-color: #FAF8F5; font-family: 'Manrope', Arial, sans-serif; color: #1D2840; -webkit-font-smoothing: antialiased; }
+    .wrapper { max-width: 600px; margin: 32px auto; background: #ffffff; border-radius: 16px; overflow: hidden; border: 1px solid #E8DFD0; }
+    .header { background: linear-gradient(135deg, #1C6D82 0%, #155E71 60%, #0E4A5A 100%); padding: 40px 40px 32px; text-align: center; }
+    .logo { font-family: 'Space Grotesk', Arial, sans-serif; font-size: 22px; font-weight: 700; color: #ffffff; letter-spacing: -0.03em; }
+    .logo span { color: #7DD3E0; }
+    .header-tag { display: inline-block; margin-top: 20px; background: rgba(255,255,255,0.15); border-radius: 100px; padding: 4px 14px; font-size: 12px; color: rgba(255,255,255,0.85); letter-spacing: 0.06em; text-transform: uppercase; font-weight: 600; }
+    .header h1 { font-family: 'Space Grotesk', Arial, sans-serif; font-size: 26px; font-weight: 700; color: #ffffff; margin-top: 10px; letter-spacing: -0.03em; }
+    .status-badge { display: inline-block; margin-top: 14px; background: #22C55E; color: #ffffff; padding: 5px 16px; border-radius: 100px; font-size: 13px; font-weight: 700; letter-spacing: 0.02em; }
+    .body { padding: 36px 40px; }
+    .body p { font-size: 15px; line-height: 1.7; color: #4A5568; margin-bottom: 14px; }
+    .receipt-meta { display: flex; justify-content: space-between; margin-bottom: 24px; }
+    .receipt-meta .meta-item .meta-label { font-size: 11px; color: #9CA3AF; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; }
+    .receipt-meta .meta-item .meta-value { font-size: 14px; color: #1D2840; font-weight: 600; margin-top: 2px; }
+    .section-label { font-size: 11px; font-weight: 700; color: #1C6D82; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 12px; }
+    .detail-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+    .detail-table tr { border-bottom: 1px solid #F0EAE0; }
+    .detail-table tr:last-child { border-bottom: none; }
+    .detail-table td { font-size: 14px; padding: 11px 0; color: #4A5568; }
+    .detail-table td:last-child { text-align: right; font-weight: 600; color: #1D2840; }
+    .total-row { background: #F5EBD1; border-radius: 10px; padding: 14px 18px; display: flex; justify-content: space-between; align-items: center; margin: 4px 0 28px; }
+    .total-row .total-label { font-size: 14px; font-weight: 700; color: #1D2840; }
+    .total-row .total-amount { font-family: 'Space Grotesk', Arial, sans-serif; font-size: 22px; font-weight: 700; color: #1C6D82; letter-spacing: -0.02em; }
+    .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px; }
+    .info-cell { background: #FAF8F5; border: 1px solid #E8DFD0; border-radius: 10px; padding: 14px 16px; }
+    .info-cell .info-label { font-size: 11px; color: #9CA3AF; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 4px; }
+    .info-cell .info-value { font-size: 14px; color: #1D2840; font-weight: 600; }
+    .note { background: #F3DFC3; border-left: 3px solid #1C6D82; border-radius: 0 8px 8px 0; padding: 14px 18px; font-size: 13px; color: #5A4A38; line-height: 1.6; margin-bottom: 24px; }
+    .cta-wrap { text-align: center; margin-bottom: 8px; }
+    .cta { display: inline-block; background: #1C6D82; color: #ffffff; text-decoration: none; font-family: 'Space Grotesk', Arial, sans-serif; font-size: 15px; font-weight: 700; padding: 14px 36px; border-radius: 100px; letter-spacing: -0.01em; }
+    .footer { padding: 24px 40px; background: #FAF8F5; border-top: 1px solid #E8DFD0; text-align: center; }
+    .footer p { font-size: 12px; color: #9CA3AF; line-height: 1.6; }
+    .footer a { color: #1C6D82; text-decoration: none; }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <div class="header">
+      <div class="logo">edu<span>plus</span></div>
+      <div class="header-tag">Payment receipt</div>
+      <h1>Payment Confirmed</h1>
+      <div class="status-badge">✓ Payment Successful</div>
+    </div>
+
+    <div class="body">
+      <p>Dear <strong>{{payerName}}</strong>,</p>
+      <p>We have received your payment for <strong>{{studentName}}</strong>. Below is your official receipt. Please keep this for your records.</p>
+
+      <div class="receipt-meta">
+        <div class="meta-item">
+          <div class="meta-label">Receipt number</div>
+          <div class="meta-value">{{receiptNumber}}</div>
+        </div>
+        <div class="meta-item" style="text-align:right;">
+          <div class="meta-label">Date</div>
+          <div class="meta-value">{{paymentDate}}</div>
+        </div>
+      </div>
+
+      <div class="section-label">Payment breakdown</div>
+      <table class="detail-table">
+        <tbody>
+          {{#each items}}
+          <tr>
+            <td>{{this.description}}</td>
+            <td>{{this.amount}}</td>
+          </tr>
+          {{/each}}
+        </tbody>
+      </table>
+
+      <div class="total-row">
+        <span class="total-label">Total paid</span>
+        <span class="total-amount">{{totalAmount}}</span>
+      </div>
+
+      <div class="info-grid">
+        <div class="info-cell">
+          <div class="info-label">Student</div>
+          <div class="info-value">{{studentName}}</div>
+        </div>
+        <div class="info-cell">
+          <div class="info-label">Class</div>
+          <div class="info-value">{{className}}</div>
+        </div>
+        <div class="info-cell">
+          <div class="info-label">Payment method</div>
+          <div class="info-value">{{paymentMethod}}</div>
+        </div>
+        <div class="info-cell">
+          <div class="info-label">Term</div>
+          <div class="info-value">{{termName}}</div>
+        </div>
+      </div>
+
+      <div class="note">
+        <strong>Keep this receipt.</strong> This is your official proof of payment. For queries, quote receipt number <strong>{{receiptNumber}}</strong> when contacting the school's finance office.
+      </div>
+
+      <div class="cta-wrap">
+        <a href="{{portalUrl}}" class="cta">View payment history</a>
+      </div>
+    </div>
+
+    <div class="footer">
+      <p>Issued by {{schoolName}} · {{schoolAddress}}</p>
+      <p style="margin-top:6px;">© {{year}} EduPlus · <a href="{{portalUrl}}">Parent portal</a></p>
+    </div>
+  </div>
+</body>
+</html>

@@ -25,11 +25,11 @@ Multi-tenant SaaS school management platform backend (Express + TypeScript + Pri
 
 - `src/middleware/` - Express middleware (auth, authorization, tenant, validation, error handling)
 - `src/utils/` - Shared utilities (permissions, tenant scoping, encryption, storage, schemas)
-- `src/services/` - Business logic services (`RoleService`, `AcademicYearService`, `TermService`, `SubjectService`, `TimetableService`, `GradebookService`, `AttendanceService`, …)
-- `src/controllers/` - Route controllers (roles, academicYears, terms, subjects, timetable, gradebook, attendance, …)
-- `src/routes/` - Express route definitions
+- `src/modules/<domain>/` - Module-based structure; each domain has `controller.ts`, `service.ts`, `routes.ts` (e.g. `src/modules/academicYears/`, `src/modules/attendance/`, `src/modules/gradebook/`, …)
 - `src/prisma/` - Prisma client instance
 - `src/workers/` - Background workers
+
+Note: the flat `src/controllers/` layout no longer exists. Domain services have been moved into `src/modules/<domain>/service.ts`; only cross-cutting services remain in `src/services/` (`notificationService.ts`, `studentIdService.ts`, `tenantService.ts`).
 
 ### Prisma Schema Domains
 
@@ -78,7 +78,7 @@ All controllers follow a consistent structure:
 | `termController` | `create` (schema: `name`, `academicYearId` UUID, `startDate`/`endDate` string→Date, `isCurrent?`), `list` (filter: `?academicYearId`), `getCurrent`, `update` (omits `academicYearId` — immutable; rest partial), `delete` |
 | `subjectController` | `create` (schema: `name`, `code?`, `description?`, `classId` UUID **required**, `teacherId` UUID optional, `academicYearId` UUID **required**), `list` (filters: `?classId&academicYearId&teacherId`), `getById`, `update` (omits `classId`/`academicYearId`, all partial), `delete`, `assignTeacher` (body: `{ teacherId: uuid }`) |
 | `timetableController` | `create` (schema: `academicYearId`, `subjectId`, `classId`, `teacherId` UUIDs; `dayOfWeek` 0–6; `startTime`/`endTime` HH:MM regex; `room?`), `listByClass` (`GET /timetable/class/:classId?academicYearId=`), `listByTeacher` (`GET /timetable/teacher/:teacherId?academicYearId=`), `update` (omits `academicYearId`, `subjectId`, `classId`, `teacherId` — all immutable; remaining fields partial), `delete` |
-| `attendanceController` | `markAttendance` (schema: `studentId` uuid, `date` string→Date, `status` enum, `remarks?`), `bulkMarkAttendance` (array of same), `getAttendance` (filters: `studentId?`, `classId?`, `date?`, `startDate?`, `endDate?`), `getAttendanceStats` (params: `studentId`; query: `startDate`, `endDate`), `getClassAttendanceReport` (params: `classId`; query: `date`) |
+| `attendanceController` | `markAttendance` (schema: `studentId` uuid, `date` string→Date, `status` enum, `remarks?`), `bulkMarkAttendance` (array of same), `getAttendance` (filters: `studentId?`, `classId?`, `date?`, `startDate?`, `endDate?`), `getStudentAttendance` (params: `studentId`; returns all records for student, no date filter; used by legacy route `GET /attendance/student/:studentId`), `getAttendanceStats` (params: `studentId`; query: `startDate`, `endDate`), `getClassAttendanceReport` (params: `classId`; query: `date`) |
 | `gradebookController` | `createAssignment` (schema: `academicYearId`, `termId`, `subjectId` UUIDs, `title`, `description?`, `maxScore` positive, `weight?` positive, `dueDate?` string→Date), `listAssignments` (filters: `subjectId`, `termId`), `recordGrade` (schema: `studentId`, `subjectId` UUIDs, `assignmentId?` UUID, `score` min 0, `maxScore` positive, `remarks?`, `gradedBy?` **string** — any string, not UUID), `bulkRecordGrades`, `getStudentGrades`, `calculateSubjectAverage`, `getStudentReportCard`, `createExamination` (schema: `academicYearId`, `termId`, `subjectId` UUIDs, `name`, `examDate` string→Date, `duration?` positive, `maxScore` positive, `passingScore?` positive, `room?`), `recordExamResult` (schema: `examinationId`, `studentId` UUIDs, `score` min 0, `grade?` string, `remarks?`), `getExamResults` |
 
 ### Authorization (RBAC)
@@ -121,7 +121,7 @@ Routes mounted in `src/app.ts` (no-auth routes before `tenantMiddleware`; auth r
 | `/students` | `authMiddleware` | ADMIN, TEACHER |
 | `/teachers` | `authMiddleware` | ADMIN |
 | `/classes` | `authMiddleware` | ADMIN, TEACHER |
-| `/attendance` | `authMiddleware` | ADMIN, TEACHER |
+| `/attendance` | `authMiddleware` | ADMIN, TEACHER (legacy routes: `POST /` markAttendance, `GET /student/:studentId` getStudentAttendance) |
 | `/grades` | `authMiddleware` | ADMIN, TEACHER |
 | `/notices` | `authMiddleware` | none extra |
 | `/payments` | `authMiddleware` | ADMIN |
@@ -191,13 +191,13 @@ Validated at startup by Zod schema in `src/server.ts`; process exits on failure.
 
 - `src/prisma/client.ts` - Shared Prisma client instance (injected into every service at module load)
 - `src/utils/permissions.ts` - `RESOURCES`, `ACTIONS` constants + `hasPermission()` utility
-- `src/services/roleService.ts` - `RoleService`: role CRUD, permission assignment, `checkPermission()`
-- `src/services/academicYearService.ts` - `AcademicYearService`: create/list/getCurrent/update/delete academic years
-- `src/services/termService.ts` - `TermService`: term management scoped to an academic year
-- `src/services/subjectService.ts` - `SubjectService`: subject CRUD + `assignTeacher()`
-- `src/services/timetableService.ts` - `TimetableService`: timetable entries; query by class or teacher
-- `src/services/gradebookService.ts` - `GradebookService`: assignments, grades (bulk), examinations, exam results, report cards
-- `src/services/attendanceService.ts` - `AttendanceService`: mark/bulk-mark attendance, stats, class reports; statuses: `PRESENT`, `ABSENT`, `LATE`, `EXCUSED`
+- `src/modules/roles/service.ts` - `RoleService`: role CRUD, permission assignment, `checkPermission()`
+- `src/modules/academicYears/service.ts` - `AcademicYearService`: create/list/getCurrent/update/delete academic years
+- `src/modules/terms/service.ts` - `TermService`: term management scoped to an academic year
+- `src/modules/subjects/service.ts` - `SubjectService`: subject CRUD + `assignTeacher()`
+- `src/modules/timetables/service.ts` - `TimetableService`: timetable entries; query by class or teacher
+- `src/modules/gradebook/service.ts` - `GradebookService`: assignments, grades (bulk), examinations, exam results, report cards
+- `src/modules/attendance/service.ts` - `AttendanceService`: mark/bulk-mark attendance, stats, class reports; statuses: `PRESENT`, `ABSENT`, `LATE`, `EXCUSED`
 - `src/config/index.ts` - typed `config` object wrapping all env vars into structured groups: `database`, `upstash`, `brevo`, `jwt`, `storage`, `payments`; available as an alternative to reading `process.env` directly; `config.brevo.fromName` defaults to `'School SaaS'`
 - `prisma/seed.ts` - idempotent demo seed (`npm run seed`); creates subdomain `greenwood` (Greenwood Academy, `schoolCode: 'GWD'`) with `config.gradingSystem` bands (A=70–100, B=60–69, C=50–59, D=45–49, F=0–44); patches `schoolCode` on existing tenant if missing; 6 system roles (Admin/Principal/Teacher/Staff/Parent/Student, all `isSystem: true`); 4 demo users: admin `admin@greenwood.edu`/`Admin@1234` (Grace Adeyemi), teacher `teacher@greenwood.edu`/`Teacher@1234` (Samuel Okafor), parent `parent@greenwood.edu`/`Parent@1234` (Funke Obi — linked to student Emeka Obi via `guardian.email`), student `student@greenwood.edu`/`Student@1234` (Chisom Nkem); academic year `2025/2026` with 3 terms; 4 classes (Primary 1, Primary 3, JSS 1, SS 1); 3 teachers; 8 students with enrollments; 13 subjects; 5 timetable slots for JSS 1; attendance records; 1 assignment + grades; 1 fee + payment; 5 events; library (6 books), hostel (4 rooms + assignments), transport (2 buses + routes), inventory (6 assets), sports (4 activities), health (4 records), 3 courses, disciplinary (2 records); skips any domain that already exists. Role default permissions: Admin=all; Principal=read-only (students/teachers/classes/attendance/fees/payments/roles); Teacher=students+classes read + attendance CRUD; Staff=students/classes/fees/payments/attendance read; Parent+Student=none
 - `src/utils/seedTier1.ts` - alternative tier-1 seed (`npm run seed:tier1`); separate from the demo seed

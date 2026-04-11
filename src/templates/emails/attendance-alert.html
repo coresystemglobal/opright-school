@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Attendance Alert – {{studentName}}</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Space+Grotesk:wght@500;700&display=swap');
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background-color: #FAF8F5; font-family: 'Manrope', Arial, sans-serif; color: #1D2840; -webkit-font-smoothing: antialiased; }
+    .wrapper { max-width: 600px; margin: 32px auto; background: #ffffff; border-radius: 16px; overflow: hidden; border: 1px solid #E8DFD0; }
+    .header { background: linear-gradient(135deg, #1C6D82 0%, #155E71 60%, #0E4A5A 100%); padding: 40px 40px 32px; text-align: center; }
+    .logo { font-family: 'Space Grotesk', Arial, sans-serif; font-size: 22px; font-weight: 700; color: #ffffff; letter-spacing: -0.03em; }
+    .logo span { color: #7DD3E0; }
+    .alert-icon { font-size: 40px; margin-top: 18px; display: block; }
+    .header h1 { font-family: 'Space Grotesk', Arial, sans-serif; font-size: 24px; font-weight: 700; color: #ffffff; margin-top: 8px; letter-spacing: -0.03em; }
+    .status-badge-absent { display: inline-block; margin-top: 12px; background: #EF4444; color: #ffffff; padding: 5px 16px; border-radius: 100px; font-size: 13px; font-weight: 700; }
+    .status-badge-late { display: inline-block; margin-top: 12px; background: #F59E0B; color: #ffffff; padding: 5px 16px; border-radius: 100px; font-size: 13px; font-weight: 700; }
+    .body { padding: 36px 40px; }
+    .body p { font-size: 15px; line-height: 1.7; color: #4A5568; margin-bottom: 14px; }
+    .alert-box { background: #FEE2E2; border: 1px solid #FECACA; border-radius: 12px; padding: 20px 24px; margin: 20px 0; }
+    .alert-box.late { background: #FEF3C7; border-color: #FDE68A; }
+    .alert-box .alert-title { font-family: 'Space Grotesk', Arial, sans-serif; font-size: 16px; font-weight: 700; color: #991B1B; margin-bottom: 8px; }
+    .alert-box.late .alert-title { color: #92400E; }
+    .alert-box p { font-size: 14px; color: #7F1D1D; margin-bottom: 0; }
+    .alert-box.late p { color: #78350F; }
+    .info-row { display: flex; gap: 12px; margin: 24px 0; }
+    .info-card { flex: 1; background: #F5EBD1; border-radius: 12px; padding: 14px 16px; }
+    .info-card .info-label { font-size: 11px; font-weight: 700; color: #1C6D82; text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 4px; }
+    .info-card .info-value { font-size: 15px; font-weight: 700; color: #1D2840; }
+    .stats-row { display: flex; gap: 12px; margin-bottom: 24px; }
+    .stat { flex: 1; text-align: center; background: #FAF8F5; border: 1px solid #E8DFD0; border-radius: 12px; padding: 14px 8px; }
+    .stat .stat-number { font-family: 'Space Grotesk', Arial, sans-serif; font-size: 22px; font-weight: 700; color: #1D2840; letter-spacing: -0.03em; }
+    .stat .stat-label { font-size: 11px; color: #9CA3AF; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 2px; }
+    .stat.highlight .stat-number { color: #EF4444; }
+    .action-note { background: #F3DFC3; border-left: 3px solid #1C6D82; border-radius: 0 8px 8px 0; padding: 14px 18px; font-size: 13px; color: #5A4A38; line-height: 1.6; margin-bottom: 24px; }
+    .cta-wrap { text-align: center; margin-bottom: 8px; }
+    .cta { display: inline-block; background: #1C6D82; color: #ffffff; text-decoration: none; font-family: 'Space Grotesk', Arial, sans-serif; font-size: 15px; font-weight: 700; padding: 14px 36px; border-radius: 100px; letter-spacing: -0.01em; }
+    .footer { padding: 24px 40px; background: #FAF8F5; border-top: 1px solid #E8DFD0; text-align: center; }
+    .footer p { font-size: 12px; color: #9CA3AF; line-height: 1.6; }
+    .footer a { color: #1C6D82; text-decoration: none; }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <div class="header">
+      <div class="logo">edu<span>plus</span></div>
+      <span class="alert-icon">⚠️</span>
+      <h1>Attendance Alert</h1>
+      <div class="status-badge-{{statusLower}}">{{statusLabel}}</div>
+    </div>
+
+    <div class="body">
+      <p>Dear <strong>{{parentName}}</strong>,</p>
+      <p>This is to inform you that <strong>{{studentName}}</strong> was marked <strong>{{statusLabel}}</strong> on <strong>{{attendanceDate}}</strong>.</p>
+
+      <div class="alert-box {{#if isLate}}late{{/if}}">
+        <div class="alert-title">{{alertTitle}}</div>
+        <p>{{alertMessage}}</p>
+      </div>
+
+      <div class="info-row">
+        <div class="info-card">
+          <div class="info-label">Student</div>
+          <div class="info-value">{{studentName}}</div>
+        </div>
+        <div class="info-card">
+          <div class="info-label">Class</div>
+          <div class="info-value">{{className}}</div>
+        </div>
+        <div class="info-card">
+          <div class="info-label">Date</div>
+          <div class="info-value">{{attendanceDate}}</div>
+        </div>
+      </div>
+
+      <div class="stats-row">
+        <div class="stat">
+          <div class="stat-number">{{totalDays}}</div>
+          <div class="stat-label">School days</div>
+        </div>
+        <div class="stat">
+          <div class="stat-number">{{presentDays}}</div>
+          <div class="stat-label">Present</div>
+        </div>
+        <div class="stat highlight">
+          <div class="stat-number">{{absentDays}}</div>
+          <div class="stat-label">Absent</div>
+        </div>
+        <div class="stat">
+          <div class="stat-number">{{attendanceRate}}%</div>
+          <div class="stat-label">Rate</div>
+        </div>
+      </div>
+
+      {{#if remarks}}
+      <div class="action-note">
+        <strong>Teacher's note:</strong> {{remarks}}
+      </div>
+      {{/if}}
+
+      <p>If this absence was planned or you have already notified the school, please disregard this message. Otherwise, please contact the school at your earliest convenience.</p>
+
+      <div class="cta-wrap" style="margin-top:20px;">
+        <a href="{{portalUrl}}" class="cta">View full attendance record</a>
+      </div>
+    </div>
+
+    <div class="footer">
+      <p>Automated alert from {{schoolName}} · <a href="mailto:{{schoolEmail}}">{{schoolEmail}}</a></p>
+      <p style="margin-top:6px;">© {{year}} EduPlus · {{schoolName}}</p>
+    </div>
+  </div>
+</body>
+</html>

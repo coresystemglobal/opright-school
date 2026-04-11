@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{{eventTitle}} – {{schoolName}}</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Space+Grotesk:wght@500;700&display=swap');
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background-color: #FAF8F5; font-family: 'Manrope', Arial, sans-serif; color: #1D2840; -webkit-font-smoothing: antialiased; }
+    .wrapper { max-width: 600px; margin: 32px auto; background: #ffffff; border-radius: 16px; overflow: hidden; border: 1px solid #E8DFD0; }
+    .header { background: linear-gradient(135deg, #1C6D82 0%, #155E71 60%, #0E4A5A 100%); padding: 40px 40px 0; text-align: center; }
+    .logo { font-family: 'Space Grotesk', Arial, sans-serif; font-size: 22px; font-weight: 700; color: #ffffff; letter-spacing: -0.03em; }
+    .logo span { color: #7DD3E0; }
+    .header-tag { display: inline-block; margin-top: 20px; background: rgba(255,255,255,0.15); border-radius: 100px; padding: 4px 14px; font-size: 12px; color: rgba(255,255,255,0.85); letter-spacing: 0.06em; text-transform: uppercase; font-weight: 600; }
+    .event-banner { margin-top: 24px; background: rgba(0,0,0,0.2); border-radius: 12px 12px 0 0; padding: 28px 24px; }
+    .event-type { font-size: 11px; font-weight: 700; color: #7DD3E0; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px; }
+    .event-title { font-family: 'Space Grotesk', Arial, sans-serif; font-size: 28px; font-weight: 700; color: #ffffff; letter-spacing: -0.03em; line-height: 1.15; }
+    .body { padding: 36px 40px; }
+    .body p { font-size: 15px; line-height: 1.7; color: #4A5568; margin-bottom: 14px; }
+    .event-details { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 24px 0; }
+    .detail-card { background: #F5EBD1; border-radius: 12px; padding: 16px 18px; }
+    .detail-card .detail-icon { font-size: 18px; margin-bottom: 6px; }
+    .detail-card .detail-label { font-size: 11px; font-weight: 700; color: #1C6D82; text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 4px; }
+    .detail-card .detail-value { font-size: 15px; font-weight: 700; color: #1D2840; }
+    .detail-card .detail-sub { font-size: 12px; color: #6B7280; margin-top: 2px; }
+    .description-box { background: #FAF8F5; border: 1px solid #E8DFD0; border-radius: 12px; padding: 20px 24px; margin: 24px 0; }
+    .description-box .section-label { font-size: 11px; font-weight: 700; color: #1C6D82; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 10px; }
+    .description-box p { font-size: 14px; color: #4A5568; line-height: 1.7; margin-bottom: 0; }
+    .audience-pill { display: inline-block; background: #F3DFC3; color: #5A4A38; border-radius: 100px; padding: 4px 14px; font-size: 12px; font-weight: 600; margin-right: 6px; margin-bottom: 6px; }
+    .cta-wrap { text-align: center; margin: 28px 0 8px; }
+    .cta { display: inline-block; background: #1C6D82; color: #ffffff; text-decoration: none; font-family: 'Space Grotesk', Arial, sans-serif; font-size: 15px; font-weight: 700; padding: 14px 36px; border-radius: 100px; letter-spacing: -0.01em; }
+    .divider { height: 1px; background: #E8DFD0; margin: 28px 0; }
+    .footer { padding: 24px 40px; background: #FAF8F5; border-top: 1px solid #E8DFD0; text-align: center; }
+    .footer p { font-size: 12px; color: #9CA3AF; line-height: 1.6; }
+    .footer a { color: #1C6D82; text-decoration: none; }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <div class="header">
+      <div class="logo">edu<span>plus</span></div>
+      <div class="header-tag">{{schoolName}}</div>
+      <div class="event-banner">
+        <div class="event-type">{{eventCategory}}</div>
+        <div class="event-title">{{eventTitle}}</div>
+      </div>
+    </div>
+
+    <div class="body">
+      <p>Dear <strong>{{recipientName}}</strong>,</p>
+      <p>{{schoolName}} is pleased to invite you to the upcoming <strong>{{eventTitle}}</strong>. We look forward to your participation.</p>
+
+      <div class="event-details">
+        <div class="detail-card">
+          <div class="detail-icon">📅</div>
+          <div class="detail-label">Date</div>
+          <div class="detail-value">{{eventDate}}</div>
+          <div class="detail-sub">{{eventDay}}</div>
+        </div>
+        <div class="detail-card">
+          <div class="detail-icon">🕐</div>
+          <div class="detail-label">Time</div>
+          <div class="detail-value">{{startTime}}</div>
+          <div class="detail-sub">Ends {{endTime}}</div>
+        </div>
+        <div class="detail-card">
+          <div class="detail-icon">📍</div>
+          <div class="detail-label">Venue</div>
+          <div class="detail-value">{{venue}}</div>
+          <div class="detail-sub">{{venueDetail}}</div>
+        </div>
+        <div class="detail-card">
+          <div class="detail-icon">👥</div>
+          <div class="detail-label">Audience</div>
+          <div class="detail-value">{{audienceSummary}}</div>
+        </div>
+      </div>
+
+      <div class="description-box">
+        <div class="section-label">About this event</div>
+        <p>{{eventDescription}}</p>
+      </div>
+
+      {{#if targetAudience}}
+      <p style="font-size:13px; color:#6B7280; margin-bottom:8px;">This event is for:</p>
+      {{#each targetAudience}}
+      <span class="audience-pill">{{this}}</span>
+      {{/each}}
+      {{/if}}
+
+      <div class="cta-wrap">
+        <a href="{{eventUrl}}" class="cta">View event details</a>
+      </div>
+
+      <div class="divider"></div>
+      <p style="font-size:13px; color:#9CA3AF;">For more information, contact the school administration at <a href="mailto:{{schoolEmail}}" style="color:#1C6D82;">{{schoolEmail}}</a>.</p>
+    </div>
+
+    <div class="footer">
+      <p>You received this because you are a member of {{schoolName}}.</p>
+      <p style="margin-top:6px;">© {{year}} EduPlus · {{schoolName}}</p>
+    </div>
+  </div>
+</body>
+</html>

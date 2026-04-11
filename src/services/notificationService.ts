@@ -1,3 +1,5 @@
+import { buildEmail, type EmailTemplateVars } from '../templates/emailTemplates';
+
 const BREVO_API_URL = "https://api.brevo.com/v3/smtp/email";
 
 function getBrevoConfig() {
@@ -9,7 +11,7 @@ function getBrevoConfig() {
 }
 
 export const NotificationService = {
-  async sendEmail(to: string, subject: string, body: string) {
+  async sendEmail(to: string, subject: string, body: string, htmlContent?: string) {
     const { apiKey, fromEmail, fromName } = getBrevoConfig();
 
     if (!apiKey || !fromEmail) {
@@ -34,7 +36,7 @@ export const NotificationService = {
         to: [{ email: to }],
         subject,
         textContent: body,
-        htmlContent: `<p>${body.replace(/\n/g, "<br/>")}</p>`,
+        htmlContent: htmlContent ?? `<p>${body.replace(/\n/g, "<br/>")}</p>`,
       }),
     });
 
@@ -42,6 +44,23 @@ export const NotificationService = {
       const errorText = await response.text();
       throw new Error(`Brevo email failed (${response.status}): ${errorText}`);
     }
+  },
+
+  /**
+   * Send a typed, themed email using one of the HTML templates in src/templates/emails/.
+   * The subject line is derived automatically from the template vars.
+   *
+   * @example
+   * await NotificationService.sendTemplatedEmail('parent@example.com', {
+   *   type: 'attendance-alert',
+   *   parentName: 'Mrs Obi',
+   *   studentName: 'Emeka Obi',
+   *   // … other vars
+   * });
+   */
+  async sendTemplatedEmail(to: string, vars: EmailTemplateVars) {
+    const { subject, html } = buildEmail(vars);
+    await NotificationService.sendEmail(to, subject, subject, html);
   },
 
   async notify(tenantId: string, userId: string, message: string, type: string) {

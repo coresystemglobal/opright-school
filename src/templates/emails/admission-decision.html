@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admission Decision – {{candidateName}}</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Space+Grotesk:wght@500;700&display=swap');
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background-color: #FAF8F5; font-family: 'Manrope', Arial, sans-serif; color: #1D2840; -webkit-font-smoothing: antialiased; }
+    .wrapper { max-width: 600px; margin: 32px auto; background: #ffffff; border-radius: 16px; overflow: hidden; border: 1px solid #E8DFD0; }
+    .header { background: linear-gradient(135deg, #1C6D82 0%, #155E71 60%, #0E4A5A 100%); padding: 40px 40px 32px; text-align: center; }
+    .logo { font-family: 'Space Grotesk', Arial, sans-serif; font-size: 22px; font-weight: 700; color: #ffffff; letter-spacing: -0.03em; }
+    .logo span { color: #7DD3E0; }
+    .header-icon { font-size: 44px; margin-top: 18px; display: block; }
+    .header h1 { font-family: 'Space Grotesk', Arial, sans-serif; font-size: 26px; font-weight: 700; color: #ffffff; margin-top: 8px; letter-spacing: -0.03em; }
+    .admitted-badge { display: inline-block; margin-top: 12px; background: #22C55E; color: #ffffff; padding: 5px 18px; border-radius: 100px; font-size: 13px; font-weight: 700; }
+    .rejected-badge { display: inline-block; margin-top: 12px; background: #EF4444; color: #ffffff; padding: 5px 18px; border-radius: 100px; font-size: 13px; font-weight: 700; }
+    .body { padding: 36px 40px; }
+    .body p { font-size: 15px; line-height: 1.7; color: #4A5568; margin-bottom: 14px; }
+    .admitted-banner { background: linear-gradient(135deg, #DCFCE7, #BBF7D0); border: 1px solid #86EFAC; border-radius: 12px; padding: 22px 24px; margin: 20px 0; text-align: center; }
+    .admitted-banner .banner-title { font-family: 'Space Grotesk', Arial, sans-serif; font-size: 20px; font-weight: 700; color: #166534; letter-spacing: -0.02em; }
+    .admitted-banner .banner-sub { font-size: 14px; color: #166534; margin-top: 4px; }
+    .rejected-banner { background: linear-gradient(135deg, #FEE2E2, #FECACA); border: 1px solid #FCA5A5; border-radius: 12px; padding: 22px 24px; margin: 20px 0; }
+    .rejected-banner .banner-title { font-family: 'Space Grotesk', Arial, sans-serif; font-size: 18px; font-weight: 700; color: #991B1B; }
+    .rejected-banner p { font-size: 14px; color: #7F1D1D; margin-top: 6px; margin-bottom: 0; }
+    .details-box { background: #F5EBD1; border-radius: 12px; padding: 20px 24px; margin: 20px 0; }
+    .details-box .section-label { font-size: 11px; font-weight: 700; color: #1C6D82; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 12px; }
+    .detail-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(0,0,0,0.06); }
+    .detail-row:last-child { border-bottom: none; }
+    .detail-row .key { font-size: 13px; color: #6B7280; font-weight: 500; }
+    .detail-row .value { font-size: 13px; color: #1D2840; font-weight: 700; }
+    .next-steps { margin: 24px 0; }
+    .step { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 14px; }
+    .step-number { min-width: 28px; height: 28px; background: #1C6D82; color: #ffffff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; flex-shrink: 0; }
+    .step-text { font-size: 14px; color: #4A5568; line-height: 1.6; padding-top: 3px; }
+    .step-text strong { color: #1D2840; }
+    .cta-wrap { text-align: center; margin: 28px 0 8px; }
+    .cta { display: inline-block; background: #1C6D82; color: #ffffff; text-decoration: none; font-family: 'Space Grotesk', Arial, sans-serif; font-size: 15px; font-weight: 700; padding: 14px 36px; border-radius: 100px; letter-spacing: -0.01em; }
+    .footer { padding: 24px 40px; background: #FAF8F5; border-top: 1px solid #E8DFD0; text-align: center; }
+    .footer p { font-size: 12px; color: #9CA3AF; line-height: 1.6; }
+    .footer a { color: #1C6D82; text-decoration: none; }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <div class="header">
+      <div class="logo">edu<span>plus</span></div>
+      <span class="header-icon">{{#if isAdmitted}}🎓{{else}}📋{{/if}}</span>
+      <h1>Admission Decision</h1>
+      {{#if isAdmitted}}
+      <div class="admitted-badge">✓ Admitted</div>
+      {{else}}
+      <div class="rejected-badge">Application Not Successful</div>
+      {{/if}}
+    </div>
+
+    <div class="body">
+      <p>Dear <strong>{{parentName}}</strong>,</p>
+
+      {{#if isAdmitted}}
+      <div class="admitted-banner">
+        <div class="banner-title">Congratulations, {{candidateName}}!</div>
+        <div class="banner-sub">Your application to {{schoolName}} has been accepted.</div>
+      </div>
+
+      <p>We are delighted to inform you that <strong>{{candidateName}}</strong> has been <strong>admitted</strong> to {{schoolName}} for the <strong>{{academicYear}}</strong> academic year. Please find your admission details below.</p>
+
+      <div class="details-box">
+        <div class="section-label">Admission details</div>
+        <div class="detail-row">
+          <span class="key">Student name</span>
+          <span class="value">{{candidateName}}</span>
+        </div>
+        <div class="detail-row">
+          <span class="key">Student ID</span>
+          <span class="value">{{studentCode}}</span>
+        </div>
+        <div class="detail-row">
+          <span class="key">Class assigned</span>
+          <span class="value">{{className}}</span>
+        </div>
+        <div class="detail-row">
+          <span class="key">Academic year</span>
+          <span class="value">{{academicYear}}</span>
+        </div>
+        <div class="detail-row">
+          <span class="key">Resumption date</span>
+          <span class="value">{{resumptionDate}}</span>
+        </div>
+      </div>
+
+      <div class="next-steps">
+        <p style="font-size:13px; font-weight:700; color:#1D2840; margin-bottom:14px; text-transform:uppercase; letter-spacing:0.06em;">Next steps</p>
+        <div class="step">
+          <div class="step-number">1</div>
+          <div class="step-text"><strong>Complete registration</strong> — Log in to the parent portal and complete all required registration forms.</div>
+        </div>
+        <div class="step">
+          <div class="step-number">2</div>
+          <div class="step-text"><strong>Pay acceptance fee</strong> — A non-refundable acceptance fee of <strong>{{acceptanceFee}}</strong> must be paid within {{paymentDeadlineDays}} days.</div>
+        </div>
+        <div class="step">
+          <div class="step-number">3</div>
+          <div class="step-text"><strong>Submit documents</strong> — Bring birth certificate, previous school records, and passport photographs on resumption day.</div>
+        </div>
+      </div>
+
+      <div class="cta-wrap">
+        <a href="{{portalUrl}}" class="cta">Complete registration</a>
+      </div>
+
+      {{else}}
+      <div class="rejected-banner">
+        <div class="banner-title">Application Not Successful</div>
+        <p>We regret to inform you that {{candidateName}}'s application to {{schoolName}} was not successful for the {{academicYear}} academic year.</p>
+      </div>
+
+      <p>After careful review of all applications received, we were unable to offer {{candidateName}} a place at this time due to limited availability.</p>
+      <p>We encourage you to apply again in a future admission cycle. If you have any questions or would like feedback, please contact the school's admissions office.</p>
+      {{/if}}
+    </div>
+
+    <div class="footer">
+      <p>{{schoolName}} Admissions Office · <a href="mailto:{{schoolEmail}}">{{schoolEmail}}</a></p>
+      <p style="margin-top:6px;">© {{year}} EduPlus · {{schoolName}}</p>
+    </div>
+  </div>
+</body>
+</html>

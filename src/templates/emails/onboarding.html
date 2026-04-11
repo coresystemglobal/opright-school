@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Welcome to {{schoolName}}</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Space+Grotesk:wght@500;700&display=swap');
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background-color: #FAF8F5; font-family: 'Manrope', Arial, sans-serif; color: #1D2840; -webkit-font-smoothing: antialiased; }
+    .wrapper { max-width: 600px; margin: 32px auto; background: #ffffff; border-radius: 16px; overflow: hidden; border: 1px solid #E8DFD0; }
+    .header { background: linear-gradient(135deg, #1C6D82 0%, #155E71 60%, #0E4A5A 100%); padding: 40px 40px 32px; text-align: center; }
+    .logo { font-family: 'Space Grotesk', Arial, sans-serif; font-size: 22px; font-weight: 700; color: #ffffff; letter-spacing: -0.03em; }
+    .logo span { color: #7DD3E0; }
+    .header-tag { display: inline-block; margin-top: 20px; background: rgba(255,255,255,0.15); border-radius: 100px; padding: 4px 14px; font-size: 12px; color: rgba(255,255,255,0.85); letter-spacing: 0.06em; text-transform: uppercase; font-weight: 600; }
+    .header h1 { font-family: 'Space Grotesk', Arial, sans-serif; font-size: 28px; font-weight: 700; color: #ffffff; margin-top: 12px; letter-spacing: -0.03em; line-height: 1.2; }
+    .body { padding: 36px 40px; }
+    .greeting { font-size: 16px; color: #1D2840; margin-bottom: 16px; font-weight: 500; }
+    .body p { font-size: 15px; line-height: 1.7; color: #4A5568; margin-bottom: 14px; }
+    .credentials-box { background: #F5EBD1; border: 1px solid #E8DFD0; border-radius: 12px; padding: 20px 24px; margin: 24px 0; }
+    .credentials-box .label { font-size: 11px; font-weight: 700; color: #1C6D82; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 12px; }
+    .credential-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid rgba(0,0,0,0.06); }
+    .credential-row:last-child { border-bottom: none; }
+    .credential-row .key { font-size: 13px; color: #6B7280; font-weight: 500; }
+    .credential-row .value { font-size: 13px; color: #1D2840; font-weight: 700; font-family: 'Courier New', monospace; }
+    .cta-wrap { text-align: center; margin: 28px 0; }
+    .cta { display: inline-block; background: #1C6D82; color: #ffffff; text-decoration: none; font-family: 'Space Grotesk', Arial, sans-serif; font-size: 15px; font-weight: 700; padding: 14px 36px; border-radius: 100px; letter-spacing: -0.01em; }
+    .divider { height: 1px; background: #E8DFD0; margin: 28px 0; }
+    .note { background: #F3DFC3; border-left: 3px solid #1C6D82; border-radius: 0 8px 8px 0; padding: 14px 18px; font-size: 13px; color: #5A4A38; line-height: 1.6; }
+    .footer { padding: 24px 40px; background: #FAF8F5; border-top: 1px solid #E8DFD0; text-align: center; }
+    .footer p { font-size: 12px; color: #9CA3AF; line-height: 1.6; }
+    .footer a { color: #1C6D82; text-decoration: none; }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <div class="header">
+      <div class="logo">edu<span>plus</span></div>
+      <div class="header-tag">Welcome aboard</div>
+      <h1>Your account is ready,<br/>{{firstName}}!</h1>
+    </div>
+
+    <div class="body">
+      <p class="greeting">Hi {{firstName}} {{lastName}},</p>
+      <p>You've been added to <strong>{{schoolName}}</strong> on EduPlus. Your account has been created and you can now log in to access the platform.</p>
+
+      <div class="credentials-box">
+        <div class="label">Your login details</div>
+        <div class="credential-row">
+          <span class="key">School code</span>
+          <span class="value">{{schoolCode}}</span>
+        </div>
+        <div class="credential-row">
+          <span class="key">Email</span>
+          <span class="value">{{email}}</span>
+        </div>
+        <div class="credential-row">
+          <span class="key">Temporary password</span>
+          <span class="value">{{tempPassword}}</span>
+        </div>
+        <div class="credential-row">
+          <span class="key">Role</span>
+          <span class="value">{{role}}</span>
+        </div>
+      </div>
+
+      <div class="cta-wrap">
+        <a href="{{loginUrl}}" class="cta">Log in to EduPlus</a>
+      </div>
+
+      <div class="note">
+        <strong>Security reminder:</strong> Please change your temporary password immediately after your first login. Do not share your credentials with anyone.
+      </div>
+
+      <div class="divider"></div>
+      <p>If you have any trouble logging in, contact your school administrator or reply to this email for support.</p>
+    </div>
+
+    <div class="footer">
+      <p>This email was sent to <a href="mailto:{{email}}">{{email}}</a> because an account was created for you at {{schoolName}}.</p>
+      <p style="margin-top:6px;">© {{year}} EduPlus · <a href="{{loginUrl}}">{{schoolName}}</a></p>
+    </div>
+  </div>
+</body>
+</html>
