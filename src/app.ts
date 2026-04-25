@@ -7,6 +7,8 @@ import { loggingMiddleware } from "./middleware/logging";
 import { monitoringMiddleware } from "./middleware/monitoring";
 import { errorHandler } from "./middleware/errorHandler";
 import { apiLimiter } from "./middleware/rateLimiter";
+import { domainRewriteMiddleware } from "./middleware/domain-rewrite";
+import billingRoutes from "./modules/billing/routes";
 import academicYearRoutes from "./modules/academicYears/routes";
 import attendanceRoutes from "./modules/attendance/legacyRoutes";
 import attendancesRoutes from "./modules/attendance/routes";
@@ -38,6 +40,7 @@ import termRoutes from "./modules/terms/routes";
 import timetableRoutes from "./modules/timetables/routes";
 import transportRoutes from "./modules/transport/routes";
 import uploadRoutes from "./modules/upload/routes";
+import websiteDomainRoutes from "./modules/school-website/domain.routes";
 import { CacheService } from "./utils/cache";
 
 const corsOrigins = process.env.CORS_ORIGIN
@@ -54,6 +57,7 @@ app.use(express.json());
 app.use(apiLimiter);
 app.use(loggingMiddleware);
 app.use(monitoringMiddleware);
+app.use(domainRewriteMiddleware);
 
 app.get("/health", async (_req, res) => {
   const cache = await Promise.race<string>([
@@ -96,6 +100,8 @@ app.use("/parents", authMiddleware, requireRole("ADMIN"), parentRoutes);
 app.use("/candidates", authMiddleware, requireRole("ADMIN"), candidateRoutes);
 app.use("/courses", authMiddleware, requireRole("ADMIN", "TEACHER"), courseRoutes);
 app.use("/elearning", authMiddleware, elearningRoutes);
+app.use("/billing", authMiddleware, requireRole("ADMIN"), billingRoutes);
+app.use("/api/admin/website/domain", authMiddleware, requireRole("ADMIN"), websiteDomainRoutes);
 
 app.use(errorHandler);
 

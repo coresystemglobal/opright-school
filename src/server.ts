@@ -28,6 +28,9 @@ const envSchema = z.object({
   S3_SECRET_ACCESS_KEY: z.string().optional(),
   S3_REGION: z.string().optional(),
   PAYSTACK_SECRET_KEY: z.string().optional(),
+  CLOUDFLARE_API_TOKEN: z.string().optional(),
+  CLOUDFLARE_ZONE_ID: z.string().optional(),
+  CLOUDFLARE_CNAME_TARGET: z.string().optional(),
 });
 
 const parsedEnv = envSchema.safeParse(process.env);
