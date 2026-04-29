@@ -21,7 +21,6 @@ import docsRoutes from "./modules/docs/routes";
 import elearningRoutes from "./modules/elearning/routes";
 import eventRoutes from "./modules/events/routes";
 import gradebookRoutes from "./modules/gradebook/routes";
-import gradeRoutes from "./modules/grades/routes";
 import healthRoutes from "./modules/health/routes";
 import hostelRoutes from "./modules/hostel/routes";
 import inventoryRoutes from "./modules/inventory/routes";
@@ -77,7 +76,6 @@ app.use("/students", authMiddleware, requireRole("ADMIN", "TEACHER"), studentRou
 app.use("/teachers", authMiddleware, requireRole("ADMIN"), teacherRoutes);
 app.use("/classes", authMiddleware, requireRole("ADMIN", "TEACHER"), classRoutes);
 app.use("/attendance", authMiddleware, requireRole("ADMIN", "TEACHER"), attendanceRoutes);
-app.use("/grades", authMiddleware, requireRole("ADMIN", "TEACHER"), gradeRoutes);
 app.use("/notices", authMiddleware, noticeRoutes);
 app.use("/payments", authMiddleware, requireRole("ADMIN"), paymentRoutes);
 app.use("/academic-years", authMiddleware, academicYearRoutes);

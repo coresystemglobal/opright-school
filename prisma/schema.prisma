@@ -22,6 +22,7 @@ model Tenant {
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
+  subscription Subscription?
   users      User[]
   roles      Role[]
   students   Student[]
@@ -47,6 +48,7 @@ model Tenant {
   assets Asset[]
   assetTransactions AssetTransaction[]
   events Event[]
+  notices Notice[]
   eventParticipants EventParticipant[]
   disciplinaryRecords DisciplinaryRecord[]
   healthRecords HealthRecord[]
@@ -70,10 +72,23 @@ model Tenant {
   idSequences  IdSequence[]
   parents      Parent[]
   candidates   Candidate[]
+  website      SchoolWebsite?
 
   @@unique([domain])
   @@unique([subdomain])
   @@unique([schoolCode])
+}
+
+model SchoolWebsite {
+  id                   String   @id @default(uuid()) @db.Uuid
+  tenantId             String   @unique @db.Uuid
+  tenant               Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  customDomain         String?  @unique
+  customDomainVerified Boolean  @default(false)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  @@index([customDomain])
 }
 
 model User {
@@ -93,6 +108,7 @@ model User {
 
   student     Student?  // back-relation
   parent      Parent?   // back-relation
+  noticesAuthored Notice[]
 
   @@index([tenantId])
   @@index([studentCode])
@@ -781,6 +797,25 @@ enum AssetTransactionType {
 /// EVENT MANAGEMENT
 /// ─────────────────────────────────────────
 
+model Notice {
+  id          String   @id @default(uuid()) @db.Uuid
+  tenantId    String   @db.Uuid
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  authorId    String
+  author      User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  title       String
+  content     String
+  targetRoles String[] @default([])
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([tenantId, createdAt], map: "idx_notice_tenant_created_at")
+  @@index([tenantId, authorId], map: "idx_notice_tenant_author")
+}
+
 model Event {
   id          String   @id @default(uuid()) @db.Uuid
   tenantId    String   @db.Uuid
@@ -1182,42 +1217,84 @@ model LessonProgress {
 }
 
 model Quiz {
-  id          String   @id @default(uuid()) @db.Uuid
-  tenantId    String   @db.Uuid
-  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  lessonId    String?  @db.Uuid
-  lesson      Lesson?  @relation(fields: [lessonId], references: [id], onDelete: Cascade)
-
-  title       String
-  description String?
-  duration    Int?     // minutes
-  passingScore Float   @default(70)
-  questions   Json     // [{question, type, options, answer, points}]
+  id                String                @id @default(uuid()) @db.Uuid
+  tenantId          String                @db.Uuid
+  tenant            Tenant                @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  lessonId          String?               @db.Uuid
+  lesson            Lesson?               @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  placement         QuizPlacement         @default(LESSON)
+  status            QuizStatus            @default(DRAFT)
+  courseId          String?               @db.Uuid
+  academicYearId    String?               @db.Uuid
+  termId            String?               @db.Uuid
+  subjectId         String?               @db.Uuid
+  title             String
+  description       String?
+  durationMinutes   Int?                  // minutes per attempt
+  attemptLimit      Int?
+  passMark          Float                 @default(70)
+  availableFrom     DateTime?
+  availableUntil    DateTime?
+  gradeSinkType     QuizGradeSinkType     @default(NONE)
+  assignmentId      String?               @db.Uuid
+  examinationId     String?               @db.Uuid
+  resultsVisibility QuizResultsVisibility @default(AFTER_CLOSE)
+  questions         Json                  // [{id, prompt, type, options, correctAnswer, points}]
   
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt         DateTime              @default(now())
+  updatedAt         DateTime              @updatedAt
 
-  attempts    QuizAttempt[]
+  attempts          QuizAttempt[]
 
   @@index([tenantId, lessonId])
+  @@index([tenantId, courseId])
+  @@index([tenantId, subjectId])
+  @@index([tenantId, placement, status])
 }
 
 model QuizAttempt {
-  id          String   @id @default(uuid()) @db.Uuid
-  quizId      String   @db.Uuid
-  quiz        Quiz     @relation(fields: [quizId], references: [id], onDelete: Cascade)
-  studentId   String   @db.Uuid
+  id                   String   @id @default(uuid()) @db.Uuid
+  quizId               String   @db.Uuid
+  quiz                 Quiz     @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  submittedForStudentId String  @db.Uuid
+  submittedByUserId    String?  @db.Uuid
 
-  answers     Json     // [{questionId, answer}]
-  score       Float
-  passed      Boolean
-  startedAt   DateTime @default(now())
-  completedAt DateTime?
+  answers              Json     // [{questionId, answer}]
+  score                Float
+  passed               Boolean
+  attemptNumber        Int
+  officialScoreApplied Boolean  @default(false)
+  startedAt            DateTime @default(now())
+  deadlineAt           DateTime?
+  completedAt          DateTime?
   
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
 
-  @@index([quizId, studentId])
+  @@unique([quizId, submittedForStudentId, attemptNumber])
+  @@index([quizId, submittedForStudentId])
+}
+
+enum QuizPlacement {
+  LESSON
+  ACADEMIC
+}
+
+enum QuizStatus {
+  DRAFT
+  PUBLISHED
+  CLOSED
+  ARCHIVED
+}
+
+enum QuizGradeSinkType {
+  NONE
+  ASSIGNMENT
+  EXAMINATION
+}
+
+enum QuizResultsVisibility {
+  AFTER_CLOSE
 }
 
 model Submission {
@@ -1352,10 +1429,42 @@ model Certificate {
   certificateNumber String @unique
   issuedAt    DateTime @default(now())
   fileUrl     String?
-  
+
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   @@unique([courseId, studentId])
   @@index([tenantId, studentId])
+}
+
+/// ─────────────────────────────────────────
+/// BILLING & SUBSCRIPTIONS
+/// ─────────────────────────────────────────
+
+enum SubscriptionStatus {
+  TRIAL
+  ACTIVE
+  EXPIRED
+  CANCELLED
+}
+
+model Subscription {
+  id           String             @id @default(uuid()) @db.Uuid
+  tenantId     String             @unique @db.Uuid
+  tenant       Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  studentCount Int
+  billingCycle String             // 'per_term' | 'per_session'
+  status       SubscriptionStatus @default(TRIAL)
+  amount       Int                // in Naira
+  paystackRef  String?
+
+  trialEndsAt  DateTime?
+  activatedAt  DateTime?
+  expiresAt    DateTime?
+
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+
+  @@index([tenantId])
 }
