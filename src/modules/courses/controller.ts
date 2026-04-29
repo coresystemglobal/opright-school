@@ -11,6 +11,35 @@ import {
 import { CourseService } from "./service";
 
 const service = new CourseService(prisma);
+const SUPPORTED_DIRECT_VIDEO_EXTENSIONS = [".mp4", ".m4v", ".mov", ".webm", ".ogv", ".m3u8"];
+
+function isSupportedRecordedLessonUrl(value: string) {
+  try {
+    const url = new URL(value);
+    const host = url.hostname.toLowerCase().replace(/^www\./, "");
+    const pathname = url.pathname.toLowerCase();
+
+    if (host === "youtu.be" || host.endsWith("youtube.com")) {
+      return true;
+    }
+
+    if (host === "vimeo.com" || host.endsWith(".vimeo.com")) {
+      return true;
+    }
+
+    return SUPPORTED_DIRECT_VIDEO_EXTENSIONS.some((extension) => pathname.endsWith(extension));
+  } catch {
+    return false;
+  }
+}
+
+const supportedVideoUrlSchema = z
+  .string()
+  .url()
+  .refine(
+    isSupportedRecordedLessonUrl,
+    "Only YouTube, Vimeo, or direct video file URLs are supported"
+  );
 
 const createCourseSchema = z.object({
   title: z.string().min(1),
@@ -44,6 +73,56 @@ const updateProgressSchema = z.object({
   lessonId: uuidSchema,
   completed: z.boolean(),
   timeSpent: z.coerce.number().int().nonnegative(),
+});
+
+const courseIdParamSchema = idParamSchema;
+
+const moduleIdParamSchema = z.object({
+  id: uuidSchema,
+  moduleId: uuidSchema,
+});
+
+const lessonIdParamSchema = z.object({
+  id: uuidSchema,
+  moduleId: uuidSchema,
+  lessonId: uuidSchema,
+});
+
+const createModuleSchema = z.object({
+  title: z.string().min(1),
+  description: z.string().optional(),
+});
+
+const updateModuleSchema = createModuleSchema.partial();
+
+const reorderModulesSchema = z.object({
+  moduleIds: z.array(uuidSchema).min(1),
+});
+
+const createLessonSchema = z.discriminatedUnion("type", [
+  z.object({
+    type: z.literal("VIDEO"),
+    title: z.string().min(1),
+    content: z.string().optional(),
+    videoUrl: supportedVideoUrlSchema,
+    duration: z.coerce.number().int().positive(),
+  }),
+  z.object({
+    type: z.literal("QUIZ"),
+    title: z.string().min(1),
+    content: z.string().optional(),
+  }),
+]);
+
+const updateLessonSchema = z.object({
+  title: z.string().min(1).optional(),
+  content: z.string().optional(),
+  videoUrl: supportedVideoUrlSchema.optional(),
+  duration: z.coerce.number().int().positive().optional(),
+});
+
+const reorderLessonsSchema = z.object({
+  lessonIds: z.array(uuidSchema).min(1),
 });
 
 function requireTenantId(req: Request) {
@@ -145,6 +224,100 @@ export const courseController = {
         timeSpent,
       });
       res.json(progress);
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  async createModule(req: Request, res: Response, next: NextFunction) {
+    try {
+      const tenantId = requireTenantId(req);
+      const { id } = courseIdParamSchema.parse(req.params);
+      const data = createModuleSchema.parse(req.body);
+      const module = await service.createModule(tenantId, id, data);
+      res.status(201).json(module);
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  async updateModule(req: Request, res: Response, next: NextFunction) {
+    try {
+      const tenantId = requireTenantId(req);
+      const { id, moduleId } = moduleIdParamSchema.parse(req.params);
+      const data = updateModuleSchema.parse(req.body);
+      const module = await service.updateModule(tenantId, id, moduleId, data);
+      res.json(module);
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  async reorderModules(req: Request, res: Response, next: NextFunction) {
+    try {
+      const tenantId = requireTenantId(req);
+      const { id } = courseIdParamSchema.parse(req.params);
+      const { moduleIds } = reorderModulesSchema.parse(req.body);
+      const course = await service.reorderModules(tenantId, id, moduleIds);
+      res.json(course);
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  async deleteModule(req: Request, res: Response, next: NextFunction) {
+    try {
+      const tenantId = requireTenantId(req);
+      const { id, moduleId } = moduleIdParamSchema.parse(req.params);
+      await service.deleteModule(tenantId, id, moduleId);
+      res.status(204).send();
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  async createLesson(req: Request, res: Response, next: NextFunction) {
+    try {
+      const tenantId = requireTenantId(req);
+      const { id, moduleId } = moduleIdParamSchema.parse(req.params);
+      const data = createLessonSchema.parse(req.body);
+      const lesson = await service.createLesson(tenantId, id, moduleId, data);
+      res.status(201).json(lesson);
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  async updateLesson(req: Request, res: Response, next: NextFunction) {
+    try {
+      const tenantId = requireTenantId(req);
+      const { id, moduleId, lessonId } = lessonIdParamSchema.parse(req.params);
+      const data = updateLessonSchema.parse(req.body);
+      const lesson = await service.updateLesson(tenantId, id, moduleId, lessonId, data);
+      res.json(lesson);
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  async reorderRecordedLessons(req: Request, res: Response, next: NextFunction) {
+    try {
+      const tenantId = requireTenantId(req);
+      const { id, moduleId } = moduleIdParamSchema.parse(req.params);
+      const { lessonIds } = reorderLessonsSchema.parse(req.body);
+      const course = await service.reorderRecordedLessons(tenantId, id, moduleId, lessonIds);
+      res.json(course);
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  async deleteRecordedLesson(req: Request, res: Response, next: NextFunction) {
+    try {
+      const tenantId = requireTenantId(req);
+      const { id, moduleId, lessonId } = lessonIdParamSchema.parse(req.params);
+      await service.deleteRecordedLesson(tenantId, id, moduleId, lessonId);
+      res.status(204).send();
     } catch (error) {
       next(error);
     }
