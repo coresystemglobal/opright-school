@@ -1,7 +1,8 @@
-import { Prisma, PrismaClient } from '@prisma/client';
+import { Prisma, PrismaClient, SubscriptionStatus } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import prisma from '../prisma/client';
 import { seedDefaultRoles } from '../utils/seedRoles';
+import { calculatePrice } from '../modules/billing/pricing';
 
 type DbClient = Prisma.TransactionClient | PrismaClient;
 type SchoolType = 'PRIMARY' | 'SECONDARY' | 'PRIMARY_SECONDARY';
@@ -13,7 +14,7 @@ type CreateSchoolInput = {
   adminEmail: string;
   adminPassword: string;
   schoolType: SchoolType;
-  studentTier: 'STARTER' | 'GROWING' | 'STANDARD' | 'LARGE' | 'MEGA';
+  studentCount: number;
 };
 
 type ClassTemplate = {
@@ -251,7 +252,7 @@ export class TenantService {
           config: {
             country: 'NG',
             schoolType: data.schoolType,
-            studentTier: data.studentTier,
+            studentCount: data.studentCount,
             mobileFirst: true,
             trialDays: 30,
             trialEndsAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
@@ -292,6 +293,18 @@ export class TenantService {
       });
 
       const setup = await seedSchoolDefaults(tx, tenant.id, data.schoolType);
+
+      const trialEndsAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+      await tx.subscription.create({
+        data: {
+          tenantId: tenant.id,
+          studentCount: data.studentCount,
+          billingCycle: 'per_term',
+          status: SubscriptionStatus.TRIAL,
+          amount: calculatePrice(data.studentCount),
+          trialEndsAt,
+        },
+      });
 
       return {
         tenant,
