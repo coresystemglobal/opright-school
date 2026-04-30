@@ -84,7 +84,7 @@ app.use("/subjects", authMiddleware, subjectRoutes);
 app.use("/timetables", authMiddleware, timetableRoutes);
 app.use("/attendances", authMiddleware, attendancesRoutes);
 app.use("/gradebook", authMiddleware, gradebookRoutes);
-app.use("/library", authMiddleware, requireRole("ADMIN", "TEACHER", "STAFF"), libraryRoutes);
+app.use("/library", authMiddleware, libraryRoutes);
 app.use("/transport", authMiddleware, requireRole("ADMIN", "STAFF"), transportRoutes);
 app.use("/inventory", authMiddleware, requireRole("ADMIN", "STAFF"), inventoryRoutes);
 app.use("/events", authMiddleware, requireRole("ADMIN", "TEACHER"), eventRoutes);
