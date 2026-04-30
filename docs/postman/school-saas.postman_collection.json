@@ -70,6 +70,10 @@
     {
       "key": "key",
       "value": "replace-with-upload-key"
+    },
+    {
+      "key": "uploadId",
+      "value": "replace-with-upload-id"
     }
   ],
   "item": [
@@ -194,6 +198,105 @@
               ]
             },
             "description": "Get Current Academic Year. Requires a valid bearer token."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Api",
+      "item": [
+        {
+          "name": "Create Initiate",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/website/domain/initiate",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "website",
+                "domain",
+                "initiate"
+              ]
+            },
+            "description": "Create Initiate. Requires a valid bearer token. Mounted with role restrictions: ADMIN."
+          },
+          "response": []
+        },
+        {
+          "name": "List Ssl Statu",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/website/domain/ssl-status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "website",
+                "domain",
+                "ssl-status"
+              ]
+            },
+            "description": "List Ssl Statu. Requires a valid bearer token. Mounted with role restrictions: ADMIN."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Verify",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/website/domain/verify",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "website",
+                "domain",
+                "verify"
+              ]
+            },
+            "description": "Create Verify. Requires a valid bearer token. Mounted with role restrictions: ADMIN."
           },
           "response": []
         }
@@ -513,6 +616,292 @@
             "description": "Register User. Public endpoint."
           },
           "response": []
+        },
+        {
+          "name": "Create Student Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/student-login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "student-login"
+              ]
+            },
+            "description": "Create Student Login. Public endpoint."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Billing",
+      "item": [
+        {
+          "name": "Create Initialize",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/billing/initialize",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "billing",
+                "initialize"
+              ]
+            },
+            "description": "Create Initialize. Requires a valid bearer token. Mounted with role restrictions: ADMIN."
+          },
+          "response": []
+        },
+        {
+          "name": "List Pricing",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/billing/pricing",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "billing",
+                "pricing"
+              ]
+            },
+            "description": "List Pricing. Requires a valid bearer token. Mounted with role restrictions: ADMIN."
+          },
+          "response": []
+        },
+        {
+          "name": "List Subscription",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/billing/subscription",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "billing",
+                "subscription"
+              ]
+            },
+            "description": "List Subscription. Requires a valid bearer token. Mounted with role restrictions: ADMIN."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Verify",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/billing/verify",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "billing",
+                "verify"
+              ]
+            },
+            "description": "Create Verify. Requires a valid bearer token. Mounted with role restrictions: ADMIN."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Candidates",
+      "item": [
+        {
+          "name": "List Candidates",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/candidates",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "candidates"
+              ]
+            },
+            "description": "List Candidates. Requires a valid bearer token. Mounted with role restrictions: ADMIN."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Candidate",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/candidates",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "candidates"
+              ]
+            },
+            "description": "Create Candidate. Requires a valid bearer token. Mounted with role restrictions: ADMIN."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Candidate",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/candidates/{{id}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "candidates",
+                "{{id}}"
+              ]
+            },
+            "description": "Get Candidate. Requires a valid bearer token. Mounted with role restrictions: ADMIN."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Candidate",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/candidates/{{id}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "candidates",
+                "{{id}}"
+              ]
+            },
+            "description": "Update Candidate. Requires a valid bearer token. Mounted with role restrictions: ADMIN."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Admit",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/candidates/{{id}}/admit",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "candidates",
+                "{{id}}",
+                "admit"
+              ]
+            },
+            "description": "Create Admit. Requires a valid bearer token. Mounted with role restrictions: ADMIN."
+          },
+          "response": []
         }
       ]
     },
@@ -600,6 +989,58 @@
               ]
             },
             "description": "Enroll Student In Class. Requires a valid bearer token. Mounted with role restrictions: ADMIN, TEACHER."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Class",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/classes/{{id}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "classes",
+                "{{id}}"
+              ]
+            },
+            "description": "Delete Class. Requires a valid bearer token. Mounted with role restrictions: ADMIN, TEACHER."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Class",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/classes/{{id}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "classes",
+                "{{id}}"
+              ]
+            },
+            "description": "Update Class. Requires a valid bearer token. Mounted with role restrictions: ADMIN, TEACHER."
           },
           "response": []
         }
@@ -774,6 +1215,264 @@
               ]
             },
             "description": "Enroll Student In Course. Requires a valid bearer token. Mounted with role restrictions: ADMIN, TEACHER."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Module",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/courses/{{id}}/modules",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "courses",
+                "{{id}}",
+                "modules"
+              ]
+            },
+            "description": "Create Module. Requires a valid bearer token. Mounted with role restrictions: ADMIN, TEACHER."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Module",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/courses/{{id}}/modules/{{moduleId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "courses",
+                "{{id}}",
+                "modules",
+                "{{moduleId}}"
+              ]
+            },
+            "description": "Delete Module. Requires a valid bearer token. Mounted with role restrictions: ADMIN, TEACHER."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Module",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/courses/{{id}}/modules/{{moduleId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "courses",
+                "{{id}}",
+                "modules",
+                "{{moduleId}}"
+              ]
+            },
+            "description": "Update Module. Requires a valid bearer token. Mounted with role restrictions: ADMIN, TEACHER."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Lesson",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/courses/{{id}}/modules/{{moduleId}}/lessons",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "courses",
+                "{{id}}",
+                "modules",
+                "{{moduleId}}",
+                "lessons"
+              ]
+            },
+            "description": "Create Lesson. Requires a valid bearer token. Mounted with role restrictions: ADMIN, TEACHER."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Lesson",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/courses/{{id}}/modules/{{moduleId}}/lessons/{{lessonId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "courses",
+                "{{id}}",
+                "modules",
+                "{{moduleId}}",
+                "lessons",
+                "{{lessonId}}"
+              ]
+            },
+            "description": "Delete Lesson. Requires a valid bearer token. Mounted with role restrictions: ADMIN, TEACHER."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Lesson",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/courses/{{id}}/modules/{{moduleId}}/lessons/{{lessonId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "courses",
+                "{{id}}",
+                "modules",
+                "{{moduleId}}",
+                "lessons",
+                "{{lessonId}}"
+              ]
+            },
+            "description": "Update Lesson. Requires a valid bearer token. Mounted with role restrictions: ADMIN, TEACHER."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Reorder",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/courses/{{id}}/modules/{{moduleId}}/lessons/reorder",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "courses",
+                "{{id}}",
+                "modules",
+                "{{moduleId}}",
+                "lessons",
+                "reorder"
+              ]
+            },
+            "description": "Update Reorder. Requires a valid bearer token. Mounted with role restrictions: ADMIN, TEACHER."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Reorder",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/courses/{{id}}/modules/reorder",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "courses",
+                "{{id}}",
+                "modules",
+                "reorder"
+              ]
+            },
+            "description": "Update Reorder. Requires a valid bearer token. Mounted with role restrictions: ADMIN, TEACHER."
           },
           "response": []
         },
@@ -1262,6 +1961,41 @@
           "response": []
         },
         {
+          "name": "Create Progres",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/elearning/lessons/{{lessonId}}/progress",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "elearning",
+                "lessons",
+                "{{lessonId}}",
+                "progress"
+              ]
+            },
+            "description": "Create Progres. Requires a valid bearer token."
+          },
+          "response": []
+        },
+        {
           "name": "List Live Class",
           "request": {
             "method": "GET",
@@ -1542,6 +2276,25 @@
           "response": []
         },
         {
+          "name": "List Recorded Cours",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/elearning/recorded-courses",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "elearning",
+                "recorded-courses"
+              ]
+            },
+            "description": "List Recorded Cours. Requires a valid bearer token."
+          },
+          "response": []
+        },
+        {
           "name": "List Submission",
           "request": {
             "method": "GET",
@@ -1606,6 +2359,454 @@
               ]
             },
             "description": "Grade Submission. Requires a valid bearer token."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Quiz",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/elearning/quizzes/{{id}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "elearning",
+                "quizzes",
+                "{{id}}"
+              ]
+            },
+            "description": "Get Quiz details. Requires a valid bearer token."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Quiz",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/elearning/quizzes/{{id}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "elearning",
+                "quizzes",
+                "{{id}}"
+              ]
+            },
+            "description": "Update Quiz. Requires a valid bearer token. Mounted with role restrictions: ADMIN, TEACHER.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Updated Quiz\",\n  \"passMark\": 70\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Publish Quiz",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/elearning/quizzes/{{id}}/publish",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "elearning",
+                "quizzes",
+                "{{id}}",
+                "publish"
+              ]
+            },
+            "description": "Publish a draft quiz. Mounted with role restrictions: ADMIN, TEACHER."
+          },
+          "response": []
+        },
+        {
+          "name": "Close Quiz",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/elearning/quizzes/{{id}}/close",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "elearning",
+                "quizzes",
+                "{{id}}",
+                "close"
+              ]
+            },
+            "description": "Close a quiz. Mounted with role restrictions: ADMIN, TEACHER."
+          },
+          "response": []
+        },
+        {
+          "name": "Start Quiz Attempt",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/elearning/quizzes/{{id}}/start",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "elearning",
+                "quizzes",
+                "{{id}}",
+                "start"
+              ]
+            },
+            "description": "Start a new quiz attempt. Mounted with role restrictions: STUDENT."
+          },
+          "response": []
+        },
+        {
+          "name": "Staff Submit Quiz",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/elearning/quizzes/{{id}}/staff-submit",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "elearning",
+                "quizzes",
+                "{{id}}",
+                "staff-submit"
+              ]
+            },
+            "description": "Submit quiz on behalf of a student. Mounted with role restrictions: ADMIN, TEACHER.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"studentId\": \"{{studentId}}\",\n  \"answers\": [\n    {\n      \"questionId\": \"q1\",\n      \"answer\": \"A\"\n    }\n  ],\n  \"reason\": \"Student absent\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "E-Library",
+      "item": [
+        {
+          "name": "List E-Books",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/library/ebooks?search=&genre=",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "library",
+                "ebooks"
+              ]
+            },
+            "description": "List all e-books. Available to all authenticated users."
+          },
+          "response": []
+        },
+        {
+          "name": "Upload E-Book",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/library/ebooks",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "library",
+                "ebooks"
+              ]
+            },
+            "description": "Upload e-book (PDF/EPUB, max 100MB). ADMIN, TEACHER.",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": ""
+                },
+                {
+                  "key": "title",
+                  "value": "Things Fall Apart",
+                  "type": "text"
+                },
+                {
+                  "key": "author",
+                  "value": "Chinua Achebe",
+                  "type": "text"
+                },
+                {
+                  "key": "genre",
+                  "value": "Literature",
+                  "type": "text"
+                },
+                {
+                  "key": "isDownloadable",
+                  "value": "true",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get E-Book",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/library/ebooks/{{id}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "library",
+                "ebooks",
+                "{{id}}"
+              ]
+            },
+            "description": "Get e-book details."
+          },
+          "response": []
+        },
+        {
+          "name": "Update E-Book",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/library/ebooks/{{id}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "library",
+                "ebooks",
+                "{{id}}"
+              ]
+            },
+            "description": "Update e-book metadata. ADMIN, TEACHER.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Updated Title\",\n  \"isDownloadable\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete E-Book",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/library/ebooks/{{id}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "library",
+                "ebooks",
+                "{{id}}"
+              ]
+            },
+            "description": "Delete e-book and file. ADMIN, TEACHER."
+          },
+          "response": []
+        },
+        {
+          "name": "Replace E-Book File",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/library/ebooks/{{id}}/file",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "library",
+                "ebooks",
+                "{{id}}",
+                "file"
+              ]
+            },
+            "description": "Replace file. ADMIN, TEACHER.",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": ""
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Read URL",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/library/ebooks/{{id}}/read",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "library",
+                "ebooks",
+                "{{id}}",
+                "read"
+              ]
+            },
+            "description": "Get signed URL for online reading."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Download URL",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/library/ebooks/{{id}}/download",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "library",
+                "ebooks",
+                "{{id}}",
+                "download"
+              ]
+            },
+            "description": "Get signed URL for downloading."
+          },
+          "response": []
+        },
+        {
+          "name": "List E-Book Genres",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/library/ebooks/genres",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "library",
+                "ebooks",
+                "genres"
+              ]
+            },
+            "description": "Get distinct genres."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Reading Progress",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/library/ebooks/{{id}}/progress",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "library",
+                "ebooks",
+                "{{id}}",
+                "progress"
+              ]
+            },
+            "description": "Get saved reading progress."
+          },
+          "response": []
+        },
+        {
+          "name": "Save Reading Progress",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/library/ebooks/{{id}}/progress",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "library",
+                "ebooks",
+                "{{id}}",
+                "progress"
+              ]
+            },
+            "description": "Save current page.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"currentPage\": 42,\n  \"totalPages\": 200\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
           },
           "response": []
         }
@@ -2279,6 +3480,25 @@
       "name": "Hostel",
       "item": [
         {
+          "name": "List Assignment",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/hostel/assignments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "hostel",
+                "assignments"
+              ]
+            },
+            "description": "List Assignment. Requires a valid bearer token. Mounted with role restrictions: ADMIN, STAFF."
+          },
+          "response": []
+        },
+        {
           "name": "Create Assignment",
           "request": {
             "method": "POST",
@@ -2308,6 +3528,25 @@
               ]
             },
             "description": "Create Assignment. Requires a valid bearer token. Mounted with role restrictions: ADMIN, STAFF."
+          },
+          "response": []
+        },
+        {
+          "name": "List Meal Plan",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/hostel/meal-plans",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "hostel",
+                "meal-plans"
+              ]
+            },
+            "description": "List Meal Plan. Requires a valid bearer token. Mounted with role restrictions: ADMIN, STAFF."
           },
           "response": []
         },
@@ -2393,6 +3632,25 @@
               ]
             },
             "description": "Create Room. Requires a valid bearer token. Mounted with role restrictions: ADMIN, STAFF."
+          },
+          "response": []
+        },
+        {
+          "name": "List Visitor",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/hostel/visitors",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "hostel",
+                "visitors"
+              ]
+            },
+            "description": "List Visitor. Requires a valid bearer token. Mounted with role restrictions: ADMIN, STAFF."
           },
           "response": []
         },
@@ -2906,7 +4164,7 @@
                 "notices"
               ]
             },
-            "description": "List Notices. Requires a valid bearer token. This feature currently returns HTTP 501 and is not implemented yet."
+            "description": "List Notices. Requires a valid bearer token."
           },
           "response": []
         },
@@ -2938,7 +4196,122 @@
                 "notices"
               ]
             },
-            "description": "Create Notice. Requires a valid bearer token. This feature currently returns HTTP 501 and is not implemented yet."
+            "description": "Create Notice. Requires a valid bearer token."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Notice",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/notices/{{id}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "notices",
+                "{{id}}"
+              ]
+            },
+            "description": "Update Notice. Requires a valid bearer token. Mounted with role restrictions: ADMIN, PRINCIPAL, TEACHER.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Updated Notice\",\n  \"content\": \"Updated content\",\n  \"targetRoles\": [\n    \"STUDENT\",\n    \"PARENT\"\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Notice",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/notices/{{id}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "notices",
+                "{{id}}"
+              ]
+            },
+            "description": "Delete Notice. Requires a valid bearer token. Mounted with role restrictions: ADMIN, PRINCIPAL, TEACHER."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Onboarding",
+      "item": [
+        {
+          "name": "List Pricing",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/onboarding/pricing",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "onboarding",
+                "pricing"
+              ]
+            },
+            "description": "List Pricing. Public endpoint."
+          },
+          "response": []
+        },
+        {
+          "name": "Create School",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/onboarding/school",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "onboarding",
+                "school"
+              ]
+            },
+            "description": "Create School. Public endpoint."
           },
           "response": []
         }
@@ -2947,6 +4320,38 @@
     {
       "name": "Parent",
       "item": [
+        {
+          "name": "Create Parent",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/parent",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "parent"
+              ]
+            },
+            "description": "Create Parent. Requires a valid bearer token. Mounted with role restrictions: PARENT."
+          },
+          "response": []
+        },
         {
           "name": "List Children",
           "request": {
@@ -3026,6 +4431,125 @@
               ]
             },
             "description": "Get Payment. Requires a valid bearer token. Mounted with role restrictions: PARENT."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Parents",
+      "item": [
+        {
+          "name": "Create Parent",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/parents",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "parents"
+              ]
+            },
+            "description": "Create Parent. Requires a valid bearer token. Mounted with role restrictions: ADMIN."
+          },
+          "response": []
+        },
+        {
+          "name": "List Children",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/parents/children",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "parents",
+                "children"
+              ]
+            },
+            "description": "List Children. Requires a valid bearer token. Mounted with role restrictions: ADMIN."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Attendance",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/parents/children/{{studentId}}/attendance",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "parents",
+                "children",
+                "{{studentId}}",
+                "attendance"
+              ]
+            },
+            "description": "Get Attendance. Requires a valid bearer token. Mounted with role restrictions: ADMIN."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Grade",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/parents/children/{{studentId}}/grades",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "parents",
+                "children",
+                "{{studentId}}",
+                "grades"
+              ]
+            },
+            "description": "Get Grade. Requires a valid bearer token. Mounted with role restrictions: ADMIN."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Payment",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/parents/children/{{studentId}}/payments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "parents",
+                "children",
+                "{{studentId}}",
+                "payments"
+              ]
+            },
+            "description": "Get Payment. Requires a valid bearer token. Mounted with role restrictions: ADMIN."
           },
           "response": []
         }
@@ -3571,6 +5095,25 @@
           "response": []
         },
         {
+          "name": "Get Student",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/students/{{id}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "students",
+                "{{id}}"
+              ]
+            },
+            "description": "Get Student. Requires a valid bearer token. Mounted with role restrictions: ADMIN, TEACHER."
+          },
+          "response": []
+        },
+        {
           "name": "Update Student",
           "request": {
             "method": "PUT",
@@ -3880,6 +5423,25 @@
               ]
             },
             "description": "Delete Teacher. Requires a valid bearer token. Mounted with role restrictions: ADMIN."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Teacher",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/teachers/{{id}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "teachers",
+                "{{id}}"
+              ]
+            },
+            "description": "Get Teacher. Requires a valid bearer token. Mounted with role restrictions: ADMIN."
           },
           "response": []
         },
@@ -4378,6 +5940,24 @@
       "name": "Uploads",
       "item": [
         {
+          "name": "Delete Upload",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/upload",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "upload"
+              ]
+            },
+            "description": "Delete Upload. Requires a valid bearer token."
+          },
+          "response": []
+        },
+        {
           "name": "Upload File",
           "request": {
             "method": "POST",
@@ -4425,6 +6005,25 @@
           "response": []
         },
         {
+          "name": "List Signed Url",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/upload/signed-url",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "upload",
+                "signed-url"
+              ]
+            },
+            "description": "List Signed Url. Requires a valid bearer token."
+          },
+          "response": []
+        },
+        {
           "name": "Get Signed File URL",
           "request": {
             "method": "GET",
@@ -4441,6 +6040,148 @@
               ]
             },
             "description": "Get Signed File URL. Requires a valid bearer token."
+          },
+          "response": []
+        },
+        {
+          "name": "Abort Large Video Upload",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"key\": \"schools/demo/lessons/{{id}}/2026/04/1713990200000_calculus-intro.mp4\",\n  \"uploadId\": \"replace-with-upload-id\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/upload/videos/abort",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "upload",
+                "videos",
+                "abort"
+              ]
+            },
+            "description": "Abort Large Video Upload. Requires a valid bearer token."
+          },
+          "response": []
+        },
+        {
+          "name": "Complete Large Video Upload",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"key\": \"schools/demo/lessons/{{id}}/2026/04/1713990200000_calculus-intro.mp4\",\n  \"uploadId\": \"replace-with-upload-id\",\n  \"parts\": [\n    {\n      \"partNumber\": 1,\n      \"etag\": \"replace-with-etag-1\"\n    },\n    {\n      \"partNumber\": 2,\n      \"etag\": \"replace-with-etag-2\"\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/upload/videos/complete",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "upload",
+                "videos",
+                "complete"
+              ]
+            },
+            "description": "Complete Large Video Upload. Requires a valid bearer token."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Large Video Upload",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"domain\": \"lessons\",\n  \"entityId\": \"{{id}}\",\n  \"fileName\": \"calculus-intro.mp4\",\n  \"contentType\": \"video/mp4\",\n  \"fileSize\": 73400320\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/upload/videos/initiate",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "upload",
+                "videos",
+                "initiate"
+              ]
+            },
+            "description": "Create Large Video Upload. Requires a valid bearer token."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Large Video Upload Part URL",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/upload/videos/part-url?key={{key}}&uploadId={{uploadId}}&partNumber={{partNumber}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "upload",
+                "videos",
+                "part-url"
+              ],
+              "query": [
+                {
+                  "key": "key",
+                  "value": "{{key}}",
+                  "description": "Multipart upload object key.",
+                  "disabled": false
+                },
+                {
+                  "key": "uploadId",
+                  "value": "{{uploadId}}",
+                  "description": "Multipart upload identifier.",
+                  "disabled": false
+                },
+                {
+                  "key": "partNumber",
+                  "value": "{{partNumber}}",
+                  "description": "Multipart upload part number.",
+                  "disabled": false
+                }
+              ]
+            },
+            "description": "Get Large Video Upload Part URL. Requires a valid bearer token."
           },
           "response": []
         }

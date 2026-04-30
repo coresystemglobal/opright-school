@@ -99,7 +99,7 @@ async function getRouteMounts(): Promise<Mount[]> {
   const appSource = await fs.readFile(appFile, "utf8");
   const importMap = new Map<string, string>();
 
-  for (const match of appSource.matchAll(/import\s+(\w+)\s+from\s+"(\.\/routes\/[^"]+)";/g)) {
+  for (const match of appSource.matchAll(/import\s+(\w+)\s+from\s+"(\.\/[^"]+)";/g)) {
     const [, identifier, routeImport] = match;
     importMap.set(identifier, path.join(srcRoot, routeImport.replace("./", "") + ".ts"));
   }
@@ -400,6 +400,7 @@ function buildPostmanCollection(endpoints: Endpoint[]) {
       { key: "certificateNumber", value: "replace-with-certificate-number" },
       { key: "healthRecordId", value: "replace-with-health-record-id" },
       { key: "key", value: "replace-with-upload-key" },
+      { key: "uploadId", value: "replace-with-upload-id" },
     ],
     item: Array.from(itemsByTag.entries()).map(([tag, items]) => ({
       name: tag,
@@ -461,12 +462,20 @@ function getRequestBodyConfig(method: HttpMethod, fullPath: string): RequestBody
       schema: {
         type: "object",
         properties: {
+          domain: {
+            type: "string",
+            example: "lessons",
+          },
+          entityId: {
+            type: "string",
+            example: "course-module-lesson",
+          },
           file: {
             type: "string",
             format: "binary",
           },
         },
-        required: ["file"],
+        required: ["domain", "entityId", "file"],
       },
     };
   }
@@ -907,6 +916,34 @@ function getExampleForEndpoint(method: HttpMethod, fullPath: string): unknown {
     };
   }
 
+  if (fullPath === "/upload/videos/initiate") {
+    return {
+      domain: "lessons",
+      entityId: "{{id}}",
+      fileName: "calculus-intro.mp4",
+      contentType: "video/mp4",
+      fileSize: 73400320,
+    };
+  }
+
+  if (fullPath === "/upload/videos/complete") {
+    return {
+      key: "schools/demo/lessons/{{id}}/2026/04/1713990200000_calculus-intro.mp4",
+      uploadId: "replace-with-upload-id",
+      parts: [
+        { partNumber: 1, etag: "replace-with-etag-1" },
+        { partNumber: 2, etag: "replace-with-etag-2" },
+      ],
+    };
+  }
+
+  if (fullPath === "/upload/videos/abort") {
+    return {
+      key: "schools/demo/lessons/{{id}}/2026/04/1713990200000_calculus-intro.mp4",
+      uploadId: "replace-with-upload-id",
+    };
+  }
+
   if (fullPath === "/elearning/quizzes") {
     return {
       lessonId: "{{id}}",
@@ -1143,6 +1180,19 @@ function getQueryParams(method: HttpMethod, fullPath: string): QueryParam[] | un
     ];
   }
 
+  if (method === "GET" && fullPath === "/upload/videos/part-url") {
+    return [
+      stringParam("key", "Multipart upload object key.", true),
+      stringParam("uploadId", "Multipart upload identifier.", true),
+      {
+        name: "partNumber",
+        description: "Multipart upload part number.",
+        required: true,
+        schema: { type: "integer", minimum: 1, maximum: 10000 },
+      },
+    ];
+  }
+
   if (method === "GET" && fullPath === "/elearning/quizzes") {
     return [stringParam("lessonId", "Filter quizzes by lesson identifier.")];
   }
@@ -1175,6 +1225,10 @@ function getSummary(method: HttpMethod, fullPath: string, tag: string) {
     "GET /health": "Health Check",
     "POST /queue/reports": "Process Report Webhook",
     "POST /upload": "Upload File",
+    "POST /upload/videos/initiate": "Create Large Video Upload",
+    "GET /upload/videos/part-url": "Get Large Video Upload Part URL",
+    "POST /upload/videos/complete": "Complete Large Video Upload",
+    "POST /upload/videos/abort": "Abort Large Video Upload",
     "GET /upload/signed-url/:key": "Get Signed File URL",
     "DELETE /upload/:key": "Delete Uploaded File",
     "GET /academic-years/current": "Get Current Academic Year",
