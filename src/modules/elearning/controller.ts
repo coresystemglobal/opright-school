@@ -1,12 +1,13 @@
 import { NextFunction, Request, Response } from "express";
 import { z } from "zod";
 import prisma from "../../prisma/client";
-import { ValidationError } from "../../utils/errors";
+import { UnauthorizedError, ValidationError } from "../../utils/errors";
 import {
   CertificateService,
   DiscussionService,
   LiveClassService,
   QuizService,
+  RecordedLessonService,
   SubmissionService,
 } from "./service";
 import {
@@ -20,28 +21,78 @@ const submissionService = new SubmissionService(prisma);
 const liveClassService = new LiveClassService(prisma);
 const discussionService = new DiscussionService(prisma);
 const certificateService = new CertificateService(prisma);
+const recordedLessonService = new RecordedLessonService(prisma);
 
 const quizIdParamSchema = idParamSchema;
 const lessonQuerySchema = z.object({
   lessonId: optionalUuidSchema,
+  courseId: optionalUuidSchema.optional(),
+  subjectId: optionalUuidSchema.optional(),
+  placement: z.enum(["LESSON", "ACADEMIC"]).optional(),
+  status: z.enum(["DRAFT", "PUBLISHED", "CLOSED", "ARCHIVED"]).optional(),
 });
 
+const quizQuestionSchema = z.discriminatedUnion("type", [
+  z.object({
+    id: z.string().min(1),
+    prompt: z.string().min(1),
+    type: z.literal("MULTIPLE_CHOICE"),
+    options: z
+      .array(
+        z.object({
+          id: z.string().min(1),
+          label: z.string().min(1),
+        })
+      )
+      .min(2),
+    correctAnswer: z.string().min(1),
+    points: z.coerce.number().positive(),
+  }),
+  z.object({
+    id: z.string().min(1),
+    prompt: z.string().min(1),
+    type: z.literal("TRUE_FALSE"),
+    correctAnswer: z.boolean(),
+    points: z.coerce.number().positive(),
+  }),
+]);
+
 const createQuizSchema = z.object({
+  placement: z.enum(["LESSON", "ACADEMIC"]),
   lessonId: optionalUuidSchema,
+  academicYearId: optionalUuidSchema,
+  termId: optionalUuidSchema,
+  subjectId: optionalUuidSchema,
   title: z.string().min(1),
   description: z.string().optional(),
-  duration: z.coerce.number().int().positive().optional(),
-  passingScore: z.coerce.number().nonnegative().optional(),
-  questions: z.array(z.record(z.unknown())),
+  durationMinutes: z.coerce.number().int().positive().optional(),
+  attemptLimit: z.coerce.number().int().positive().optional(),
+  passMark: z.coerce.number().min(0).max(100).optional(),
+  availableFrom: z.coerce.date().optional(),
+  availableUntil: z.coerce.date().optional(),
+  gradeSinkType: z.enum(["NONE", "ASSIGNMENT", "EXAMINATION"]).optional(),
+  questions: z.array(quizQuestionSchema).min(1),
+});
+
+const updateQuizSchema = createQuizSchema.partial();
+
+const quizAnswerSchema = z.object({
+  questionId: z.string().min(1),
+  answer: z.union([z.string(), z.boolean()]),
 });
 
 const submitQuizSchema = z.object({
-  studentId: uuidSchema,
-  answers: z.array(z.record(z.unknown())),
+  answers: z.array(quizAnswerSchema),
 });
 
 const attemptsQuerySchema = z.object({
+  studentId: optionalUuidSchema,
+});
+
+const staffSubmitQuizSchema = z.object({
   studentId: uuidSchema,
+  answers: z.array(quizAnswerSchema),
+  reason: z.string().optional(),
 });
 
 const assignmentIdParamSchema = z.object({
@@ -125,12 +176,31 @@ const certificateNumberParamSchema = z.object({
   certificateNumber: z.string().min(1),
 });
 
+const recordedLessonParamSchema = z.object({
+  lessonId: uuidSchema,
+});
+
+const syncRecordedLessonProgressSchema = z.object({
+  watchedSeconds: z.coerce.number().nonnegative(),
+});
+
 function requireTenantId(req: Request) {
   if (!req.tenantId) {
     throw new ValidationError("Tenant ID required");
   }
 
   return req.tenantId;
+}
+
+function requireActor(req: Request) {
+  if (!req.user?.userId || !req.user.role) {
+    throw new UnauthorizedError();
+  }
+
+  return {
+    userId: req.user.userId,
+    role: req.user.role,
+  };
 }
 
 export const quizController = {
@@ -148,9 +218,68 @@ export const quizController = {
   async getQuizzes(req: Request, res: Response, next: NextFunction) {
     try {
       const tenantId = requireTenantId(req);
-      const { lessonId } = lessonQuerySchema.parse(req.query);
-      const quizzes = await quizService.getQuizzes(tenantId, lessonId);
+      const actor = requireActor(req);
+      const filters = lessonQuerySchema.parse(req.query);
+      const quizzes = await quizService.getQuizzes(tenantId, actor, filters);
       res.json(quizzes);
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  async getQuiz(req: Request, res: Response, next: NextFunction) {
+    try {
+      const tenantId = requireTenantId(req);
+      const actor = requireActor(req);
+      const { id } = quizIdParamSchema.parse(req.params);
+      const quiz = await quizService.getQuiz(tenantId, id, actor);
+      res.json(quiz);
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  async updateQuiz(req: Request, res: Response, next: NextFunction) {
+    try {
+      const tenantId = requireTenantId(req);
+      const { id } = quizIdParamSchema.parse(req.params);
+      const data = updateQuizSchema.parse(req.body);
+      const quiz = await quizService.updateQuiz(tenantId, id, data);
+      res.json(quiz);
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  async publishQuiz(req: Request, res: Response, next: NextFunction) {
+    try {
+      const tenantId = requireTenantId(req);
+      const { id } = quizIdParamSchema.parse(req.params);
+      const quiz = await quizService.publishQuiz(tenantId, id);
+      res.json(quiz);
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  async closeQuiz(req: Request, res: Response, next: NextFunction) {
+    try {
+      const tenantId = requireTenantId(req);
+      const { id } = quizIdParamSchema.parse(req.params);
+      const quiz = await quizService.closeQuiz(tenantId, id);
+      res.json(quiz);
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  async startQuiz(req: Request, res: Response, next: NextFunction) {
+    try {
+      const tenantId = requireTenantId(req);
+      const { userId } = requireActor(req);
+      const { id } = quizIdParamSchema.parse(req.params);
+      const attempt = await quizService.startQuiz(tenantId, id, userId);
+      res.status(201).json(attempt);
     } catch (error) {
       next(error);
     }
@@ -159,9 +288,23 @@ export const quizController = {
   async submitQuiz(req: Request, res: Response, next: NextFunction) {
     try {
       const tenantId = requireTenantId(req);
+      const { userId } = requireActor(req);
       const { id } = quizIdParamSchema.parse(req.params);
-      const { studentId, answers } = submitQuizSchema.parse(req.body);
-      const attempt = await quizService.submitQuiz(tenantId, id, studentId, answers);
+      const { answers } = submitQuizSchema.parse(req.body);
+      const attempt = await quizService.submitQuiz(tenantId, id, userId, answers);
+      res.status(201).json(attempt);
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  async staffSubmitQuiz(req: Request, res: Response, next: NextFunction) {
+    try {
+      const tenantId = requireTenantId(req);
+      const { userId } = requireActor(req);
+      const { id } = quizIdParamSchema.parse(req.params);
+      const { studentId, answers } = staffSubmitQuizSchema.parse(req.body);
+      const attempt = await quizService.staffSubmitQuiz(tenantId, id, userId, studentId, answers);
       res.status(201).json(attempt);
     } catch (error) {
       next(error);
@@ -171,9 +314,10 @@ export const quizController = {
   async getAttempts(req: Request, res: Response, next: NextFunction) {
     try {
       const tenantId = requireTenantId(req);
+      const actor = requireActor(req);
       const { id } = quizIdParamSchema.parse(req.params);
       const { studentId } = attemptsQuerySchema.parse(req.query);
-      const attempts = await quizService.getAttempts(tenantId, id, studentId);
+      const attempts = await quizService.getAttempts(tenantId, id, actor, studentId);
       res.json(attempts);
     } catch (error) {
       next(error);
@@ -370,6 +514,43 @@ export const certificateController = {
       const { certificateNumber } = certificateNumberParamSchema.parse(req.params);
       const certificate = await certificateService.verifyCertificate(certificateNumber);
       res.json(certificate);
+    } catch (error) {
+      next(error);
+    }
+  },
+};
+
+export const recordedLessonController = {
+  async getRecordedCourses(req: Request, res: Response, next: NextFunction) {
+    try {
+      const tenantId = requireTenantId(req);
+      if (!req.user?.userId) {
+        throw new ValidationError("Authenticated user required");
+      }
+
+      const courses = await recordedLessonService.getRecordedCourses(tenantId, req.user.userId);
+      res.json(courses);
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  async syncProgress(req: Request, res: Response, next: NextFunction) {
+    try {
+      const tenantId = requireTenantId(req);
+      if (!req.user?.userId) {
+        throw new ValidationError("Authenticated user required");
+      }
+
+      const { lessonId } = recordedLessonParamSchema.parse(req.params);
+      const { watchedSeconds } = syncRecordedLessonProgressSchema.parse(req.body);
+      const result = await recordedLessonService.syncLessonProgress(
+        tenantId,
+        req.user.userId,
+        lessonId,
+        watchedSeconds
+      );
+      res.json(result);
     } catch (error) {
       next(error);
     }
