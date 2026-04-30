@@ -15,7 +15,7 @@ const schoolOnboardingSchema = z.object({
   adminEmail: z.string().email("Valid admin email is required"),
   adminPassword: z.string().min(8, "Password must be at least 8 characters"),
   schoolType: z.enum(["PRIMARY", "SECONDARY", "PRIMARY_SECONDARY"]).default("PRIMARY_SECONDARY"),
-  studentTier: z.enum(["STARTER", "GROWING", "STANDARD", "LARGE", "MEGA"]).default("STARTER"),
+  studentCount: z.number().int().min(1, "Student count must be at least 1").max(100_000),
 });
 
 export const onboardingController = {
