@@ -74,6 +74,32 @@ type QuizRecordResolved = NonNullable<QuizRecord>;
 
 const STAFF_ROLES = new Set(["ADMIN", "TEACHER"]);
 
+/**
+ * Deterministic shuffle using a seed derived from studentId + quizId.
+ * Same student always sees the same order; different students see different orders.
+ */
+function seededShuffle<T>(items: T[], seed: string): T[] {
+  const arr = [...items];
+  let hash = 0;
+  for (let i = 0; i < seed.length; i++) {
+    hash = ((hash << 5) - hash + seed.charCodeAt(i)) | 0;
+  }
+  for (let i = arr.length - 1; i > 0; i--) {
+    hash = ((hash << 5) - hash + i) | 0;
+    const j = ((hash >>> 0) % (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+function shuffleQuizQuestions(questions: QuizQuestionInput[], studentId: string, quizId: string): QuizQuestionInput[] {
+  const seed = `${studentId}:${quizId}`;
+  return seededShuffle(questions, seed).map((q) => {
+    if (q.type !== "MULTIPLE_CHOICE" || !q.options?.length) return q;
+    return { ...q, options: seededShuffle(q.options, `${seed}:${q.id}`) };
+  });
+}
+
 export class QuizService {
   constructor(private prisma: PrismaClient) {}
 
@@ -1389,7 +1415,7 @@ export class QuizService {
       resultsReleased,
       questionCount: (quiz.questions as QuizQuestionInput[]).length,
       questions: includeQuestions
-        ? (quiz.questions as QuizQuestionInput[]).map((question) => ({
+        ? shuffleQuizQuestions(quiz.questions as QuizQuestionInput[], studentId, quiz.id).map((question) => ({
             id: question.id,
             prompt: question.prompt,
             type: question.type,
