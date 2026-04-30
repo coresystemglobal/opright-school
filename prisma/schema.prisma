@@ -648,6 +648,7 @@ model Book {
   updatedAt   DateTime @updatedAt
 
   transactions BookTransaction[]
+  ebooks        EBook[]
 
   @@index([tenantId, isbn])
   @@index([tenantId, available], map: "idx_book_tenant_available")
@@ -726,7 +727,7 @@ model ReadingProgress {
   userId    String   @db.Uuid
 
   currentPage Int    @default(1)
-  totalPages  Int?   @default(null)
+  totalPages  Int?
   expiresAt   DateTime
 
   updatedAt   DateTime @updatedAt
