@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { passwordSchema } from './passwordPolicy';
 
 export const loginSchema = z.object({
   email: z.string().email(),
@@ -7,7 +8,7 @@ export const loginSchema = z.object({
 
 export const registerSchema = z.object({
   email: z.string().email(),
-  password: z.string().min(8),
+  password: passwordSchema,
   firstName: z.string().min(1),
   lastName: z.string().min(1),
   roleId: z.string().uuid()
@@ -70,7 +71,7 @@ export const parentSchema = z.object({
   lastName: z.string().min(1),
   email: z.string().email().optional(),
   phone: z.string().optional(),
-  password: z.string().min(8),
+  password: passwordSchema,
   studentIds: z.array(z.string().uuid()).optional(),
 });
 
