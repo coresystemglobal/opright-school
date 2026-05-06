@@ -2,6 +2,7 @@ import { NextFunction, Request, Response } from "express";
 import { z } from "zod";
 import prisma from "../../prisma/client";
 import { ValidationError } from "../../utils/errors";
+import { parseCsv } from "../../utils/csv";
 import {
   idParamSchema,
   optionalBooleanSchema,
@@ -318,6 +319,51 @@ export const courseController = {
       const { id, moduleId, lessonId } = lessonIdParamSchema.parse(req.params);
       await service.deleteRecordedLesson(tenantId, id, moduleId, lessonId);
       res.status(204).send();
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  async enrollCsv(req: Request, res: Response, next: NextFunction) {
+    try {
+      const tenantId = requireTenantId(req);
+      const { id } = idParamSchema.parse(req.params);
+      if (!req.file) throw new ValidationError("No file uploaded");
+
+      const rows = parseCsv(req.file.buffer);
+      if (!rows.length) throw new ValidationError("CSV is empty");
+
+      const students = await prisma.student.findMany({
+        where: { tenantId },
+        select: { id: true, firstName: true, lastName: true, studentCode: true },
+      });
+      const byName = new Map(students.map(s => [`${s.firstName} ${s.lastName}`.toLowerCase(), s.id]));
+      const byCode = new Map(students.filter(s => s.studentCode).map(s => [s.studentCode!.toUpperCase(), s.id]));
+
+      const errors: string[] = [];
+      const enrolled: any[] = [];
+
+      for (let i = 0; i < rows.length; i++) {
+        const row = rows[i];
+        const ln = i + 2;
+        let studentId = row.student_id || '';
+        if (!studentId) {
+          const name = (row.student_name || row.name || '').toLowerCase();
+          const code = (row.student_code || '').toUpperCase();
+          if (code && byCode.has(code)) studentId = byCode.get(code)!;
+          else if (name && byName.has(name)) studentId = byName.get(name)!;
+        }
+        if (!studentId) { errors.push(`Row ${ln}: cannot resolve student`); continue; }
+
+        try {
+          const enrollment = await service.enrollStudent(tenantId, id, studentId);
+          enrolled.push(enrollment);
+        } catch (e: any) {
+          errors.push(`Row ${ln}: ${e.message}`);
+        }
+      }
+
+      res.status(201).json({ imported: enrolled.length, errors });
     } catch (error) {
       next(error);
     }
