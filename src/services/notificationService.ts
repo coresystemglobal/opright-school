@@ -1,4 +1,6 @@
 import { buildEmail, type EmailTemplateVars } from '../templates/emailTemplates';
+import prisma from '../prisma/client';
+import { NotificationModuleService } from '../modules/notifications/service';
 
 const BREVO_API_URL = "https://api.brevo.com/v3/smtp/email";
 
@@ -63,8 +65,8 @@ export const NotificationService = {
     await NotificationService.sendEmail(to, subject, subject, html);
   },
 
-  async notify(tenantId: string, userId: string, message: string, type: string) {
-    console.log(`[NOTIFICATION] Tenant: ${tenantId}, User: ${userId}, Type: ${type}, Message: ${message}`);
-    // Store in-app notification (extend schema if needed)
+  async notify(tenantId: string, userId: string, message: string, type: string, link?: string) {
+    const svc = new NotificationModuleService(prisma);
+    await svc.send(tenantId, userId, { title: type, body: message, type, link });
   }
 };
