@@ -1,7 +1,9 @@
 import { Router } from "express";
+import multer from "multer";
 import { courseController } from "./controller";
 
 const router = Router();
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } });
 
 router.post("/", courseController.createCourse);
 router.get("/", courseController.getCourses);
@@ -17,6 +19,7 @@ router.put("/:id/modules/:moduleId/lessons/reorder", courseController.reorderRec
 router.put("/:id/modules/:moduleId/lessons/:lessonId", courseController.updateLesson);
 router.delete("/:id/modules/:moduleId/lessons/:lessonId", courseController.deleteRecordedLesson);
 router.post("/:id/enroll", courseController.enrollStudent);
+router.post("/:id/enroll-csv", upload.single("file"), courseController.enrollCsv);
 router.get("/enrollments/:studentId", courseController.getEnrollments);
 router.post("/progress", courseController.updateProgress);
 
