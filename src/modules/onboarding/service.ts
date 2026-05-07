@@ -1,28 +1,24 @@
-import jwt from "jsonwebtoken";
 import prisma from "../../prisma/client";
-import { ValidationError } from "../../utils/errors";
 import { CreateSchoolInput, TenantService } from "../../services/tenantService";
+import { AuthTokenService } from "../auth/tokenService";
 
 const tenantService = new TenantService(prisma);
+const tokenService = new AuthTokenService(prisma);
 
 export class OnboardingService {
   async createSchool(data: CreateSchoolInput) {
     const { tenant, adminUser, setup } = await tenantService.createSchool(data);
     const role = adminUser.role?.name?.toUpperCase() ?? "ADMIN";
-    const secret = process.env.JWT_SECRET;
-
-    if (!secret) {
-      throw new ValidationError("JWT secret is not configured");
-    }
-
-    const token = jwt.sign(
-      { userId: adminUser.id, tenantId: tenant.id, roleId: adminUser.roleId, role },
-      secret,
-      { expiresIn: "7d" }
-    );
+    const { token, refreshToken } = await tokenService.issueTokens({
+      userId: adminUser.id,
+      tenantId: tenant.id,
+      roleId: adminUser.roleId,
+      role,
+    });
 
     return {
       token,
+      refreshToken,
       user: {
         id: adminUser.id,
         email: adminUser.email,
