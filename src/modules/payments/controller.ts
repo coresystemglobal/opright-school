@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import { z } from "zod";
 import prisma from "../../prisma/client";
 import { PaymentService } from './service';
-import { uuidSchema } from "../../utils/validation";
+import { uuidSchema, idParamSchema } from "../../utils/validation";
 
 const service = new PaymentService(prisma);
 
@@ -17,6 +17,13 @@ const paymentSchema = z.object({
   studentId: z.string().uuid(),
   amount: z.coerce.number().positive(),
   method: z.string().min(1),
+});
+
+const onlinePaymentSchema = z.object({
+  feeId: z.string().uuid(),
+  studentId: z.string().uuid(),
+  amount: z.coerce.number().positive(),
+  email: z.string().email(),
 });
 
 const studentIdParamSchema = z.object({
@@ -49,6 +56,55 @@ export const paymentController = {
       const data = paymentSchema.parse(req.body);
       const payment = await service.createPayment(req.tenantId, data);
       res.status(201).json(payment);
+    } catch (error) {
+      res.status(400).json({
+        error: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
+  },
+
+  async initializeOnlinePayment(req: Request, res: Response) {
+    try {
+      if (!req.tenantId) {
+        return res.status(400).json({ error: "Tenant ID required" });
+      }
+
+      const data = onlinePaymentSchema.parse(req.body);
+      const result = await service.initializeOnlinePayment(req.tenantId, data);
+      res.status(201).json(result);
+    } catch (error) {
+      res.status(400).json({
+        error: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
+  },
+
+  async paystackWebhook(req: Request, res: Response) {
+    try {
+      const signature = req.headers['x-paystack-signature'] as string;
+      if (!signature) {
+        return res.status(400).json({ error: "Missing Paystack signature" });
+      }
+
+      // req.body is a Buffer when express.raw() middleware is used on this route
+      const rawBody = req.body as Buffer;
+      const result = await service.handlePaystackWebhook(rawBody, signature);
+      res.json(result);
+    } catch (error) {
+      res.status(400).json({
+        error: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
+  },
+
+  async confirmPayment(req: Request, res: Response) {
+    try {
+      if (!req.tenantId) {
+        return res.status(400).json({ error: "Tenant ID required" });
+      }
+      const { id } = idParamSchema.parse(req.params);
+      const payment = await service.confirmPayment(req.tenantId, id);
+      res.json(payment);
     } catch (error) {
       res.status(400).json({
         error: error instanceof Error ? error.message : "Unknown error",
