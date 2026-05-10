@@ -81,6 +81,7 @@ export class StudentService {
         });
 
         studentData.studentCode = studentCode;
+        studentData.studentId = studentCode;
         studentData.userId = user.id;
       }
 
