@@ -11,6 +11,18 @@ const createSchema = z.object({
   firstName: z.string().min(1),
   lastName: z.string().min(1),
   subject: z.string().min(1).nullable().optional(),
+  employeeId: z.string().min(1).nullable().optional(),
+  email: z.string().email().nullable().optional(),
+  phone: z.string().min(1).nullable().optional(),
+  gender: z.enum(["MALE", "FEMALE", "OTHER"]).nullable().optional(),
+  dob: z.string().datetime().nullable().optional().transform((v) => (v ? new Date(v) : null)),
+  address: z.string().min(1).nullable().optional(),
+  qualification: z.string().min(1).nullable().optional(),
+  bio: z.string().min(1).nullable().optional(),
+  photoUrl: z.string().url().nullable().optional(),
+  employmentDate: z.string().datetime().nullable().optional().transform((v) => (v ? new Date(v) : null)),
+  employmentStatus: z.enum(["FULL_TIME", "PART_TIME", "CONTRACT"]).nullable().optional(),
+  userId: z.string().nullable().optional(),
 });
 
 const updateSchema = createSchema.partial();
@@ -115,8 +127,15 @@ export const teacherController = {
 
         try {
           const teacher = await service.create(req.tenantId, {
-            firstName, lastName,
+            firstName,
+            lastName,
             subject: (row.subject || '').trim() || null,
+            employeeId: (row.employee_id || '').trim() || null,
+            email: (row.email || '').trim() || null,
+            phone: (row.phone || '').trim() || null,
+            gender: (row.gender || '').trim() || null,
+            qualification: (row.qualification || '').trim() || null,
+            employmentStatus: (row.employment_status || '').trim() || null,
           });
           created.push(teacher);
         } catch (e: any) {
@@ -132,10 +151,13 @@ export const teacherController = {
 
   async downloadCsvTemplate(req: Request, res: Response) {
     try {
-      const headers = ['first_name', 'last_name', 'subject'];
+      const headers = [
+        'first_name', 'last_name', 'subject', 'employee_id',
+        'email', 'phone', 'gender', 'qualification', 'employment_status',
+      ];
       const rows = [
-        ['Chidi', 'Eze', 'Mathematics'],
-        ['Amaka', 'Nwosu', 'English Language'],
+        ['Chidi', 'Eze', 'Mathematics', 'EMP001', 'chidi.eze@school.edu', '08012345678', 'MALE', 'B.Sc Education', 'FULL_TIME'],
+        ['Amaka', 'Nwosu', 'English Language', 'EMP002', 'amaka.nwosu@school.edu', '08098765432', 'FEMALE', 'M.A English', 'FULL_TIME'],
       ];
       const csv = buildCsv(headers, rows);
       res.setHeader('Content-Type', 'text/csv');

@@ -110,6 +110,7 @@ model User {
 
   student     Student?  // back-relation
   parent      Parent?   // back-relation
+  teacher     Teacher?  // back-relation
   noticesAuthored Notice[]
 
   @@index([tenantId])
@@ -288,16 +289,31 @@ model Teacher {
   tenantId  String   @db.Uuid
   tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
-  firstName String
-  lastName  String
-  subject   String?
+  userId    String?  @unique  // FK to User (login account)
+  user      User?    @relation(fields: [userId], references: [id])
+
+  firstName        String
+  lastName         String
+  subject          String?   // free-text specialty (legacy)
+  employeeId       String?
+  email            String?
+  phone            String?
+  gender           String?
+  dob              DateTime?
+  address          String?
+  qualification    String?
+  bio              String?
+  photoUrl         String?
+  employmentDate   DateTime?
+  employmentStatus String?   // e.g. "FULL_TIME", "PART_TIME", "CONTRACT"
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  classes   Class[]
-  subjects  Subject[]
+  classes    Class[]
+  subjects   Subject[]
   timetables Timetable[]
-  courses Course[]
+  courses    Course[]
 
   @@index([tenantId])
 }
