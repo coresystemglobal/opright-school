@@ -1,5 +1,5 @@
 import { Prisma, PrismaClient } from "@prisma/client";
-import { NotFoundError } from "../../utils/errors";
+import { ForbiddenError, NotFoundError } from "../../utils/errors";
 
 type SubmissionFilters = {
   assignmentId?: string;
@@ -14,12 +14,22 @@ type SubmissionInput = {
 export class SubmissionService {
   constructor(private prisma: PrismaClient) {}
 
+  private async resolveStudentId(tenantId: string, userId: string) {
+    const student = await this.prisma.student.findFirst({
+      where: { tenantId, userId },
+      select: { id: true },
+    });
+    if (!student) throw new ForbiddenError('Student access required');
+    return student.id;
+  }
+
   async submitAssignment(
     tenantId: string,
     assignmentId: string,
-    studentId: string,
+    userId: string,
     data: SubmissionInput
   ) {
+    const studentId = await this.resolveStudentId(tenantId, userId);
     const assignment = await this.prisma.assignment.findFirst({
       where: { tenantId, id: assignmentId },
       select: { dueDate: true },

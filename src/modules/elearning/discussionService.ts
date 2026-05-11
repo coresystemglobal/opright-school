@@ -1,26 +1,33 @@
 import { PrismaClient } from "@prisma/client";
 import { NotFoundError } from "../../utils/errors";
 
+type Actor = { userId: string; role: string };
+
 type DiscussionInput = {
   courseId: string;
   title: string;
   content: string;
-  authorId: string;
-  authorType: "STUDENT" | "TEACHER";
 };
 
 type DiscussionReplyInput = {
   content: string;
-  authorId: string;
-  authorType: "STUDENT" | "TEACHER";
 };
 
 export class DiscussionService {
   constructor(private prisma: PrismaClient) {}
 
-  async createDiscussion(tenantId: string, data: DiscussionInput) {
+  private resolveAuthorType(role: string): "STUDENT" | "TEACHER" {
+    return role === 'STUDENT' ? 'STUDENT' : 'TEACHER';
+  }
+
+  async createDiscussion(tenantId: string, actor: Actor, data: DiscussionInput) {
     return this.prisma.discussion.create({
-      data: { ...data, tenantId },
+      data: {
+        ...data,
+        tenantId,
+        authorId: actor.userId,
+        authorType: this.resolveAuthorType(actor.role),
+      },
     });
   }
 
@@ -32,11 +39,16 @@ export class DiscussionService {
     });
   }
 
-  async addReply(tenantId: string, discussionId: string, data: DiscussionReplyInput) {
+  async addReply(tenantId: string, discussionId: string, actor: Actor, data: DiscussionReplyInput) {
     await this.ensureDiscussion(tenantId, discussionId);
 
     return this.prisma.discussionReply.create({
-      data: { ...data, discussionId },
+      data: {
+        ...data,
+        discussionId,
+        authorId: actor.userId,
+        authorType: this.resolveAuthorType(actor.role),
+      },
     });
   }
 

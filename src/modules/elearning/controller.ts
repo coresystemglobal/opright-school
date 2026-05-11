@@ -10,6 +10,7 @@ import {
   RecordedLessonService,
   SubmissionService,
 } from "./service";
+import { StudentElearningService } from "./studentElearningService";
 import {
   idParamSchema,
   optionalUuidSchema,
@@ -22,6 +23,7 @@ const liveClassService = new LiveClassService(prisma);
 const discussionService = new DiscussionService(prisma);
 const certificateService = new CertificateService(prisma);
 const recordedLessonService = new RecordedLessonService(prisma);
+const studentElearningService = new StudentElearningService(prisma);
 
 const quizIdParamSchema = idParamSchema;
 const lessonQuerySchema = z.object({
@@ -105,7 +107,6 @@ const submissionFiltersSchema = z.object({
 });
 
 const submissionBodySchema = z.object({
-  studentId: uuidSchema,
   content: z.string().optional(),
   files: z.unknown().optional(),
 });
@@ -149,14 +150,10 @@ const createDiscussionSchema = z.object({
   courseId: uuidSchema,
   title: z.string().min(1),
   content: z.string().min(1),
-  authorId: uuidSchema,
-  authorType: z.enum(["STUDENT", "TEACHER"]),
 });
 
 const createReplySchema = z.object({
   content: z.string().min(1),
-  authorId: uuidSchema,
-  authorType: z.enum(["STUDENT", "TEACHER"]),
 });
 
 const pinDiscussionSchema = z.object({
@@ -329,14 +326,10 @@ export const submissionController = {
   async submitAssignment(req: Request, res: Response, next: NextFunction) {
     try {
       const tenantId = requireTenantId(req);
+      const { userId } = requireActor(req);
       const { assignmentId } = assignmentIdParamSchema.parse(req.params);
       const data = submissionBodySchema.parse(req.body);
-      const submission = await submissionService.submitAssignment(
-        tenantId,
-        assignmentId,
-        data.studentId,
-        data
-      );
+      const submission = await submissionService.submitAssignment(tenantId, assignmentId, userId, data);
       res.status(201).json(submission);
     } catch (error) {
       next(error);
@@ -442,8 +435,9 @@ export const discussionController = {
   async createDiscussion(req: Request, res: Response, next: NextFunction) {
     try {
       const tenantId = requireTenantId(req);
+      const actor = requireActor(req);
       const data = createDiscussionSchema.parse(req.body);
-      const discussion = await discussionService.createDiscussion(tenantId, data);
+      const discussion = await discussionService.createDiscussion(tenantId, actor, data);
       res.status(201).json(discussion);
     } catch (error) {
       next(error);
@@ -464,9 +458,10 @@ export const discussionController = {
   async addReply(req: Request, res: Response, next: NextFunction) {
     try {
       const tenantId = requireTenantId(req);
+      const actor = requireActor(req);
       const { id } = idParamSchema.parse(req.params);
       const data = createReplySchema.parse(req.body);
-      const reply = await discussionService.addReply(tenantId, id, data);
+      const reply = await discussionService.addReply(tenantId, id, actor, data);
       res.status(201).json(reply);
     } catch (error) {
       next(error);
@@ -550,6 +545,70 @@ export const recordedLessonController = {
         lessonId,
         watchedSeconds
       );
+      res.json(result);
+    } catch (error) {
+      next(error);
+    }
+  },
+};
+
+const courseIdParamSchema2 = z.object({ courseId: uuidSchema });
+
+export const studentElearningController = {
+  async getMyCourses(req: Request, res: Response, next: NextFunction) {
+    try {
+      const tenantId = requireTenantId(req);
+      const { userId } = requireActor(req);
+      const courses = await studentElearningService.getMyCourses(tenantId, userId);
+      res.json(courses);
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  async getCourse(req: Request, res: Response, next: NextFunction) {
+    try {
+      const tenantId = requireTenantId(req);
+      const { userId } = requireActor(req);
+      const { id } = idParamSchema.parse(req.params);
+      const result = await studentElearningService.getCourse(tenantId, userId, id);
+      res.json(result);
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  async getUpcomingLiveClasses(req: Request, res: Response, next: NextFunction) {
+    try {
+      const tenantId = requireTenantId(req);
+      const { userId } = requireActor(req);
+      const classes = await studentElearningService.getUpcomingLiveClasses(tenantId, userId);
+      res.json(classes);
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  async getMyQuizzes(req: Request, res: Response, next: NextFunction) {
+    try {
+      const tenantId = requireTenantId(req);
+      const { userId } = requireActor(req);
+      const quizzes = await studentElearningService.getMyQuizzes(tenantId, userId);
+      res.json(quizzes);
+    } catch (error) {
+      next(error);
+    }
+  },
+};
+
+export const joinLiveClassController = {
+  async join(req: Request, res: Response, next: NextFunction) {
+    try {
+      const tenantId = requireTenantId(req);
+      const actor = requireActor(req);
+      const { id } = idParamSchema.parse(req.params);
+      const role = actor.role === 'TEACHER' ? 'TEACHER' : 'STUDENT';
+      const result = await liveClassService.joinClass(tenantId, id, actor.userId, role);
       res.json(result);
     } catch (error) {
       next(error);

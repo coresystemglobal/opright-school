@@ -1418,10 +1418,11 @@ model LiveClass {
   
   scheduledAt DateTime
   duration    Int      // minutes
-  meetingUrl  String?
-  meetingId  String?  @db.Uuid
-  platform    String   // "Zoom", "Google Meet", "Teams"
-  recordingUrl String?
+  meetingUrl    String?
+  meetingId     String?  @db.Uuid
+  platform      String   // "Zoom", "Google Meet", "Teams", "DAILY"
+  recordingUrl  String?
+  dailyRoomName String?  // Daily.co room name (set when platform = "DAILY")
   
   status      LiveClassStatus @default(SCHEDULED)
   

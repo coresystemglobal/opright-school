@@ -34,4 +34,7 @@ export const config = {
       secretKey: process.env.PAYSTACK_SECRET_KEY,
     },
   },
+  daily: {
+    apiKey: process.env.DAILY_API_KEY,
+  },
 };
