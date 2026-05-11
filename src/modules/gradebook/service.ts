@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client';
+import { notifyParentsOfGrade } from '../../utils/parentNotify';
 
 export class GradebookService {
   constructor(private prisma: PrismaClient) {}
@@ -36,16 +37,28 @@ export class GradebookService {
     remarks?: string;
     gradedBy?: string;
   }) {
-    if (data.assignmentId) {
-      return this.prisma.grade.upsert({
-        where: { studentId_assignmentId: { studentId: data.studentId, assignmentId: data.assignmentId } },
-        update: { score: data.score, maxScore: data.maxScore, remarks: data.remarks, gradedBy: data.gradedBy },
-        create: { ...data, tenantId }
-      });
-    }
-    return this.prisma.grade.create({
-      data: { ...data, tenantId }
-    });
+    const grade = data.assignmentId
+      ? await this.prisma.grade.upsert({
+          where: { studentId_assignmentId: { studentId: data.studentId, assignmentId: data.assignmentId } },
+          update: { score: data.score, maxScore: data.maxScore, remarks: data.remarks, gradedBy: data.gradedBy },
+          create: { ...data, tenantId },
+          include: { subject: { select: { name: true } } },
+        })
+      : await this.prisma.grade.create({
+          data: { ...data, tenantId },
+          include: { subject: { select: { name: true } } },
+        });
+
+    notifyParentsOfGrade(
+      this.prisma,
+      tenantId,
+      data.studentId,
+      (grade as any).subject?.name ?? 'a subject',
+      data.score,
+      data.maxScore
+    );
+
+    return grade;
   }
 
   async bulkRecordGrades(tenantId: string, grades: Array<{
