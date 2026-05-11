@@ -1420,7 +1420,7 @@ model LiveClass {
   duration    Int      // minutes
   meetingUrl    String?
   meetingId     String?  @db.Uuid
-  platform      String   // "JITSI", "100MS", "DAILY", "ZOOM", etc.
+  platform      String   // "JITSI" | "100MS" | "GOOGLE_MEET"
   recordingUrl  String?
   roomName      String?  // generated as {subject-slug}-{YYYY-MM-DD}-{HHmm}
   

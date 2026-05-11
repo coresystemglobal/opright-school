@@ -148,7 +148,15 @@ export class LiveClassService {
       });
     }
 
-    // Unknown / legacy platform — return stored URL with no token
+    if (platform === 'GOOGLE_MEET') {
+      if (!liveClass.meetingUrl) {
+        throw new ForbiddenError('No Google Meet link has been set for this class');
+      }
+      // Record attendance and return the teacher-provided Meet URL
+      await this.recordStudentJoin(tenantId, classId, userId, role);
+      return { meetingUrl: liveClass.meetingUrl, platform: 'GOOGLE_MEET', token: null, roomName: null };
+    }
+
     return { meetingUrl: liveClass.meetingUrl, platform: liveClass.platform, token: null, roomName };
   }
 

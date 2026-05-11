@@ -126,7 +126,7 @@ const liveClassSchema = z.object({
   duration: z.coerce.number().int().positive(),
   meetingUrl: z.string().optional(),
   meetingId: optionalUuidSchema,
-  platform: z.string().min(1),
+  platform: z.enum(["JITSI", "100MS", "GOOGLE_MEET"]),
   recordingUrl: z.string().optional(),
   status: z.enum(["SCHEDULED", "LIVE", "COMPLETED", "CANCELLED"]).optional(),
 });
