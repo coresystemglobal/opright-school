@@ -8,6 +8,8 @@ import { monitoringMiddleware } from "./middleware/monitoring";
 import { errorHandler } from "./middleware/errorHandler";
 import { apiLimiter } from "./middleware/rateLimiter";
 import { domainRewriteMiddleware } from "./middleware/domain-rewrite";
+import { auditMiddleware } from "./middleware/audit";
+import auditRoutes from "./modules/audit/routes";
 import billingRoutes from "./modules/billing/routes";
 import academicYearRoutes from "./modules/academicYears/routes";
 import attendanceRoutes from "./modules/attendance/legacyRoutes";
@@ -26,13 +28,17 @@ import hostelRoutes from "./modules/hostel/routes";
 import inventoryRoutes from "./modules/inventory/routes";
 import libraryRoutes from "./modules/library/routes";
 import noticeRoutes from "./modules/notices/routes";
+import notificationRoutes from "./modules/notifications/routes";
+import settingsRoutes from "./modules/settings/routes";
 import onboardingRoutes from "./modules/onboarding/routes";
 import parentRoutes from "./modules/parent/routes";
 import paymentRoutes from "./modules/payments/routes";
+import { paymentController } from "./modules/payments/controller";
 import queueRoutes from "./modules/queue/routes";
 import roleRoutes from "./modules/roles/routes";
 import sportsRoutes from "./modules/sports/routes";
 import studentRoutes from "./modules/students/routes";
+import studentSelfRoutes from "./modules/student-self/routes";
 import subjectRoutes from "./modules/subjects/routes";
 import teacherRoutes from "./modules/teachers/routes";
 import termRoutes from "./modules/terms/routes";
@@ -41,17 +47,11 @@ import transportRoutes from "./modules/transport/routes";
 import uploadRoutes from "./modules/upload/routes";
 import websiteDomainRoutes from "./modules/school-website/domain.routes";
 import { CacheService } from "./utils/cache";
-
-const corsOrigins = process.env.CORS_ORIGIN
-  ? process.env.CORS_ORIGIN.split(",").map((origin) => origin.trim()).filter(Boolean)
-  : [];
+import { buildCorsOptions } from "./utils/cors";
 
 const app = express();
 app.use(helmet());
-app.use(cors({
-  origin: corsOrigins.length > 0 ? corsOrigins : true,
-  credentials: true,
-}));
+app.use(cors(buildCorsOptions()));
 app.use(express.json());
 app.use(apiLimiter);
 app.use(loggingMiddleware);
@@ -69,37 +69,49 @@ app.get("/health", async (_req, res) => {
 app.use("/docs", docsRoutes);
 app.use("/onboarding", onboardingRoutes);
 app.use(tenantMiddleware);
-app.use("/queue", queueRoutes); // QStash webhooks — no auth
+app.use("/queue", queueRoutes); // QStash webhooks — no auth/tenant
+
+// Paystack webhook — no auth required, needs raw body for HMAC verification
+app.post("/payments/webhook", express.raw({ type: 'application/json' }), paymentController.paystackWebhook);
+
 app.use("/auth", authRoutes);
 app.use("/roles", roleRoutes);
-app.use("/students", authMiddleware, requireRole("ADMIN", "TEACHER"), studentRoutes);
-app.use("/teachers", authMiddleware, requireRole("ADMIN"), teacherRoutes);
-app.use("/classes", authMiddleware, requireRole("ADMIN", "TEACHER"), classRoutes);
-app.use("/attendance", authMiddleware, requireRole("ADMIN", "TEACHER"), attendanceRoutes);
-app.use("/notices", authMiddleware, noticeRoutes);
-app.use("/payments", authMiddleware, requireRole("ADMIN"), paymentRoutes);
-app.use("/academic-years", authMiddleware, academicYearRoutes);
-app.use("/terms", authMiddleware, termRoutes);
-app.use("/subjects", authMiddleware, subjectRoutes);
-app.use("/timetables", authMiddleware, timetableRoutes);
-app.use("/attendances", authMiddleware, attendancesRoutes);
-app.use("/gradebook", authMiddleware, gradebookRoutes);
-app.use("/library", authMiddleware, libraryRoutes);
-app.use("/transport", authMiddleware, requireRole("ADMIN", "STAFF"), transportRoutes);
-app.use("/inventory", authMiddleware, requireRole("ADMIN", "STAFF"), inventoryRoutes);
-app.use("/events", authMiddleware, requireRole("ADMIN", "TEACHER"), eventRoutes);
-app.use("/disciplinary", authMiddleware, requireRole("ADMIN", "PRINCIPAL", "TEACHER"), disciplinaryRoutes);
-app.use("/health", authMiddleware, requireRole("ADMIN", "STAFF"), healthRoutes);
-app.use("/hostel", authMiddleware, requireRole("ADMIN", "STAFF"), hostelRoutes);
-app.use("/sports", authMiddleware, requireRole("ADMIN", "TEACHER"), sportsRoutes);
-app.use("/upload", authMiddleware, uploadRoutes);
-app.use("/parent", authMiddleware, requireRole("PARENT"), parentRoutes);
-app.use("/parents", authMiddleware, requireRole("ADMIN"), parentRoutes);
-app.use("/candidates", authMiddleware, requireRole("ADMIN"), candidateRoutes);
-app.use("/courses", authMiddleware, requireRole("ADMIN", "TEACHER"), courseRoutes);
-app.use("/elearning", authMiddleware, elearningRoutes);
-app.use("/billing", authMiddleware, requireRole("ADMIN"), billingRoutes);
-app.use("/api/admin/website/domain", authMiddleware, requireRole("ADMIN"), websiteDomainRoutes);
+app.use("/audit-logs", authMiddleware, requireRole("ADMIN"), auditRoutes);
+
+// Auth + audit for all routes below
+app.use(authMiddleware, auditMiddleware);
+
+app.use("/students", requireRole("ADMIN", "TEACHER"), studentRoutes);
+app.use("/teachers", requireRole("ADMIN"), teacherRoutes);
+app.use("/classes", requireRole("ADMIN", "TEACHER"), classRoutes);
+app.use("/attendance", requireRole("ADMIN", "TEACHER"), attendanceRoutes);
+app.use("/notices", noticeRoutes);
+app.use("/notifications", notificationRoutes);
+app.use("/settings", settingsRoutes);
+app.use("/payments", requireRole("ADMIN"), paymentRoutes);
+app.use("/academic-years", academicYearRoutes);
+app.use("/terms", termRoutes);
+app.use("/subjects", subjectRoutes);
+app.use("/timetables", timetableRoutes);
+app.use("/attendances", attendancesRoutes);
+app.use("/gradebook", gradebookRoutes);
+app.use("/library", libraryRoutes);
+app.use("/transport", requireRole("ADMIN", "STAFF"), transportRoutes);
+app.use("/inventory", requireRole("ADMIN", "STAFF"), inventoryRoutes);
+app.use("/events", requireRole("ADMIN", "TEACHER"), eventRoutes);
+app.use("/disciplinary", requireRole("ADMIN", "PRINCIPAL", "TEACHER"), disciplinaryRoutes);
+app.use("/health", requireRole("ADMIN", "STAFF"), healthRoutes);
+app.use("/hostel", requireRole("ADMIN", "STAFF"), hostelRoutes);
+app.use("/sports", requireRole("ADMIN", "TEACHER"), sportsRoutes);
+app.use("/upload", uploadRoutes);
+app.use("/parent", requireRole("PARENT"), parentRoutes);
+app.use("/parents", requireRole("ADMIN"), parentRoutes);
+app.use("/student/me", requireRole("STUDENT"), studentSelfRoutes);
+app.use("/candidates", requireRole("ADMIN"), candidateRoutes);
+app.use("/courses", requireRole("ADMIN", "TEACHER"), courseRoutes);
+app.use("/elearning", elearningRoutes);
+app.use("/billing", requireRole("ADMIN"), billingRoutes);
+app.use("/api/admin/website/domain", requireRole("ADMIN"), websiteDomainRoutes);
 
 app.use(errorHandler);
 
