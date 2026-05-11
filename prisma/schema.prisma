@@ -74,7 +74,12 @@ model Tenant {
   idSequences  IdSequence[]
   parents      Parent[]
   candidates   Candidate[]
+  refreshTokens RefreshToken[]
+  passwordResetOtps PasswordResetOtp[]
   website      SchoolWebsite?
+  notifications Notification[]
+  pushSubscriptions PushSubscription[]
+  auditLogs     AuditLog[]
 
   @@unique([domain])
   @@unique([subdomain])
@@ -105,15 +110,51 @@ model User {
   role        Role?    @relation(fields: [roleId], references: [id])
   firstName   String?
   lastName    String?
+  mustChangePassword Boolean @default(false)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   student     Student?  // back-relation
   parent      Parent?   // back-relation
   noticesAuthored Notice[]
+  refreshTokens  RefreshToken[]
+  notifications  Notification[]
+  pushSubscriptions PushSubscription[]
+  auditLogs      AuditLog[]
 
   @@index([tenantId])
   @@index([studentCode])
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tenantId  String   @db.Uuid
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tokenHash String   @unique
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([tenantId])
+  @@index([expiresAt])
+}
+
+model PasswordResetOtp {
+  id        String   @id @default(uuid()) @db.Uuid
+  tenantId  String   @db.Uuid
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  email     String
+  otpHash   String
+  expiresAt DateTime
+  usedAt    DateTime?
+  attempts  Int      @default(0)
+  createdAt DateTime @default(now())
+
+  @@index([tenantId, email])
+  @@index([expiresAt])
 }
 
 model Role {
@@ -230,6 +271,11 @@ enum CandidateStatus {
   REJECTED
 }
 
+enum StudentStatus {
+  ACTIVE
+  ARCHIVED
+}
+
 model Candidate {
   id              String          @id @default(uuid()) @db.Uuid
   tenantId        String          @db.Uuid
@@ -260,7 +306,8 @@ model Student {
   tenantId    String   @db.Uuid
   tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
-  studentCode String?  // e.g. "GWD250042" — unique per tenant
+  studentId   String?  // human-readable ID e.g. "GWD-2025-0042"
+  studentCode String?  // legacy alias — kept for migration compatibility
   userId      String?  @unique  // FK to User (login account)
   user        User?    @relation(fields: [userId], references: [id])
 
@@ -268,6 +315,7 @@ model Student {
   lastName    String
   dob         DateTime?
   guardian    Json?    // legacy guardian JSON — kept for migration compatibility
+  status      StudentStatus @default(ACTIVE)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -278,9 +326,11 @@ model Student {
   examResults ExamResult[]
   parents     StudentParent[]
 
+  @@unique([tenantId, studentId])
   @@unique([tenantId, studentCode])
   @@index([tenantId])
   @@index([tenantId, lastName], map: "idx_student_tenant_name")
+  @@index([tenantId, status])
 }
 
 model Teacher {
@@ -399,10 +449,11 @@ model Payment {
   studentId  String  @db.Uuid
   student   Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
 
-  amount    Float
-  method    String   // Paystack/Flutterwave
-  status    PaymentStatus
-  createdAt DateTime @default(now())
+  amount      Float
+  method      String    // cash | bank_transfer | paystack
+  status      PaymentStatus
+  paystackRef String?   @unique
+  createdAt   DateTime  @default(now())
 
   @@index([tenantId])
 }
@@ -1528,4 +1579,71 @@ model Subscription {
   updatedAt    DateTime           @updatedAt
 
   @@index([tenantId])
+}
+
+/// ─────────────────────────────────────────
+/// NOTIFICATIONS & WEB PUSH
+/// ─────────────────────────────────────────
+
+model Notification {
+  id        String   @id @default(uuid()) @db.Uuid
+  tenantId  String   @db.Uuid
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  title     String
+  body      String
+  type      String   @default("general") // general, notice, attendance, grade, event, etc.
+  link      String?  // optional deep-link path e.g. "/notices"
+  read      Boolean  @default(false)
+
+  createdAt DateTime @default(now())
+
+  @@index([tenantId, userId, read])
+  @@index([tenantId, userId, createdAt])
+}
+
+model PushSubscription {
+  id        String   @id @default(uuid()) @db.Uuid
+  tenantId  String   @db.Uuid
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  endpoint  String
+  p256dh    String
+  auth      String
+
+  createdAt DateTime @default(now())
+
+  @@unique([userId, endpoint])
+  @@index([tenantId, userId])
+}
+
+/// ─────────────────────────────────────────
+/// AUDIT LOG
+/// ─────────────────────────────────────────
+
+model AuditLog {
+  id        String   @id @default(uuid()) @db.Uuid
+  tenantId  String   @db.Uuid
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  action    String   // e.g. "student.create", "grade.update", "settings.update"
+  entity    String?  // e.g. "Student", "Grade", "Notice"
+  entityId  String?  // id of the affected record
+  meta      Json?    // before/after snapshot, extra context
+  ipAddress String?
+
+  createdAt DateTime @default(now())
+
+  @@index([tenantId, createdAt])
+  @@index([tenantId, userId])
+  @@index([tenantId, action])
 }
