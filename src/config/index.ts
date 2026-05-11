@@ -34,7 +34,13 @@ export const config = {
       secretKey: process.env.PAYSTACK_SECRET_KEY,
     },
   },
-  daily: {
-    apiKey: process.env.DAILY_API_KEY,
+  jitsi: {
+    appId: process.env.JITSI_APP_ID,
+    appSecret: process.env.JITSI_APP_SECRET,
+    baseUrl: process.env.JITSI_BASE_URL, // e.g. https://meet.yourdomain.com
+  },
+  hundredMs: {
+    appAccessKey: process.env.HUNDREDMS_APP_ACCESS_KEY,
+    appSecret: process.env.HUNDREDMS_APP_SECRET,
   },
 };

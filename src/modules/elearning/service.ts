@@ -1,6 +1,7 @@
 export { CertificateService } from "./certificateService";
-export { DailyService } from "./dailyService";
 export { DiscussionService } from "./discussionService";
+export { HundredMsService } from "./hundredMsService";
+export { JitsiService } from "./jitsiService";
 export { LiveClassService } from "./liveClassService";
 export { QuizService } from "./quizService";
 export { RecordedLessonService } from "./recordedLessonService";

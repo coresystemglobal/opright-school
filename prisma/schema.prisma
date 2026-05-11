@@ -1420,9 +1420,9 @@ model LiveClass {
   duration    Int      // minutes
   meetingUrl    String?
   meetingId     String?  @db.Uuid
-  platform      String   // "Zoom", "Google Meet", "Teams", "DAILY"
+  platform      String   // "JITSI", "100MS", "DAILY", "ZOOM", etc.
   recordingUrl  String?
-  dailyRoomName String?  // Daily.co room name (set when platform = "DAILY")
+  roomName      String?  // generated as {subject-slug}-{YYYY-MM-DD}-{HHmm}
   
   status      LiveClassStatus @default(SCHEDULED)
   
