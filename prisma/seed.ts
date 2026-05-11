@@ -64,8 +64,16 @@ async function main() {
     { resource: 'fees',      action: 'create' }, { resource: 'fees',      action: 'read' },
     { resource: 'fees',      action: 'update' },
     { resource: 'payments',  action: 'read' },
-    { resource: 'roles',     action: 'create' }, { resource: 'roles',     action: 'read' },
-    { resource: 'roles',     action: 'update' }, { resource: 'roles',     action: 'delete' },
+    { resource: 'roles',        action: 'create' }, { resource: 'roles',        action: 'read' },
+    { resource: 'roles',        action: 'update' }, { resource: 'roles',        action: 'delete' },
+    { resource: 'academicYears',action: 'create' }, { resource: 'academicYears',action: 'read' },
+    { resource: 'academicYears',action: 'update' }, { resource: 'academicYears',action: 'delete' },
+    { resource: 'terms',        action: 'create' }, { resource: 'terms',        action: 'read' },
+    { resource: 'terms',        action: 'update' }, { resource: 'terms',        action: 'delete' },
+    { resource: 'subjects',     action: 'create' }, { resource: 'subjects',     action: 'read' },
+    { resource: 'subjects',     action: 'update' }, { resource: 'subjects',     action: 'delete' },
+    { resource: 'timetables',   action: 'create' }, { resource: 'timetables',   action: 'read' },
+    { resource: 'timetables',   action: 'update' }, { resource: 'timetables',   action: 'delete' },
   ];
   await prisma.permission.createMany({ data: permDefs, skipDuplicates: true });
   const permissions = await prisma.permission.findMany();
@@ -78,8 +86,8 @@ async function main() {
 
   const roleDefs = [
     { name: 'Admin',     perms: Object.values(permMap) },
-    { name: 'Principal', perms: ['students:read','teachers:read','classes:read','attendance:read','fees:read','payments:read','roles:read'].map(k => permMap[k]).filter(Boolean) },
-    { name: 'Teacher',   perms: ['students:read','classes:read','attendance:create','attendance:read','attendance:update'].map(k => permMap[k]).filter(Boolean) },
+    { name: 'Principal', perms: ['students:read','teachers:read','classes:read','attendance:read','fees:read','payments:read','roles:read','academicYears:read','terms:read','subjects:read','timetables:read'].map(k => permMap[k]).filter(Boolean) },
+    { name: 'Teacher',   perms: ['students:read','classes:read','attendance:create','attendance:read','attendance:update','subjects:read','timetables:read'].map(k => permMap[k]).filter(Boolean) },
     { name: 'Staff',     perms: ['students:read','classes:read','fees:read','payments:read','attendance:read'].map(k => permMap[k]).filter(Boolean) },
     { name: 'Parent',    perms: [] },
     { name: 'Student',   perms: [] },
