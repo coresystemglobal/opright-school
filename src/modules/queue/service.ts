@@ -11,7 +11,7 @@ export class QueueService {
 
   async processReport(signature: string, body: string, tenantId: string, payload: ReportPayload) {
     await this.receiver.verify({ signature, body });
-    await handleReportJob(tenantId, payload);
-    return { ok: true };
+    const result = await handleReportJob(tenantId, payload);
+    return { ok: true, ...result };
   }
 }
