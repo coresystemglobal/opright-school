@@ -23,12 +23,26 @@ export async function hasPermission(userId: string, resource: string, action: st
 
 export const RESOURCES = {
   STUDENTS: 'students',
-  TEACHERS: 'teachers', 
+  TEACHERS: 'teachers',
   CLASSES: 'classes',
   ATTENDANCE: 'attendance',
   FEES: 'fees',
   PAYMENTS: 'payments',
-  ROLES: 'roles'
+  ROLES: 'roles',
+  GRADEBOOK: 'gradebook',
+  LIBRARY: 'library',
+  TRANSPORT: 'transport',
+  HOSTEL: 'hostel',
+  DISCIPLINARY: 'disciplinary',
+  COURSES: 'courses',
+  ELEARNING: 'elearning',
+  BILLING: 'billing',
+  CANDIDATES: 'candidates',
+  NOTICES: 'notices',
+  EVENTS: 'events',
+  SPORTS: 'sports',
+  HEALTH: 'health',
+  INVENTORY: 'inventory',
 } as const;
 
 export const ACTIONS = {
