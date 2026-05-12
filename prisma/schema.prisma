@@ -14,13 +14,14 @@ generator client {
 
 model Tenant {
   id         String   @id @default(uuid()) @db.Uuid
-  name       String
-  domain     String?  // custom domain (school.com)
-  subdomain  String?  // subdomain (greenwood)
-  schoolCode String?  // short uppercase code for student IDs (e.g. "GWD")
-  config     Json?    // theme, settings
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  name                String
+  domain              String?  // custom domain (school.com)
+  subdomain           String?  // subdomain (greenwood)
+  schoolCode          String?  // short uppercase code for student IDs (e.g. "GWD")
+  config              Json?    // theme, settings
+  collectionEnabled   Boolean  @default(false) // fees collection feature enabled
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
 
   subscription Subscription?
   users      User[]
@@ -79,7 +80,14 @@ model Tenant {
   website      SchoolWebsite?
   notifications Notification[]
   pushSubscriptions PushSubscription[]
-  auditLogs     AuditLog[]
+  auditLogs             AuditLog[]
+  paymentAccount        SchoolPaymentAccount?
+  bankAccountRequests   BankAccountChangeRequest[]
+  feeTemplates          FeeTemplate[]
+  feeAssignments        FeeAssignment[]
+  feeOptIns             FeeOptIn[]
+  invoices              Invoice[]
+  walletLedger          WalletLedger[]
 
   @@unique([domain])
   @@unique([subdomain])
@@ -111,6 +119,7 @@ model User {
   firstName   String?
   lastName    String?
   mustChangePassword Boolean @default(false)
+  isMaster    Boolean  @default(false) // platform-level super admin (cross-tenant)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -121,9 +130,12 @@ model User {
   notifications  Notification[]
   pushSubscriptions PushSubscription[]
   auditLogs      AuditLog[]
+  bankAccountRequestsMade    BankAccountChangeRequest[] @relation("BankAccountRequester")
+  bankAccountRequestsReviewed BankAccountChangeRequest[] @relation("BankAccountReviewer")
 
   @@index([tenantId])
   @@index([studentCode])
+  @@index([isMaster])
 }
 
 model RefreshToken {
@@ -319,12 +331,14 @@ model Student {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  enrollments Enrollment[]
-  attendances Attendance[]
-  payments    Payment[]
-  grades      Grade[]
-  examResults ExamResult[]
-  parents     StudentParent[]
+  enrollments    Enrollment[]
+  attendances    Attendance[]
+  payments       Payment[]
+  grades         Grade[]
+  examResults    ExamResult[]
+  parents        StudentParent[]
+  feeAssignments FeeAssignment[]
+  feeOptIns      FeeOptIn[]
 
   @@unique([tenantId, studentId])
   @@unique([tenantId, studentCode])
@@ -1646,4 +1660,243 @@ model AuditLog {
   @@index([tenantId, createdAt])
   @@index([tenantId, userId])
   @@index([tenantId, action])
+}
+
+/// ─────────────────────────────────────────
+/// FEES COLLECTION
+/// ─────────────────────────────────────────
+
+model SchoolPaymentAccount {
+  id                    String   @id @default(uuid()) @db.Uuid
+  tenantId              String   @unique @db.Uuid
+  tenant                Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  paystackSubaccountCode String  @unique
+  bankName              String
+  accountNumber         String
+  accountName           String
+  commissionPercent     Decimal  @db.Decimal(5, 2) // e.g. 2.50 = 2.5%
+  currency              String   @default("NGN")   // ISO 4217
+  verifiedAt            DateTime?
+
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  @@index([tenantId])
+}
+
+enum BankAccountChangeStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model BankAccountChangeRequest {
+  id             String                  @id @default(uuid()) @db.Uuid
+  tenantId       String                  @db.Uuid
+  tenant         Tenant                  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  requestedById  String
+  requestedBy    User                    @relation("BankAccountRequester", fields: [requestedById], references: [id])
+
+  newBankName    String
+  newAccountNumber String
+  newAccountName String
+
+  status         BankAccountChangeStatus @default(PENDING)
+
+  reviewedById   String?
+  reviewedBy     User?                   @relation("BankAccountReviewer", fields: [reviewedById], references: [id])
+  reviewNote     String?
+  notifiedAt     DateTime?               // when all admins were alerted
+
+  createdAt      DateTime                @default(now())
+  updatedAt      DateTime                @updatedAt
+
+  @@index([tenantId, status])
+  @@index([tenantId, createdAt])
+}
+
+enum FeeCategory {
+  TUITION
+  TRANSPORT
+  EXAM
+  LIBRARY
+  SPORTS
+  HOSTEL
+  MEAL
+  OTHER
+}
+
+enum FeeTargetType {
+  ALL        // all active students
+  CLASS      // specific class(es)
+  TERM       // specific term
+  ACADEMIC_YEAR
+  OPT_IN     // optional, parent chooses to enroll
+}
+
+model FeeTemplate {
+  id                      String        @id @default(uuid()) @db.Uuid
+  tenantId                String        @db.Uuid
+  tenant                  Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  name                    String
+  description             String?
+  category                FeeCategory
+  amount                  Decimal       @db.Decimal(12, 2)
+  currency                String        @default("NGN")
+
+  targetType              FeeTargetType
+  targetIds               Json?         // classIds[], termId, academicYearId depending on targetType
+
+  isOptIn                 Boolean       @default(false)  // parent opts in (e.g. transport)
+  isMandatory             Boolean       @default(true)   // service denied if unpaid
+  allowInstallments       Boolean       @default(false)
+  minimumInstallmentPercent Decimal?    @db.Decimal(5, 2) // e.g. 25.00 = 25%
+
+  dueDate                 DateTime?
+  gracePeriodDays         Int           @default(0)
+
+  academicYearId          String?       @db.Uuid
+  termId                  String?       @db.Uuid
+  isActive                Boolean       @default(true)
+
+  assignments             FeeAssignment[]
+  optIns                  FeeOptIn[]
+
+  createdAt               DateTime      @default(now())
+  updatedAt               DateTime      @updatedAt
+
+  @@index([tenantId, isActive])
+  @@index([tenantId, category])
+}
+
+enum FeeAssignmentStatus {
+  UNPAID
+  PARTIAL
+  PAID
+  OVERDUE
+  WAIVED
+}
+
+model FeeAssignment {
+  id                   String              @id @default(uuid()) @db.Uuid
+  tenantId             String              @db.Uuid
+  tenant               Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  feeTemplateId        String              @db.Uuid
+  feeTemplate          FeeTemplate         @relation(fields: [feeTemplateId], references: [id])
+
+  studentId            String              @db.Uuid
+  student              Student             @relation(fields: [studentId], references: [id])
+
+  totalAmount          Decimal             @db.Decimal(12, 2)
+  paidAmount           Decimal             @db.Decimal(12, 2) @default(0)
+  currency             String              @default("NGN")
+
+  status               FeeAssignmentStatus @default(UNPAID)
+  serviceAccessRevoked Boolean             @default(false)
+
+  dueDate              DateTime?
+  gracePeriodDays      Int                 @default(0)
+
+  waivedById           String?
+  waivedReason         String?
+
+  invoices             Invoice[]
+
+  createdAt            DateTime            @default(now())
+  updatedAt            DateTime            @updatedAt
+
+  @@unique([feeTemplateId, studentId])
+  @@index([tenantId, status])
+  @@index([tenantId, studentId])
+  @@index([tenantId, feeTemplateId])
+}
+
+model FeeOptIn {
+  id             String      @id @default(uuid()) @db.Uuid
+  tenantId       String      @db.Uuid
+  tenant         Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  feeTemplateId  String      @db.Uuid
+  feeTemplate    FeeTemplate @relation(fields: [feeTemplateId], references: [id])
+
+  studentId      String      @db.Uuid
+  student        Student     @relation(fields: [studentId], references: [id])
+
+  optedInAt      DateTime    @default(now())
+  optedInBy      String      // userId of parent/guardian who opted in
+
+  @@unique([feeTemplateId, studentId])
+  @@index([tenantId, studentId])
+}
+
+enum InvoiceStatus {
+  PENDING
+  SUCCESS
+  FAILED
+  EXPIRED
+}
+
+model Invoice {
+  id                   String        @id @default(uuid()) @db.Uuid
+  tenantId             String        @db.Uuid
+  tenant               Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  feeAssignmentId      String        @db.Uuid
+  feeAssignment        FeeAssignment @relation(fields: [feeAssignmentId], references: [id])
+
+  amount               Decimal       @db.Decimal(12, 2)
+  currency             String        @default("NGN")
+
+  paystackRef          String?       @unique
+  virtualAccountBank   String?
+  virtualAccountNumber String?
+  virtualAccountExpiry DateTime?
+
+  status               InvoiceStatus @default(PENDING)
+  paidAt               DateTime?
+  paidBy               String?       // userId
+
+  walletLedger         WalletLedger[]
+
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
+
+  @@index([tenantId, status])
+  @@index([tenantId, feeAssignmentId])
+  @@index([paystackRef])
+}
+
+enum WalletLedgerType {
+  CREDIT       // payment received from parent
+  REMITTANCE   // funds sent to school sub-account
+  COMMISSION   // platform commission deducted
+  REVERSAL     // refund or correction
+}
+
+model WalletLedger {
+  id               String           @id @default(uuid()) @db.Uuid
+  tenantId         String           @db.Uuid
+  tenant           Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  type             WalletLedgerType
+  amount           Decimal          @db.Decimal(12, 2)  // gross amount
+  commissionAmount Decimal          @db.Decimal(12, 2)  @default(0)
+  netAmount        Decimal          @db.Decimal(12, 2)  // amount after commission
+  currency         String           @default("NGN")
+
+  invoiceId        String?          @db.Uuid
+  invoice          Invoice?         @relation(fields: [invoiceId], references: [id])
+
+  reference        String           // paystack reference or internal ref
+  description      String?
+
+  createdAt        DateTime         @default(now())
+
+  @@index([tenantId, type])
+  @@index([tenantId, createdAt])
+  @@index([reference])
 }
