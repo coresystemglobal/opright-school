@@ -15,7 +15,7 @@ export class FeeAssignmentService {
     });
     if (!template) throw new NotFoundError("Fee template not found or inactive");
 
-    if (template.targetType === "OPT_IN") {
+    if (template.targetType === "OPT_IN" || template.isOptIn) {
       return { assigned: 0, message: "OPT_IN templates are assigned when parents opt in" };
     }
 

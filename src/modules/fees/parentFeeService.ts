@@ -112,10 +112,15 @@ export class ParentFeeService {
     });
     if (!template) throw new NotFoundError("Opt-in fee template not found");
 
-    const existing = await this.prisma.feeOptIn.findUnique({
-      where: { feeTemplateId_studentId: { feeTemplateId, studentId } },
-    });
-    if (existing) throw new ConflictError("Already opted in to this fee");
+    const [existingOptIn, existingAssignment] = await Promise.all([
+      this.prisma.feeOptIn.findUnique({
+        where: { feeTemplateId_studentId: { feeTemplateId, studentId } },
+      }),
+      this.prisma.feeAssignment.findUnique({
+        where: { feeTemplateId_studentId: { feeTemplateId, studentId } },
+      }),
+    ]);
+    if (existingOptIn || existingAssignment) throw new ConflictError("Already opted in to this fee");
 
     await this.prisma.$transaction([
       this.prisma.feeOptIn.create({
