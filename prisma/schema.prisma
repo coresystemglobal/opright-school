@@ -111,11 +111,14 @@ model User {
   firstName   String?
   lastName    String?
   mustChangePassword Boolean @default(false)
+  emailVerified      Boolean @default(false)
+  emailVerifyToken   String?  @unique
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   student     Student?  // back-relation
   parent      Parent?   // back-relation
+  teacher     Teacher?  // back-relation
   noticesAuthored Notice[]
   refreshTokens  RefreshToken[]
   notifications  Notification[]
@@ -198,6 +201,7 @@ model RolePermission {
 }
 
 enum UserRole {
+  MASTER      // platform super-admin — oversees all schools
   ADMIN       // overall school admin
   PRINCIPAL   // head of school
   TEACHER
@@ -338,9 +342,24 @@ model Teacher {
   tenantId  String   @db.Uuid
   tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
+  userId    String?  @unique
+  user      User?    @relation(fields: [userId], references: [id])
+
   firstName String
   lastName  String
   subject   String?
+  email     String?
+  phone     String?
+  gender    Gender?
+  dob       DateTime?
+  address   String?
+  photoUrl  String?
+  employeeId String?
+  qualification String?
+  bio       String?
+  employmentDate DateTime?
+  employmentStatus EmploymentStatus @default(FULL_TIME)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -350,6 +369,18 @@ model Teacher {
   courses Course[]
 
   @@index([tenantId])
+  @@index([tenantId, userId])
+}
+
+enum Gender {
+  MALE
+  FEMALE
+}
+
+enum EmploymentStatus {
+  FULL_TIME
+  PART_TIME
+  CONTRACT
 }
 
 /// ─────────────────────────────────────────
