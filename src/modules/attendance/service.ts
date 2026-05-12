@@ -1,18 +1,42 @@
 import { PrismaClient, AttendanceStatus } from '@prisma/client';
+import { notifyParentsOfAbsence } from '../../utils/parentNotify';
 
 export class AttendanceService {
   constructor(private prisma: PrismaClient) {}
 
   async markAttendance(tenantId: string, data: { studentId: string; date: Date; status: AttendanceStatus; remarks?: string }) {
-    return this.prisma.attendance.upsert({
+    const record = await this.prisma.attendance.upsert({
       where: { studentId_date: { studentId: data.studentId, date: data.date } },
       update: { status: data.status, remarks: data.remarks },
       create: { ...data, tenantId }
     });
+
+    if (data.status === 'ABSENT' || data.status === 'LATE') {
+      notifyParentsOfAbsence(this.prisma, tenantId, data.studentId, data.status, data.date, data.remarks);
+    }
+
+    return record;
   }
 
   async bulkMarkAttendance(tenantId: string, records: Array<{ studentId: string; date: Date; status: AttendanceStatus; remarks?: string }>) {
-    return Promise.all(records.map(record => this.markAttendance(tenantId, record)));
+    const results = await this.prisma.$transaction(
+      records.map(record =>
+        this.prisma.attendance.upsert({
+          where: { studentId_date: { studentId: record.studentId, date: record.date } },
+          update: { status: record.status, remarks: record.remarks },
+          create: { ...record, tenantId },
+        })
+      )
+    );
+
+    // Fire-and-forget parent notifications for absent/late
+    for (const record of records) {
+      if (record.status === 'ABSENT' || record.status === 'LATE') {
+        notifyParentsOfAbsence(this.prisma, tenantId, record.studentId, record.status, record.date, record.remarks);
+      }
+    }
+
+    return results;
   }
 
   async getAttendance(tenantId: string, filters: { studentId?: string; classId?: string; date?: Date; startDate?: Date; endDate?: Date }) {
