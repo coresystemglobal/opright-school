@@ -68,6 +68,16 @@ export const parentController = {
     }
   },
 
+  async getChildTimetable(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { studentId } = studentIdParamSchema.parse(req.params);
+      const timetable = await service.getChildTimetable(requireTenantId(req), studentId);
+      res.json(timetable);
+    } catch (error) {
+      next(error);
+    }
+  },
+
   async createParent(req: Request, res: Response, next: NextFunction) {
     try {
       const data = parentSchema.parse(req.body);

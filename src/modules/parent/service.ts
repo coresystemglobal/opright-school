@@ -68,6 +68,24 @@ export class ParentService {
     });
   }
 
+  async getChildTimetable(tenantId: string, studentId: string) {
+    const enrollment = await this.prisma.enrollment.findFirst({
+      where: { tenantId, studentId },
+      select: { classId: true },
+      orderBy: { createdAt: "desc" },
+    });
+    if (!enrollment) return [];
+
+    return (this.prisma as any).timetable.findMany({
+      where: { tenantId, classId: enrollment.classId },
+      include: {
+        subject: { select: { name: true, code: true } },
+        teacher: { select: { firstName: true, lastName: true } },
+      },
+      orderBy: [{ dayOfWeek: "asc" }, { startTime: "asc" }],
+    });
+  }
+
   async createParent(tenantId: string, data: ParentInput) {
     const parentRole = await this.prisma.role.findFirst({
       where: { tenantId, name: "Parent" },
