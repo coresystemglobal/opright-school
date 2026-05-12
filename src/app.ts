@@ -45,6 +45,7 @@ import termRoutes from "./modules/terms/routes";
 import timetableRoutes from "./modules/timetables/routes";
 import transportRoutes from "./modules/transport/routes";
 import uploadRoutes from "./modules/upload/routes";
+import platformRoutes from "./modules/platform/routes";
 import websiteDomainRoutes from "./modules/school-website/domain.routes";
 import { CacheService } from "./utils/cache";
 import { buildCorsOptions } from "./utils/cors";
@@ -68,11 +69,10 @@ app.get("/health", async (_req, res) => {
 
 app.use("/docs", docsRoutes);
 app.use("/onboarding", onboardingRoutes);
-app.use(tenantMiddleware);
-app.use("/queue", queueRoutes); // QStash webhooks — no auth/tenant
-
-// Paystack webhook — no auth required, needs raw body for HMAC verification
+app.use("/queue", queueRoutes); // QStash webhooks — no tenant header
+// Paystack webhook — no tenant header; raw body required for HMAC verification
 app.post("/payments/webhook", express.raw({ type: 'application/json' }), paymentController.paystackWebhook);
+app.use(tenantMiddleware);
 
 app.use("/auth", authRoutes);
 app.use("/roles", roleRoutes);
@@ -111,6 +111,7 @@ app.use("/candidates", requireRole("ADMIN"), candidateRoutes);
 app.use("/courses", requireRole("ADMIN", "TEACHER"), courseRoutes);
 app.use("/elearning", elearningRoutes);
 app.use("/billing", requireRole("ADMIN"), billingRoutes);
+app.use("/platform", requireRole("MASTER"), platformRoutes);
 app.use("/api/admin/website/domain", requireRole("ADMIN"), websiteDomainRoutes);
 
 app.use(errorHandler);

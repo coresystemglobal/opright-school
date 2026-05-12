@@ -43,6 +43,13 @@ export const RESOURCES = {
   SPORTS: 'sports',
   HEALTH: 'health',
   INVENTORY: 'inventory',
+  ACADEMIC_YEARS: 'academicYears',
+  TERMS: 'terms',
+  SUBJECTS: 'subjects',
+  TIMETABLES: 'timetables',
+  SETTINGS: 'settings',
+  NOTIFICATIONS: 'notifications',
+  PLATFORM: 'platform',
 } as const;
 
 export const ACTIONS = {

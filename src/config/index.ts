@@ -25,9 +25,15 @@ export const config = {
   storage: {
     bucket: process.env.S3_BUCKET,
     endpoint: process.env.S3_ENDPOINT,
+    publicEndpoint: process.env.S3_PUBLIC_ENDPOINT,
     accessKeyId: process.env.S3_ACCESS_KEY_ID,
     secretAccessKey: process.env.S3_SECRET_ACCESS_KEY,
     region: process.env.S3_REGION,
+  },
+  cloudflare: {
+    apiToken: process.env.CLOUDFLARE_API_TOKEN,
+    zoneId: process.env.CLOUDFLARE_ZONE_ID,
+    cnameTarget: process.env.CLOUDFLARE_CNAME_TARGET,
   },
   payments: {
     paystack: {
