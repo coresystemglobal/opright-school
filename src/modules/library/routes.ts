@@ -2,7 +2,8 @@ import { Router } from "express";
 import multer from "multer";
 import { libraryController } from "./controller";
 import { ebookController } from "./ebookController";
-import { requireRole } from "../../middleware/auth";
+import { authMiddleware } from "../../middleware/auth";
+import { authorize } from "../../middleware/authorize";
 
 const router = Router();
 const upload = multer({
@@ -14,27 +15,29 @@ const upload = multer({
   },
 });
 
-// ── Physical library (existing) ── restricted to ADMIN/TEACHER/STAFF ─────
-router.post("/books", requireRole("ADMIN", "TEACHER", "STAFF"), libraryController.createBook);
-router.get("/books", libraryController.getBooks);
-router.post("/borrow", requireRole("ADMIN", "TEACHER", "STAFF"), libraryController.borrowBook);
-router.post("/return/:id", requireRole("ADMIN", "TEACHER", "STAFF"), libraryController.returnBook);
-router.get("/transactions", requireRole("ADMIN", "TEACHER", "STAFF"), libraryController.getTransactions);
-router.get("/stats", libraryController.getStats);
+router.use(authMiddleware);
+
+// ── Physical library ──────────────────────────────────────────────────────
+router.post("/books", authorize("library", "create"), libraryController.createBook);
+router.get("/books", authorize("library", "read"), libraryController.getBooks);
+router.post("/borrow", authorize("library", "create"), libraryController.borrowBook);
+router.post("/return/:id", authorize("library", "update"), libraryController.returnBook);
+router.get("/transactions", authorize("library", "read"), libraryController.getTransactions);
+router.get("/stats", authorize("library", "read"), libraryController.getStats);
 
 // ── E-Library ────────────────────────────────────────────────────────────
-router.get("/ebooks", ebookController.list);
-router.get("/ebooks/genres", ebookController.getGenres);
-router.get("/ebooks/:id", ebookController.getById);
-router.get("/ebooks/:id/read", ebookController.getReadUrl);
-router.get("/ebooks/:id/download", ebookController.getDownloadUrl);
-router.get("/ebooks/:id/progress", ebookController.getProgress);
-router.post("/ebooks/:id/progress", ebookController.saveProgress);
+router.get("/ebooks", authorize("library", "read"), ebookController.list);
+router.get("/ebooks/genres", authorize("library", "read"), ebookController.getGenres);
+router.get("/ebooks/:id", authorize("library", "read"), ebookController.getById);
+router.get("/ebooks/:id/read", authorize("library", "read"), ebookController.getReadUrl);
+router.get("/ebooks/:id/download", authorize("library", "read"), ebookController.getDownloadUrl);
+router.get("/ebooks/:id/progress", authorize("library", "read"), ebookController.getProgress);
+router.post("/ebooks/:id/progress", authorize("library", "update"), ebookController.saveProgress);
 
 // Admin/Teacher only
-router.post("/ebooks", requireRole("ADMIN", "TEACHER"), upload.single("file"), ebookController.create);
-router.put("/ebooks/:id", requireRole("ADMIN", "TEACHER"), ebookController.update);
-router.put("/ebooks/:id/file", requireRole("ADMIN", "TEACHER"), upload.single("file"), ebookController.replaceFile);
-router.delete("/ebooks/:id", requireRole("ADMIN", "TEACHER"), ebookController.delete);
+router.post("/ebooks", authorize("library", "create"), upload.single("file"), ebookController.create);
+router.put("/ebooks/:id", authorize("library", "update"), ebookController.update);
+router.put("/ebooks/:id/file", authorize("library", "update"), upload.single("file"), ebookController.replaceFile);
+router.delete("/ebooks/:id", authorize("library", "delete"), ebookController.delete);
 
 export default router;
