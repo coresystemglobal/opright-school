@@ -17,8 +17,10 @@ const queueHeaderSchema = z.object({
 const queueBodySchema = z.object({
   tenantId: z.string().uuid(),
   payload: z.object({
-    type: z.enum(["attendance_report", "grade_report"]),
+    type: z.enum(["attendance_report", "grade_report", "report_card"]),
     studentId: z.string().uuid().optional(),
+    termId: z.string().uuid().optional(),
+    userId: z.string().optional(),
   }).passthrough(),
 });
 
@@ -30,6 +32,25 @@ export const queueController = {
       const { tenantId, payload } = queueBodySchema.parse(req.body);
       const result = await service.processReport(signature, body, tenantId, payload);
       res.status(200).json(result);
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  async requestReport(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { ReportQueue } = await import("../../workers/reportWorker");
+      const { type, studentId, termId } = z.object({
+        type: z.enum(["attendance_report", "grade_report", "report_card"]),
+        studentId: z.string().uuid(),
+        termId: z.string().uuid().optional(),
+      }).parse(req.body);
+
+      const tenantId = req.tenantId ?? req.body.tenantId;
+      const userId = req.user?.userId;
+
+      await ReportQueue.publish(tenantId, { type, studentId, termId, userId });
+      res.json({ queued: true, message: "Report generation started. You'll be notified when it's ready." });
     } catch (error) {
       next(error);
     }

@@ -2,8 +2,10 @@ import { Receiver } from "@upstash/qstash";
 import { handleReportJob } from "../../workers/reportWorker";
 
 type ReportPayload = {
-  type: "attendance_report" | "grade_report";
+  type: "attendance_report" | "grade_report" | "report_card";
   studentId?: string;
+  termId?: string;
+  userId?: string;
 };
 
 export class QueueService {
