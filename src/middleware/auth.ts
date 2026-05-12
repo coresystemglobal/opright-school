@@ -6,6 +6,7 @@ declare global {
     interface Request { 
       user?: { userId: string; tenantId: string; role: string; roleId?: string | null };
       tenantId?: string;
+      isMaster?: boolean;
     } 
   }
 }
@@ -16,6 +17,16 @@ export function authMiddleware(req: Request, res: Response, next: NextFunction) 
   
   try {
     const payload = jwt.verify(auth, process.env.JWT_SECRET!) as any;
+
+    // MASTER role can access any tenant
+    if (payload.role === "MASTER") {
+      req.user = payload;
+      req.isMaster = true;
+      // Allow MASTER to operate on the requested tenant (from header) or their own
+      if (req.tenantId) payload.tenantId = req.tenantId;
+      return next();
+    }
+
     if (payload.tenantId !== req.tenantId) return res.status(403).json({ error: "Wrong tenant" });
     req.user = payload;
     next();
@@ -26,7 +37,10 @@ export function authMiddleware(req: Request, res: Response, next: NextFunction) 
 
 export function requireRole(...roles: string[]) {
   return (req: Request, res: Response, next: NextFunction) => {
-    if (!req.user || !roles.includes(req.user.role)) {
+    if (!req.user) return res.status(403).json({ error: "Insufficient permissions" });
+    // MASTER has implicit access to everything
+    if (req.user.role === "MASTER") return next();
+    if (!roles.includes(req.user.role)) {
       return res.status(403).json({ error: "Insufficient permissions" });
     }
     next();
