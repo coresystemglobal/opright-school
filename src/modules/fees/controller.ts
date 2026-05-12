@@ -4,6 +4,7 @@ import prisma from "../../prisma/client";
 import { FeeAccountService } from "./accountService";
 import { FeeTemplateService } from "./templateService";
 import { FeeAssignmentService } from "./assignmentService";
+import { InvoiceService } from "./invoiceService";
 import { PaystackSubaccountService } from "./paystackSubaccountService";
 import { AppError } from "../../utils/errors";
 import { idParamSchema } from "../../utils/validation";
@@ -11,6 +12,7 @@ import { idParamSchema } from "../../utils/validation";
 const accountService = new FeeAccountService(prisma);
 const templateService = new FeeTemplateService(prisma);
 const assignmentService = new FeeAssignmentService(prisma);
+const invoiceService = new InvoiceService(prisma);
 const subaccountSvc = new PaystackSubaccountService();
 
 const setupAccountSchema = z.object({
@@ -52,25 +54,18 @@ const updateTemplateSchema = createTemplateSchema
   .omit({ category: true, targetType: true })
   .partial();
 
-const waiveSchema = z.object({
-  reason: z.string().min(1),
-});
+const waiveSchema = z.object({ reason: z.string().min(1) });
 
 function handleError(res: Response, error: unknown) {
-  if (error instanceof AppError) {
-    return res.status(error.statusCode).json({ error: error.message });
-  }
-  if (error instanceof z.ZodError) {
-    return res.status(400).json({ error: error.errors });
-  }
+  if (error instanceof AppError) return res.status(error.statusCode).json({ error: error.message });
+  if (error instanceof z.ZodError) return res.status(400).json({ error: error.errors });
   return res.status(400).json({ error: error instanceof Error ? error.message : "Unknown error" });
 }
 
 export const feesController = {
   async listBanks(req: Request, res: Response) {
     try {
-      const currency = (req.query.currency as string) ?? "NGN";
-      const banks = await subaccountSvc.listBanks(currency);
+      const banks = await subaccountSvc.listBanks((req.query.currency as string) ?? "NGN");
       res.json(banks);
     } catch (error) {
       res.status(502).json({ error: error instanceof Error ? error.message : "Failed to fetch banks" });
@@ -81,11 +76,8 @@ export const feesController = {
     try {
       const accountNumber = req.query.accountNumber as string;
       const bankCode = req.query.bankCode as string;
-      if (!accountNumber || !bankCode) {
-        return res.status(400).json({ error: "accountNumber and bankCode are required" });
-      }
-      const result = await subaccountSvc.resolveAccount(accountNumber, bankCode);
-      res.json(result);
+      if (!accountNumber || !bankCode) return res.status(400).json({ error: "accountNumber and bankCode are required" });
+      res.json(await subaccountSvc.resolveAccount(accountNumber, bankCode));
     } catch (error) {
       res.status(400).json({ error: error instanceof Error ? error.message : "Account verification failed" });
     }
@@ -95,21 +87,15 @@ export const feesController = {
     try {
       if (!req.tenantId) return res.status(400).json({ error: "Tenant ID required" });
       const data = setupAccountSchema.parse(req.body);
-      const account = await accountService.setupAccount(req.tenantId, { ...data });
-      res.status(201).json(account);
-    } catch (error) {
-      handleError(res, error);
-    }
+      res.status(201).json(await accountService.setupAccount(req.tenantId, { ...data }));
+    } catch (error) { handleError(res, error); }
   },
 
   async getAccount(req: Request, res: Response) {
     try {
       if (!req.tenantId) return res.status(400).json({ error: "Tenant ID required" });
-      const account = await accountService.getAccount(req.tenantId);
-      res.json(account);
-    } catch (error) {
-      handleError(res, error);
-    }
+      res.json(await accountService.getAccount(req.tenantId));
+    } catch (error) { handleError(res, error); }
   },
 
   async requestAccountChange(req: Request, res: Response) {
@@ -117,18 +103,14 @@ export const feesController = {
       if (!req.tenantId) return res.status(400).json({ error: "Tenant ID required" });
       if (!req.user) return res.status(401).json({ error: "Unauthorized" });
       const data = changeRequestSchema.parse(req.body);
-      const request = await accountService.requestAccountChange(req.tenantId, req.user.userId, data);
-      res.status(201).json(request);
-    } catch (error) {
-      handleError(res, error);
-    }
+      res.status(201).json(await accountService.requestAccountChange(req.tenantId, req.user.userId, data));
+    } catch (error) { handleError(res, error); }
   },
 
   async getChangeRequests(req: Request, res: Response) {
     try {
       if (!req.tenantId) return res.status(400).json({ error: "Tenant ID required" });
-      const requests = await accountService.getChangeRequests(req.tenantId);
-      res.json(requests);
+      res.json(await accountService.getChangeRequests(req.tenantId));
     } catch (error) {
       res.status(500).json({ error: error instanceof Error ? error.message : "Unknown error" });
     }
@@ -137,24 +119,19 @@ export const feesController = {
   async createTemplate(req: Request, res: Response) {
     try {
       if (!req.tenantId) return res.status(400).json({ error: "Tenant ID required" });
-      const data = createTemplateSchema.parse(req.body);
-      const template = await templateService.create(req.tenantId, data);
-      res.status(201).json(template);
-    } catch (error) {
-      handleError(res, error);
-    }
+      res.status(201).json(await templateService.create(req.tenantId, createTemplateSchema.parse(req.body)));
+    } catch (error) { handleError(res, error); }
   },
 
   async listTemplates(req: Request, res: Response) {
     try {
       if (!req.tenantId) return res.status(400).json({ error: "Tenant ID required" });
-      const templates = await templateService.list(req.tenantId, {
+      res.json(await templateService.list(req.tenantId, {
         category: req.query.category as string | undefined,
         isActive: req.query.isActive !== undefined ? req.query.isActive === "true" : undefined,
         academicYearId: req.query.academicYearId as string | undefined,
         termId: req.query.termId as string | undefined,
-      });
-      res.json(templates);
+      }));
     } catch (error) {
       res.status(500).json({ error: error instanceof Error ? error.message : "Unknown error" });
     }
@@ -163,58 +140,42 @@ export const feesController = {
   async getTemplate(req: Request, res: Response) {
     try {
       if (!req.tenantId) return res.status(400).json({ error: "Tenant ID required" });
-      const { id } = idParamSchema.parse(req.params);
-      const template = await templateService.getById(req.tenantId, id);
-      res.json(template);
-    } catch (error) {
-      handleError(res, error);
-    }
+      res.json(await templateService.getById(req.tenantId, idParamSchema.parse(req.params).id));
+    } catch (error) { handleError(res, error); }
   },
 
   async updateTemplate(req: Request, res: Response) {
     try {
       if (!req.tenantId) return res.status(400).json({ error: "Tenant ID required" });
       const { id } = idParamSchema.parse(req.params);
-      const data = updateTemplateSchema.parse(req.body);
-      const template = await templateService.update(req.tenantId, id, data);
-      res.json(template);
-    } catch (error) {
-      handleError(res, error);
-    }
+      res.json(await templateService.update(req.tenantId, id, updateTemplateSchema.parse(req.body)));
+    } catch (error) { handleError(res, error); }
   },
 
   async deactivateTemplate(req: Request, res: Response) {
     try {
       if (!req.tenantId) return res.status(400).json({ error: "Tenant ID required" });
-      const { id } = idParamSchema.parse(req.params);
-      await templateService.deactivate(req.tenantId, id);
+      await templateService.deactivate(req.tenantId, idParamSchema.parse(req.params).id);
       res.status(204).send();
-    } catch (error) {
-      handleError(res, error);
-    }
+    } catch (error) { handleError(res, error); }
   },
 
   async assignTemplate(req: Request, res: Response) {
     try {
       if (!req.tenantId) return res.status(400).json({ error: "Tenant ID required" });
-      const { id } = idParamSchema.parse(req.params);
-      const result = await assignmentService.generateAssignments(req.tenantId, id);
-      res.json(result);
-    } catch (error) {
-      handleError(res, error);
-    }
+      res.json(await assignmentService.generateAssignments(req.tenantId, idParamSchema.parse(req.params).id));
+    } catch (error) { handleError(res, error); }
   },
 
   async listAssignments(req: Request, res: Response) {
     try {
       if (!req.tenantId) return res.status(400).json({ error: "Tenant ID required" });
-      const assignments = await assignmentService.listAssignments(req.tenantId, {
+      res.json(await assignmentService.listAssignments(req.tenantId, {
         studentId: req.query.studentId as string | undefined,
         feeTemplateId: req.query.feeTemplateId as string | undefined,
         status: req.query.status as string | undefined,
         classId: req.query.classId as string | undefined,
-      });
-      res.json(assignments);
+      }));
     } catch (error) {
       res.status(500).json({ error: error instanceof Error ? error.message : "Unknown error" });
     }
@@ -226,21 +187,30 @@ export const feesController = {
       if (!req.user) return res.status(401).json({ error: "Unauthorized" });
       const { id } = idParamSchema.parse(req.params);
       const { reason } = waiveSchema.parse(req.body);
-      const assignment = await assignmentService.waiveAssignment(req.tenantId, id, req.user.userId, reason);
-      res.json(assignment);
-    } catch (error) {
-      handleError(res, error);
-    }
+      res.json(await assignmentService.waiveAssignment(req.tenantId, id, req.user.userId, reason));
+    } catch (error) { handleError(res, error); }
   },
 
   async getStudentFeeSummary(req: Request, res: Response) {
     try {
       if (!req.tenantId) return res.status(400).json({ error: "Tenant ID required" });
-      const { studentId } = req.params;
-      const summary = await assignmentService.getStudentSummary(req.tenantId, studentId);
-      res.json(summary);
+      res.json(await assignmentService.getStudentSummary(req.tenantId, req.params.studentId));
+    } catch (error) { handleError(res, error); }
+  },
+
+  async getInvoice(req: Request, res: Response) {
+    try {
+      if (!req.tenantId) return res.status(400).json({ error: "Tenant ID required" });
+      res.json(await invoiceService.getInvoice(req.tenantId, idParamSchema.parse(req.params).id));
+    } catch (error) { handleError(res, error); }
+  },
+
+  async listInvoicesForAssignment(req: Request, res: Response) {
+    try {
+      if (!req.tenantId) return res.status(400).json({ error: "Tenant ID required" });
+      res.json(await invoiceService.listForAssignment(req.tenantId, req.params.assignmentId));
     } catch (error) {
-      handleError(res, error);
+      res.status(500).json({ error: error instanceof Error ? error.message : "Unknown error" });
     }
   },
 };

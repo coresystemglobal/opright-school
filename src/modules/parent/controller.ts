@@ -5,76 +5,98 @@ import { UnauthorizedError, ValidationError } from "../../utils/errors";
 import { parentSchema } from "../../utils/schemas";
 import { uuidSchema } from "../../utils/validation";
 import { ParentService } from "./service";
+import { ParentFeeService } from "../fees/parentFeeService";
 
 const service = new ParentService(prisma);
+const feeService = new ParentFeeService(prisma);
 
-const studentIdParamSchema = z.object({
-  studentId: uuidSchema,
-});
+const studentIdParamSchema = z.object({ studentId: uuidSchema });
 
 function requireTenantId(req: Request) {
-  if (!req.tenantId) {
-    throw new ValidationError("Tenant ID required");
-  }
-
+  if (!req.tenantId) throw new ValidationError("Tenant ID required");
   return req.tenantId;
 }
 
 function requireUserId(req: Request) {
-  if (!req.user?.userId) {
-    throw new UnauthorizedError();
-  }
-
+  if (!req.user?.userId) throw new UnauthorizedError();
   return req.user.userId;
 }
 
 export const parentController = {
   async getChildren(req: Request, res: Response, next: NextFunction) {
     try {
-      const students = await service.getChildren(requireTenantId(req), requireUserId(req));
-      res.json(students);
-    } catch (error) {
-      next(error);
-    }
+      res.json(await service.getChildren(requireTenantId(req), requireUserId(req)));
+    } catch (error) { next(error); }
   },
 
   async getChildAttendance(req: Request, res: Response, next: NextFunction) {
     try {
       const { studentId } = studentIdParamSchema.parse(req.params);
-      const attendance = await service.getChildAttendance(requireTenantId(req), studentId);
-      res.json(attendance);
-    } catch (error) {
-      next(error);
-    }
+      res.json(await service.getChildAttendance(requireTenantId(req), studentId));
+    } catch (error) { next(error); }
   },
 
   async getChildGrades(req: Request, res: Response, next: NextFunction) {
     try {
       const { studentId } = studentIdParamSchema.parse(req.params);
-      const grades = await service.getChildGrades(requireTenantId(req), studentId);
-      res.json(grades);
-    } catch (error) {
-      next(error);
-    }
+      res.json(await service.getChildGrades(requireTenantId(req), studentId));
+    } catch (error) { next(error); }
   },
 
   async getChildPayments(req: Request, res: Response, next: NextFunction) {
     try {
       const { studentId } = studentIdParamSchema.parse(req.params);
-      const payments = await service.getChildPayments(requireTenantId(req), studentId);
-      res.json(payments);
-    } catch (error) {
-      next(error);
-    }
+      res.json(await service.getChildPayments(requireTenantId(req), studentId));
+    } catch (error) { next(error); }
   },
 
   async createParent(req: Request, res: Response, next: NextFunction) {
     try {
-      const data = parentSchema.parse(req.body);
-      const parent = await service.createParent(requireTenantId(req), data);
-      res.status(201).json(parent);
-    } catch (error) {
-      next(error);
-    }
+      res.status(201).json(await service.createParent(requireTenantId(req), parentSchema.parse(req.body)));
+    } catch (error) { next(error); }
+  },
+
+  async getFeeSummaries(req: Request, res: Response, next: NextFunction) {
+    try {
+      res.json(await feeService.getChildrenFeeSummaries(requireTenantId(req), requireUserId(req)));
+    } catch (error) { next(error); }
+  },
+
+  async getChildFeeDetails(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { studentId } = studentIdParamSchema.parse(req.params);
+      res.json(await feeService.getChildFeeDetails(requireTenantId(req), requireUserId(req), studentId));
+    } catch (error) { next(error); }
+  },
+
+  async initiatePayment(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { feeAssignmentId, amount, payerEmail } = z.object({
+        feeAssignmentId: uuidSchema,
+        amount: z.number().positive(),
+        payerEmail: z.string().email(),
+      }).parse(req.body);
+      const invoice = await feeService.initiatePayment(
+        requireTenantId(req), requireUserId(req), feeAssignmentId, amount, payerEmail
+      );
+      res.status(201).json(invoice);
+    } catch (error) { next(error); }
+  },
+
+  async listOptInTemplates(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { studentId } = studentIdParamSchema.parse(req.params);
+      res.json(await feeService.listOptInTemplates(requireTenantId(req), requireUserId(req), studentId));
+    } catch (error) { next(error); }
+  },
+
+  async optIn(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { studentId } = studentIdParamSchema.parse(req.params);
+      const { feeTemplateId } = z.object({ feeTemplateId: uuidSchema }).parse(req.body);
+      res.status(201).json(
+        await feeService.optIn(requireTenantId(req), requireUserId(req), studentId, feeTemplateId)
+      );
+    } catch (error) { next(error); }
   },
 };
