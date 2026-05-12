@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { z } from "zod";
 import prisma from "../../prisma/client";
 import { HostelService } from './service';
+import { checkServiceAccess } from "../../utils/checkServiceAccess";
 import {
   optionalUuidSchema,
   uuidSchema,
@@ -91,6 +92,12 @@ export const hostelController = {
       }
 
       const data = assignStudentSchema.parse(req.body);
+
+      const access = await checkServiceAccess(prisma, req.tenantId, data.studentId, "HOSTEL");
+      if (!access.allowed) {
+        return res.status(403).json({ error: access.reason, revokedFees: access.revokedFees });
+      }
+
       const assignment = await service.assignStudent(req.tenantId, data);
       res.status(201).json(assignment);
     } catch (error) {
@@ -107,6 +114,12 @@ export const hostelController = {
       }
 
       const data = createMealPlanSchema.parse(req.body);
+
+      const access = await checkServiceAccess(prisma, req.tenantId, data.studentId, "MEAL");
+      if (!access.allowed) {
+        return res.status(403).json({ error: access.reason, revokedFees: access.revokedFees });
+      }
+
       const plan = await service.createMealPlan(req.tenantId, data);
       res.status(201).json(plan);
     } catch (error) {

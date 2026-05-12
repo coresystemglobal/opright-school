@@ -3,6 +3,7 @@ import { Request, Response } from "express";
 import { z } from "zod";
 import prisma from "../../prisma/client";
 import { TransportService } from './service';
+import { checkServiceAccess } from "../../utils/checkServiceAccess";
 import { optionalUuidSchema } from "../../utils/validation";
 
 const service = new TransportService(prisma);
@@ -109,6 +110,12 @@ export const transportController = {
       }
 
       const data = assignStudentSchema.parse(req.body);
+
+      const access = await checkServiceAccess(prisma, req.tenantId, data.studentId, "TRANSPORT");
+      if (!access.allowed) {
+        return res.status(403).json({ error: access.reason, revokedFees: access.revokedFees });
+      }
+
       const assignment = await service.assignStudent(req.tenantId, data);
       res.status(201).json(assignment);
     } catch (error) {

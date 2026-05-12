@@ -22,7 +22,8 @@
     "db:migrate": "prisma migrate dev",
     "db:setup": "npm run db:push && npm run db:generate",
     "seed:tier1": "tsx src/utils/seedTier1.ts",
-    "seed": "tsx prisma/seed.ts"
+    "seed": "tsx prisma/seed.ts",
+    "seed:master": "tsx src/utils/seedMaster.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.906.0",

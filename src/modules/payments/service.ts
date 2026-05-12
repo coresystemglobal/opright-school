@@ -1,6 +1,7 @@
 import crypto from 'crypto';
 import { PaymentStatus, PrismaClient } from "@prisma/client";
 import { config } from '../../config';
+import { InvoiceService } from '../fees/invoiceService';
 
 type FeeCreateData = {
   name: string;
@@ -42,7 +43,11 @@ function verifyPaystackSignature(rawBody: Buffer, signature: string): boolean {
 }
 
 export class PaymentService {
-  constructor(private prisma: PrismaClient) {}
+  private invoiceService: InvoiceService;
+
+  constructor(private prisma: PrismaClient) {
+    this.invoiceService = new InvoiceService(prisma);
+  }
 
   async createFee(tenantId: string, data: FeeCreateData) {
     return this.prisma.fee.create({
@@ -73,14 +78,12 @@ export class PaymentService {
 
     const result = await paystackPost('/transaction/initialize', {
       email: data.email,
-      amount: Math.round(data.amount * 100), // kobo
+      amount: Math.round(data.amount * 100),
       reference,
       metadata: { tenantId, feeId: data.feeId, studentId: data.studentId },
     });
 
-    if (!result.status) {
-      throw new Error('Failed to initialize Paystack transaction');
-    }
+    if (!result.status) throw new Error('Failed to initialize Paystack transaction');
 
     const payment = await this.prisma.payment.create({
       data: {
@@ -102,55 +105,44 @@ export class PaymentService {
   }
 
   async confirmPayment(tenantId: string, paymentId: string) {
-    const payment = await this.prisma.payment.findFirst({
-      where: { id: paymentId, tenantId },
-    });
+    const payment = await this.prisma.payment.findFirst({ where: { id: paymentId, tenantId } });
     if (!payment) throw new Error('Payment not found');
     if (payment.status === PaymentStatus.SUCCESS) throw new Error('Payment already confirmed');
-
-    return this.prisma.payment.update({
-      where: { id: paymentId },
-      data: { status: PaymentStatus.SUCCESS },
-    });
+    return this.prisma.payment.update({ where: { id: paymentId }, data: { status: PaymentStatus.SUCCESS } });
   }
 
   async handlePaystackWebhook(rawBody: Buffer, signature: string) {
-    if (!verifyPaystackSignature(rawBody, signature)) {
-      throw new Error('Invalid Paystack signature');
-    }
+    if (!verifyPaystackSignature(rawBody, signature)) throw new Error('Invalid Paystack signature');
 
     const event = JSON.parse(rawBody.toString('utf-8')) as {
       event: string;
       data: {
         reference: string;
         status: string;
-        metadata?: { tenantId?: string };
+        amount: number;
+        metadata?: { tenantId?: string; feeAssignmentId?: string; payerUserId?: string };
       };
     };
 
-    if (event.event !== 'charge.success' || event.data.status !== 'success') {
-      return { ignored: true };
+    if (event.event !== 'charge.success' || event.data.status !== 'success') return { ignored: true };
+
+    const { reference, amount, metadata } = event.data;
+
+    // Route to fees invoice settlement if this is a fees payment
+    if (metadata?.feeAssignmentId) {
+      const settled = await this.invoiceService.settleFromWebhook(reference, amount, metadata ?? {});
+      if (settled) return { confirmed: true, type: 'fee_invoice', ...settled };
     }
 
-    const payment = await this.prisma.payment.findUnique({
-      where: { paystackRef: event.data.reference },
-    });
+    // Legacy payment settlement
+    const payment = await this.prisma.payment.findUnique({ where: { paystackRef: reference } });
+    if (!payment || payment.status === PaymentStatus.SUCCESS) return { ignored: true };
 
-    if (!payment || payment.status === PaymentStatus.SUCCESS) {
-      return { ignored: true };
-    }
-
-    await this.prisma.payment.update({
-      where: { id: payment.id },
-      data: { status: PaymentStatus.SUCCESS },
-    });
-
-    return { confirmed: true, paymentId: payment.id };
+    await this.prisma.payment.update({ where: { id: payment.id }, data: { status: PaymentStatus.SUCCESS } });
+    return { confirmed: true, type: 'legacy_payment', paymentId: payment.id };
   }
 
   async getStudentPayments(tenantId: string, studentId: string) {
-    return this.prisma.payment.findMany({
-      where: { tenantId, studentId },
-    });
+    return this.prisma.payment.findMany({ where: { tenantId, studentId } });
   }
 }
