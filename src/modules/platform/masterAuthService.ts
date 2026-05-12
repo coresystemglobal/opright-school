@@ -1,8 +1,11 @@
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import { PaystackSubaccountService } from "../fees/paystackSubaccountService";
 
 export class MasterAuthService {
+  private subaccountSvc = new PaystackSubaccountService();
+
   constructor(private prisma: PrismaClient) {}
 
   async login(email: string, password: string) {
@@ -95,17 +98,58 @@ export class MasterAuthService {
     });
 
     if (decision === "APPROVED") {
-      // Update the school's payment account details
-      await this.prisma.schoolPaymentAccount.updateMany({
+      const account = await this.prisma.schoolPaymentAccount.findUnique({
         where: { tenantId: request.tenantId },
-        data: {
-          bankName: request.newBankName,
-          accountNumber: request.newAccountNumber,
-          accountName: request.newAccountName,
-        },
       });
+
+      if (account) {
+        await this.subaccountSvc.updateSubaccount(account.paystackSubaccountCode, {
+          accountNumber: request.newAccountNumber,
+        });
+
+        await this.prisma.schoolPaymentAccount.update({
+          where: { tenantId: request.tenantId },
+          data: {
+            bankName: request.newBankName,
+            accountNumber: request.newAccountNumber,
+            accountName: request.newAccountName,
+          },
+        });
+      }
+
+      await this.notifyTenantAdmins(
+        request.tenantId,
+        "Bank account change approved",
+        "Your bank account change request has been approved by the platform administrator."
+      );
+    } else {
+      await this.notifyTenantAdmins(
+        request.tenantId,
+        "Bank account change rejected",
+        `Your bank account change request was rejected. ${reviewNote ?? ""}`.trim()
+      );
     }
 
     return updated;
+  }
+
+  private async notifyTenantAdmins(tenantId: string, title: string, body: string) {
+    const admins = await this.prisma.user.findMany({
+      where: { tenantId, role: { name: { in: ["Admin", "ADMIN", "admin"] } } },
+      select: { id: true },
+    });
+    if (admins.length === 0) return;
+
+    await this.prisma.notification.createMany({
+      data: admins.map((admin) => ({
+        tenantId,
+        userId: admin.id,
+        title,
+        body,
+        type: "bank_account_change",
+        link: "/settings/payment-account",
+      })),
+      skipDuplicates: true,
+    });
   }
 }
