@@ -86,12 +86,20 @@ export class TransportService {
       },
     });
 
-    await NotificationService.notify(
-      tenantId,
-      data.studentId,
-      `Assigned to ${assignment.route.bus.busNumber} - ${assignment.route.routeName}`,
-      "transport"
-    );
+    // Resolve userId from studentId for notification
+    const student = await this.prisma.student.findFirst({
+      where: { id: data.studentId, tenantId },
+      select: { userId: true },
+    });
+
+    if (student?.userId) {
+      await NotificationService.notify(
+        tenantId,
+        student.userId,
+        `Assigned to ${assignment.route.bus.busNumber} - ${assignment.route.routeName}`,
+        "transport"
+      );
+    }
 
     return assignment;
   }

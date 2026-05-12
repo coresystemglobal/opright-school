@@ -5,6 +5,11 @@ import { teacherController } from './controller';
 const router = Router();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } });
 
+// Self-service (teacher viewing/updating their own profile)
+router.get("/me", teacherController.getMyProfile);
+router.put("/me", teacherController.updateMyProfile);
+
+// Admin CRUD
 router.get("/", teacherController.list);
 router.post("/", teacherController.create);
 router.post("/upload-csv", upload.single("file"), teacherController.uploadCsv);
