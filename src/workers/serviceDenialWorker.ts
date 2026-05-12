@@ -14,8 +14,11 @@ export const ServiceDenialQueue = {
     });
   },
 
-  /** Register a daily cron at midnight UTC. Call once during platform setup. */
+  /** Register a daily cron at midnight UTC. Idempotent — skips if already scheduled. */
   async scheduleCron() {
+    const existing = await qstash.schedules.list();
+    const alreadyScheduled = existing.some((s) => s.destination === WORKER_URL);
+    if (alreadyScheduled) return { skipped: true };
     return qstash.schedules.create({
       destination: WORKER_URL,
       cron: "0 0 * * *",
