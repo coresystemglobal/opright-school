@@ -32,10 +32,13 @@ export class RoleService {
   }
 
   async updateRole(tenantId: string, roleId: string, data: { name?: string; description?: string; permissionIds?: string[] }) {
+    const existing = await this.prisma.role.findFirst({ where: { id: roleId, tenantId } });
+    if (!existing) throw new Error('Role not found');
+
     const updateData: any = {};
     if (data.name) updateData.name = data.name;
     if (data.description !== undefined) updateData.description = data.description;
-    
+
     if (data.permissionIds) {
       await this.prisma.rolePermission.deleteMany({ where: { roleId } });
       updateData.permissions = {
@@ -63,7 +66,14 @@ export class RoleService {
     return this.prisma.permission.findMany();
   }
 
-  async assignRoleToUser(userId: string, roleId: string) {
+  async assignRoleToUser(tenantId: string, userId: string, roleId: string) {
+    const [user, role] = await Promise.all([
+      this.prisma.user.findFirst({ where: { id: userId, tenantId } }),
+      this.prisma.role.findFirst({ where: { id: roleId, tenantId } }),
+    ]);
+    if (!user) throw new Error('User not found');
+    if (!role) throw new Error('Role not found');
+
     return this.prisma.user.update({
       where: { id: userId },
       data: { roleId }

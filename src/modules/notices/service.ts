@@ -1,4 +1,5 @@
 import { PrismaClient } from "@prisma/client";
+import { NotificationModuleService } from "../notifications/service";
 
 const PUBLISHER_ROLES = new Set(["ADMIN", "PRINCIPAL", "TEACHER"]);
 
@@ -28,7 +29,7 @@ export class NoticesService {
   } as const;
 
   async create(tenantId: string, authorId: string, data: NoticePayload) {
-    return this.prisma.notice.create({
+    const notice = await this.prisma.notice.create({
       data: {
         tenantId,
         authorId,
@@ -38,6 +39,27 @@ export class NoticesService {
       },
       include: this.include,
     });
+
+    // Notify targeted users (fire-and-forget)
+    this.notifyUsers(tenantId, data.targetRoles ?? [], notice.title).catch(() => {});
+
+    return notice;
+  }
+
+  private async notifyUsers(tenantId: string, targetRoles: string[], title: string) {
+    const where: any = { tenantId };
+    if (targetRoles.length) {
+      where.role = { name: { in: targetRoles } };
+    }
+    const users = await this.prisma.user.findMany({ where, select: { id: true } });
+    if (!users.length) return;
+
+    const notifService = new NotificationModuleService(this.prisma);
+    await notifService.sendBulk(
+      tenantId,
+      users.map((u) => u.id),
+      { title: "New Notice", body: title, type: "notice", link: "/notices" },
+    );
   }
 
   async list(tenantId: string, role: string) {
