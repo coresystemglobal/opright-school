@@ -1,6 +1,7 @@
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import { StudentIdService } from "../../services/studentIdService";
+import { domainEvents } from "../../utils/domainEvents";
 
 export class CandidateService {
   private studentIdService: StudentIdService;
@@ -77,7 +78,7 @@ export class CandidateService {
     const defaultPassword = candidate.dob ? formatDobPassword(candidate.dob) : "change123";
     const hashedPassword = await bcrypt.hash(defaultPassword, 12);
 
-    const [student] = await this.prisma.$transaction(async (tx) => {
+    const student = await this.prisma.$transaction(async (tx) => {
       const user = await tx.user.create({
         data: {
           tenantId,
@@ -86,6 +87,7 @@ export class CandidateService {
           firstName: candidate.firstName,
           lastName: candidate.lastName,
           roleId: studentRole?.id ?? undefined,
+          mustChangePassword: true,
         },
       });
 
@@ -105,8 +107,10 @@ export class CandidateService {
         data: { status: "ADMITTED", admittedAt: new Date(), studentId: newStudent.id },
       });
 
-      return [newStudent];
+      return newStudent;
     });
+
+    domainEvents.emit("entity.changed", { tenantId, resource: "students", action: "created", id: student.id });
 
     return student;
   }
