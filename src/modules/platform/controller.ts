@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { z } from "zod";
 import prisma from "../../prisma/client";
 import { MasterAuthService } from "./masterAuthService";
+import { ServiceDenialQueue, runServiceDenialSweep } from "../../workers/serviceDenialWorker";
 
 const service = new MasterAuthService(prisma);
 
@@ -70,6 +71,29 @@ export const platformController = {
       res.json(result);
     } catch (error) {
       res.status(400).json({ error: error instanceof Error ? error.message : "Unknown error" });
+    }
+  },
+
+  async triggerServiceDenial(req: Request, res: Response) {
+    try {
+      const mode = (req.query.mode as string) ?? "queue";
+      if (mode === "direct") {
+        const result = await runServiceDenialSweep(prisma);
+        return res.json({ ok: true, mode: "direct", ...result });
+      }
+      await ServiceDenialQueue.publish();
+      res.json({ ok: true, mode: "queued", message: "Service denial sweep queued via QStash" });
+    } catch (error) {
+      res.status(500).json({ error: error instanceof Error ? error.message : "Unknown error" });
+    }
+  },
+
+  async scheduleServiceDenialCron(req: Request, res: Response) {
+    try {
+      const schedule = await ServiceDenialQueue.scheduleCron();
+      res.status(201).json({ ok: true, schedule });
+    } catch (error) {
+      res.status(500).json({ error: error instanceof Error ? error.message : "Unknown error" });
     }
   },
 };

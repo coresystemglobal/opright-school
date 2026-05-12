@@ -13,4 +13,7 @@ router.patch("/tenants/:tenantId", platformController.updateTenant);
 router.get("/bank-account-requests", platformController.listBankAccountRequests);
 router.post("/bank-account-requests/:id/review", platformController.reviewBankAccountRequest);
 
+router.post("/run-service-denial", platformController.triggerServiceDenial);
+router.post("/schedule-service-denial-cron", platformController.scheduleServiceDenialCron);
+
 export default router;
