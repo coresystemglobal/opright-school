@@ -2,12 +2,14 @@ import { Prisma, PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import { CacheService } from "../../utils/cache";
 import { StudentIdService } from "../../services/studentIdService";
+import { domainEvents } from "../../utils/domainEvents";
 
 type StudentCreateData = {
   firstName: string;
   lastName: string;
   dob?: Date;
   guardian?: Record<string, unknown>;
+  classId?: string;
 };
 
 type StudentUpdateData = Partial<StudentCreateData>;
@@ -19,17 +21,31 @@ export class StudentService {
     this.studentIdService = new StudentIdService(prisma);
   }
 
-  async list(tenantId: string) {
-    const cached = await CacheService.get(tenantId, "students");
-    if (cached) return cached;
+  async list(tenantId: string, opts?: { includeArchived?: boolean; page?: number; limit?: number; search?: string }) {
+    const page = opts?.page ?? 1;
+    const limit = Math.min(opts?.limit ?? 50, 100);
+    const skip = (page - 1) * limit;
 
-    const students = await this.prisma.student.findMany({
-      where: { tenantId },
-      orderBy: { createdAt: "desc" },
-    });
+    const where: any = { tenantId, ...(opts?.includeArchived ? {} : { status: "ACTIVE" }) };
+    if (opts?.search) {
+      where.OR = [
+        { firstName: { contains: opts.search, mode: "insensitive" } },
+        { lastName: { contains: opts.search, mode: "insensitive" } },
+        { studentCode: { contains: opts.search, mode: "insensitive" } },
+      ];
+    }
 
-    await CacheService.set(tenantId, "students", students, 300);
-    return students;
+    const [data, total] = await Promise.all([
+      this.prisma.student.findMany({
+        where,
+        orderBy: { createdAt: "desc" },
+        skip,
+        take: limit,
+      }),
+      this.prisma.student.count({ where }),
+    ]);
+
+    return { data, total, page, limit };
   }
 
   async create(tenantId: string, data: StudentCreateData) {
@@ -77,6 +93,7 @@ export class StudentService {
             firstName: data.firstName,
             lastName: data.lastName,
             roleId: studentRole?.id ?? undefined,
+            mustChangePassword: true,
           },
         });
 
@@ -85,7 +102,16 @@ export class StudentService {
         studentData.userId = user.id;
       }
 
-      return tx.student.create({ data: studentData });
+      const student = await tx.student.create({ data: studentData });
+
+      // Auto-enroll in class if provided
+      if (data.classId) {
+        await tx.enrollment.create({
+          data: { tenantId, studentId: student.id, classId: data.classId },
+        });
+      }
+
+      return student;
     });
 
     await CacheService.invalidate(tenantId, "students");
@@ -127,11 +153,13 @@ export class StudentService {
   }
 
   async delete(tenantId: string, id: string) {
-    await this.prisma.student.delete({
+    await this.prisma.student.update({
       where: { id, tenantId },
+      data: { status: "ARCHIVED" },
     });
 
     await CacheService.invalidate(tenantId, "students");
+    await CacheService.invalidate(tenantId, "students:all");
   }
 }
 

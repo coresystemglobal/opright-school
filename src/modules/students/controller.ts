@@ -12,6 +12,7 @@ const createSchema = z.object({
   lastName: z.string().min(1),
   dob: z.coerce.date().optional(),
   guardian: z.record(z.unknown()).optional(),
+  classId: z.string().uuid().optional(),
 });
 
 const updateSchema = createSchema.partial();
@@ -23,8 +24,12 @@ export const studentController = {
         return res.status(400).json({ error: "Tenant ID required" });
       }
 
-      const students = await service.list(req.tenantId);
-      res.json(students);
+      const includeArchived = req.query.includeArchived === "true";
+      const page = req.query.page ? Number(req.query.page) : undefined;
+      const limit = req.query.limit ? Number(req.query.limit) : undefined;
+      const search = req.query.search as string | undefined;
+      const result = await service.list(req.tenantId, { includeArchived, page, limit, search });
+      res.json(result);
     } catch (error) {
       res.status(500).json({
         error: error instanceof Error ? error.message : "Unknown error",
