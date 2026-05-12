@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { z } from 'zod';
+import { z, ZodError } from 'zod';
 import { RoleService } from './service';
 import prisma from '../../prisma/client';
 import { idParamSchema } from '../../utils/validation';
@@ -53,6 +53,7 @@ export const roleController = {
       if (!role) return res.status(404).json({ error: 'Role not found' });
       res.json(role);
     } catch (error) {
+      if (error instanceof ZodError) return res.status(400).json({ error: 'Invalid role ID' });
       res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
     }
   },
@@ -91,8 +92,9 @@ export const roleController = {
 
   async assignRole(req: Request, res: Response) {
     try {
+      if (!req.tenantId) return res.status(400).json({ error: 'Tenant ID required' });
       const { userId, roleId } = assignRoleSchema.parse(req.body);
-      await roleService.assignRoleToUser(userId, roleId);
+      await roleService.assignRoleToUser(req.tenantId, userId, roleId);
       res.json({ message: 'Role assigned successfully' });
     } catch (error) {
       res.status(400).json({ error: error instanceof Error ? error.message : 'Unknown error' });

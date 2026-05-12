@@ -1,18 +1,21 @@
 import { Router } from 'express';
 import { roleController } from './controller';
-import { authMiddleware } from '../../middleware/auth';
+import { authMiddleware, requireRole } from '../../middleware/auth';
 import { authorize } from '../../middleware/authorize';
 
 const router = Router();
 
 router.use(authMiddleware);
 
-router.post('/', authorize('roles', 'create'), roleController.createRole);
-router.get('/', authorize('roles', 'read'), roleController.getRoles);
+// Read-only: any authenticated user can see permissions list
 router.get('/permissions', roleController.getPermissions);
-router.get('/:id', authorize('roles', 'read'), roleController.getRole);
-router.put('/:id', authorize('roles', 'update'), roleController.updateRole);
-router.delete('/:id', authorize('roles', 'delete'), roleController.deleteRole);
-router.post('/assign', authorize('roles', 'update'), roleController.assignRole);
+
+// RBAC management: admin only
+router.post('/', requireRole('ADMIN'), authorize('roles', 'create'), roleController.createRole);
+router.get('/', requireRole('ADMIN'), authorize('roles', 'read'), roleController.getRoles);
+router.post('/assign', requireRole('ADMIN'), authorize('roles', 'update'), roleController.assignRole);
+router.get('/:id', requireRole('ADMIN'), authorize('roles', 'read'), roleController.getRole);
+router.put('/:id', requireRole('ADMIN'), authorize('roles', 'update'), roleController.updateRole);
+router.delete('/:id', requireRole('ADMIN'), authorize('roles', 'delete'), roleController.deleteRole);
 
 export default router;
