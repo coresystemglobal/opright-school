@@ -2,6 +2,7 @@ import { NextFunction, Request, Response } from "express";
 import { z } from "zod";
 import prisma from "../../prisma/client";
 import { ValidationError } from "../../utils/errors";
+import { checkServiceAccess } from "../../utils/checkServiceAccess";
 import { parseCsv } from "../../utils/csv";
 import {
   idParamSchema,
@@ -196,6 +197,12 @@ export const courseController = {
       const tenantId = requireTenantId(req);
       const { id } = idParamSchema.parse(req.params);
       const { studentId } = enrollStudentSchema.parse(req.body);
+
+      const access = await checkServiceAccess(prisma, tenantId, studentId, "TUITION");
+      if (!access.allowed) {
+        return res.status(403).json({ error: access.reason, revokedFees: access.revokedFees });
+      }
+
       const enrollment = await service.enrollStudent(tenantId, id, studentId);
       res.status(201).json(enrollment);
     } catch (error) {

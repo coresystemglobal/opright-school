@@ -3,6 +3,7 @@ import { Request, Response } from "express";
 import { z } from "zod";
 import prisma from "../../prisma/client";
 import { LibraryService } from './service';
+import { checkServiceAccess } from "../../utils/checkServiceAccess";
 import {
   optionalNumberSchema,
   optionalStringSchema,
@@ -93,6 +94,14 @@ export const libraryController = {
       }
 
       const data = borrowBookSchema.parse(req.body);
+
+      if (data.borrowerType === "student") {
+        const access = await checkServiceAccess(prisma, req.tenantId, data.borrowerId, "LIBRARY");
+        if (!access.allowed) {
+          return res.status(403).json({ error: access.reason, revokedFees: access.revokedFees });
+        }
+      }
+
       const transaction = await service.borrowBook(req.tenantId, data);
       res.status(201).json(transaction);
     } catch (error) {
