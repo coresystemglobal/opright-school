@@ -11,8 +11,6 @@ router.use(authMiddleware, tenantMiddleware);
 
 router.post('/', attendanceController.markAttendance);
 router.post('/bulk', attendanceController.bulkMarkAttendance);
-router.post('/upload-csv', upload.single('file'), attendanceController.uploadCsv);
-router.get('/csv-template', attendanceController.downloadCsvTemplate);
 router.get('/', attendanceController.getAttendance);
 router.get('/stats/:studentId', attendanceController.getAttendanceStats);
 router.get('/class/:classId/report', attendanceController.getClassAttendanceReport);

@@ -119,6 +119,8 @@ model User {
   firstName   String?
   lastName    String?
   mustChangePassword Boolean @default(false)
+  emailVerified      Boolean @default(true)
+  emailVerifyToken   String?  @unique
   isMaster    Boolean  @default(false) // platform-level super admin (cross-tenant)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt

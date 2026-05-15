@@ -4,17 +4,15 @@ import { paymentController } from './controller';
 
 const router = Router();
 
-// Paystack webhook: must use raw body parser so the HMAC signature can be verified
+// Paystack webhook — raw body for HMAC verification
 router.post(
   "/webhook",
   express.raw({ type: 'application/json' }),
   paymentController.paystackWebhook
 );
 
-router.post("/fees", paymentController.createFee);
-router.post("/online/initialize", paymentController.initializeOnlinePayment);
-router.post("/", paymentController.createPayment);
-router.put("/:id/confirm", paymentController.confirmPayment);
-router.get("/student/:studentId", paymentController.getStudentPayments);
+router.post("/initiate", paymentController.initiatePayment);
+router.get("/invoices/:id", paymentController.getInvoice);
+router.get("/student/:studentId/invoices", paymentController.getStudentInvoices);
 
 export default router;
