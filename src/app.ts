@@ -99,7 +99,7 @@ app.use("/academic-years", academicYearRoutes);
 app.use("/terms", termRoutes);
 app.use("/subjects", subjectRoutes);
 app.use("/timetables", timetableRoutes);
-app.use("/attendances", attendancesRoutes);
+app.use("/attendances", requireRole("ADMIN", "TEACHER"), attendancesRoutes);
 app.use("/gradebook", gradebookRoutes);
 app.use("/library", libraryRoutes);
 app.use("/transport", requireRole("ADMIN", "STAFF"), transportRoutes);
