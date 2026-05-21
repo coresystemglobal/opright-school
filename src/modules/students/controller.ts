@@ -23,7 +23,11 @@ export const studentController = {
         return res.status(400).json({ error: "Tenant ID required" });
       }
 
-      const students = await service.list(req.tenantId);
+      // Parse query parameters
+      const classId = req.query.classId as string | undefined;
+      const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : undefined;
+
+      const students = await service.list(req.tenantId, { classId, limit });
       res.json(students);
     } catch (error) {
       res.status(500).json({

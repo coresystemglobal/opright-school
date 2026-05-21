@@ -12,6 +12,11 @@ type StudentCreateData = {
 
 type StudentUpdateData = Partial<StudentCreateData>;
 
+type ListOptions = {
+  classId?: string;
+  limit?: number;
+};
+
 export class StudentService {
   private studentIdService: StudentIdService;
 
@@ -19,16 +24,24 @@ export class StudentService {
     this.studentIdService = new StudentIdService(prisma);
   }
 
-  async list(tenantId: string) {
-    const cached = await CacheService.get(tenantId, "students");
-    if (cached) return cached;
+  async list(tenantId: string, options?: ListOptions) {
+    // Build Prisma where clause
+    const where: Prisma.StudentWhereInput = { tenantId };
+
+    if (options?.classId) {
+      // Join through Enrollment table to filter by class
+      where.enrollments = {
+        some: { classId: options.classId }
+      };
+    }
 
     const students = await this.prisma.student.findMany({
-      where: { tenantId },
+      where,
+      take: options?.limit || undefined,
       orderBy: { createdAt: "desc" },
+      include: options?.classId ? { enrollments: true } : undefined,
     });
 
-    await CacheService.set(tenantId, "students", students, 300);
     return students;
   }
 
