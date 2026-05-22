@@ -423,7 +423,7 @@
                 }
               ]
             },
-            "description": "List Attendances. Requires a valid bearer token."
+            "description": "List Attendances. Requires a valid bearer token. Mounted with role restrictions: ADMIN, TEACHER."
           },
           "response": []
         },
@@ -455,7 +455,7 @@
                 "attendances"
               ]
             },
-            "description": "Create Attendance. Requires a valid bearer token."
+            "description": "Create Attendance. Requires a valid bearer token. Mounted with role restrictions: ADMIN, TEACHER."
           },
           "response": []
         },
@@ -488,7 +488,7 @@
                 "bulk"
               ]
             },
-            "description": "Create Bulk. Requires a valid bearer token."
+            "description": "Create Bulk. Requires a valid bearer token. Mounted with role restrictions: ADMIN, TEACHER."
           },
           "response": []
         },
@@ -517,7 +517,7 @@
                 }
               ]
             },
-            "description": "Get Class Attendance Report. Requires a valid bearer token."
+            "description": "Get Class Attendance Report. Requires a valid bearer token. Mounted with role restrictions: ADMIN, TEACHER."
           },
           "response": []
         },
@@ -551,7 +551,7 @@
                 }
               ]
             },
-            "description": "Get Attendance Statistics. Requires a valid bearer token."
+            "description": "Get Attendance Statistics. Requires a valid bearer token. Mounted with role restrictions: ADMIN, TEACHER."
           },
           "response": []
         }

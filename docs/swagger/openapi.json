@@ -954,7 +954,7 @@
           "Attendances"
         ],
         "summary": "List Attendances",
-        "description": "List Attendances. Requires a valid bearer token.",
+        "description": "List Attendances. Requires a valid bearer token. Mounted with role restrictions: ADMIN, TEACHER.",
         "operationId": "getattendances",
         "parameters": [
           {
@@ -1077,7 +1077,7 @@
           "Attendances"
         ],
         "summary": "Create Attendance",
-        "description": "Create Attendance. Requires a valid bearer token.",
+        "description": "Create Attendance. Requires a valid bearer token. Mounted with role restrictions: ADMIN, TEACHER.",
         "operationId": "postattendances",
         "parameters": [],
         "responses": {
@@ -1186,7 +1186,7 @@
           "Attendances"
         ],
         "summary": "Create Bulk",
-        "description": "Create Bulk. Requires a valid bearer token.",
+        "description": "Create Bulk. Requires a valid bearer token. Mounted with role restrictions: ADMIN, TEACHER.",
         "operationId": "postattendances_bulk",
         "parameters": [],
         "responses": {
@@ -1296,7 +1296,7 @@
           "Attendances"
         ],
         "summary": "Get Class Attendance Report",
-        "description": "Get Class Attendance Report. Requires a valid bearer token.",
+        "description": "Get Class Attendance Report. Requires a valid bearer token. Mounted with role restrictions: ADMIN, TEACHER.",
         "operationId": "getattendances_class_classId_report",
         "parameters": [
           {
@@ -1394,7 +1394,7 @@
           "Attendances"
         ],
         "summary": "Get Attendance Statistics",
-        "description": "Get Attendance Statistics. Requires a valid bearer token.",
+        "description": "Get Attendance Statistics. Requires a valid bearer token. Mounted with role restrictions: ADMIN, TEACHER.",
         "operationId": "getattendances_stats_studentId",
         "parameters": [
           {
