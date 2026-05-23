@@ -73,6 +73,7 @@ All controllers follow a consistent structure:
 
 | Controller | Methods |
 |---|---|
+| `studentController` | `list` (query params: `classId?` filters via Enrollment join; `limit?` int pagination; `StudentService.list(tenantId, { classId?, limit? })`), `create` (schema: `firstName`, `lastName`, `dob?` date, `guardian?` object), `getById`, `update` (all fields partial), `delete`, `bulkCreate` (CSV), `exportCsv` |
 | `roleController` | `createRole`, `getRoles`, `getRole`, `updateRole`, `deleteRole`, `getPermissions`, `assignRole` |
 | `academicYearController` | `create` (schema: `name`, `startDate`/`endDate` string→Date, `isCurrent?`), `list`, `getCurrent`, `update` (all fields partial), `delete` |
 | `termController` | `create` (schema: `name`, `academicYearId` UUID, `startDate`/`endDate` string→Date, `isCurrent?`), `list` (filter: `?academicYearId`), `getCurrent`, `update` (omits `academicYearId` — immutable; rest partial), `delete` |
