@@ -40,4 +40,7 @@ export const config = {
       secretKey: process.env.PAYSTACK_SECRET_KEY,
     },
   },
+  ai: {
+    anthropicApiKey: process.env.ANTHROPIC_API_KEY ?? "",
+  },
 };

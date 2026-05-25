@@ -94,8 +94,8 @@ export async function runServiceDenialSweep(prisma: PrismaClient): Promise<{
 
   // Count distinct tenants touched
   const tenantIds = new Set([
-    ...toRevoke.map((a) => a.tenantId),
-    ...paidButRevoked.map((a) => a.tenantId),
+    ...toRevoke.map((a) => (a as any).tenantId),
+    ...paidButRevoked.map((a) => (a as any).tenantId),
   ]);
 
   return {

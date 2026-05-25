@@ -1,39 +1,15 @@
 import crypto from 'crypto';
-import { PaymentStatus, PrismaClient } from "@prisma/client";
+import { PrismaClient } from "@prisma/client";
 import { config } from '../../config';
 import { InvoiceService } from '../fees/invoiceService';
 
-type FeeCreateData = {
-  name: string;
+type InitiatePaymentData = {
+  feeAssignmentId: string;
   amount: number;
-  dueDate: Date;
+  payerEmail: string;
+  payerUserId: string;
+  currency?: string;
 };
-
-type PaymentCreateData = {
-  feeId: string;
-  studentId: string;
-  amount: number;
-  method: string;
-};
-
-type OnlinePaymentInitData = {
-  feeId: string;
-  studentId: string;
-  amount: number;
-  email: string;
-};
-
-async function paystackPost(path: string, body: Record<string, unknown>) {
-  const res = await fetch(`https://api.paystack.co${path}`, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${config.payments.paystack.secretKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(body),
-  });
-  return res.json() as Promise<{ status: boolean; data: Record<string, unknown> }>;
-}
 
 function verifyPaystackSignature(rawBody: Buffer, signature: string): boolean {
   const secret = config.payments.paystack.secretKey;
@@ -49,66 +25,16 @@ export class PaymentService {
     this.invoiceService = new InvoiceService(prisma);
   }
 
-  async createFee(tenantId: string, data: FeeCreateData) {
-    return this.prisma.fee.create({
-      data: {
-        tenantId,
-        name: data.name,
-        amount: data.amount,
-        dueDate: data.dueDate,
-      },
-    });
+  async initiatePayment(tenantId: string, data: InitiatePaymentData) {
+    return this.invoiceService.initiate(tenantId, data);
   }
 
-  async createPayment(tenantId: string, data: PaymentCreateData) {
-    return this.prisma.payment.create({
-      data: {
-        tenantId,
-        feeId: data.feeId,
-        studentId: data.studentId,
-        amount: data.amount,
-        method: data.method,
-        status: PaymentStatus.PENDING,
-      },
-    });
+  async getInvoice(tenantId: string, invoiceId: string) {
+    return this.invoiceService.getInvoice(tenantId, invoiceId);
   }
 
-  async initializeOnlinePayment(tenantId: string, data: OnlinePaymentInitData) {
-    const reference = `fee_${tenantId}_${data.feeId}_${Date.now()}`;
-
-    const result = await paystackPost('/transaction/initialize', {
-      email: data.email,
-      amount: Math.round(data.amount * 100),
-      reference,
-      metadata: { tenantId, feeId: data.feeId, studentId: data.studentId },
-    });
-
-    if (!result.status) throw new Error('Failed to initialize Paystack transaction');
-
-    const payment = await this.prisma.payment.create({
-      data: {
-        tenantId,
-        feeId: data.feeId,
-        studentId: data.studentId,
-        amount: data.amount,
-        method: 'paystack',
-        status: PaymentStatus.PENDING,
-        paystackRef: reference,
-      },
-    });
-
-    return {
-      paymentId: payment.id,
-      authorizationUrl: result.data.authorization_url as string,
-      reference,
-    };
-  }
-
-  async confirmPayment(tenantId: string, paymentId: string) {
-    const payment = await this.prisma.payment.findFirst({ where: { id: paymentId, tenantId } });
-    if (!payment) throw new Error('Payment not found');
-    if (payment.status === PaymentStatus.SUCCESS) throw new Error('Payment already confirmed');
-    return this.prisma.payment.update({ where: { id: paymentId }, data: { status: PaymentStatus.SUCCESS } });
+  async getInvoicesForAssignment(tenantId: string, feeAssignmentId: string) {
+    return this.invoiceService.listForAssignment(tenantId, feeAssignmentId);
   }
 
   async handlePaystackWebhook(rawBody: Buffer, signature: string) {
@@ -128,21 +54,26 @@ export class PaymentService {
 
     const { reference, amount, metadata } = event.data;
 
-    // Route to fees invoice settlement if this is a fees payment
-    if (metadata?.feeAssignmentId) {
-      const settled = await this.invoiceService.settleFromWebhook(reference, amount, metadata ?? {});
-      if (settled) return { confirmed: true, type: 'fee_invoice', ...settled };
-    }
-
-    // Legacy payment settlement
-    const payment = await this.prisma.payment.findUnique({ where: { paystackRef: reference } });
-    if (!payment || payment.status === PaymentStatus.SUCCESS) return { ignored: true };
-
-    await this.prisma.payment.update({ where: { id: payment.id }, data: { status: PaymentStatus.SUCCESS } });
-    return { confirmed: true, type: 'legacy_payment', paymentId: payment.id };
+    const settled = await this.invoiceService.settleFromWebhook(reference, amount, metadata ?? {});
+    if (settled) return { confirmed: true, type: 'invoice', ...settled };
+    
+    return { ignored: true };
   }
 
-  async getStudentPayments(tenantId: string, studentId: string) {
-    return this.prisma.payment.findMany({ where: { tenantId, studentId } });
+  async getStudentInvoices(tenantId: string, studentId: string) {
+    return this.prisma.invoice.findMany({
+      where: {
+        tenantId,
+        feeAssignment: { studentId }
+      },
+      include: {
+        feeAssignment: {
+          include: {
+            feeTemplate: { select: { name: true, category: true } }
+          }
+        }
+      },
+      orderBy: { createdAt: 'desc' }
+    });
   }
 }

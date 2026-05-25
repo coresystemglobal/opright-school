@@ -7,6 +7,7 @@ router.get("/children", parentController.getChildren);
 router.get("/children/:studentId/attendance", parentController.getChildAttendance);
 router.get("/children/:studentId/grades", parentController.getChildGrades);
 router.get("/children/:studentId/payments", parentController.getChildPayments);
+router.get("/children/:studentId/timetable", parentController.getChildTimetable);
 
 // Fees — parent self-service
 router.get("/fees", parentController.getFeeSummaries);

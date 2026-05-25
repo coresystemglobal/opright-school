@@ -48,6 +48,7 @@ import uploadRoutes from "./modules/upload/routes";
 import platformRoutes from "./modules/platform/routes";
 import { platformController } from "./modules/platform/controller";
 import feesRoutes from "./modules/fees/routes";
+import aiRoutes from "./modules/ai/routes";
 import websiteDomainRoutes from "./modules/school-website/domain.routes";
 import { CacheService } from "./utils/cache";
 import { buildCorsOptions } from "./utils/cors";
@@ -99,7 +100,7 @@ app.use("/academic-years", academicYearRoutes);
 app.use("/terms", termRoutes);
 app.use("/subjects", subjectRoutes);
 app.use("/timetables", timetableRoutes);
-app.use("/attendances", attendancesRoutes);
+app.use("/attendances", requireRole("ADMIN", "TEACHER"), attendancesRoutes);
 app.use("/gradebook", gradebookRoutes);
 app.use("/library", libraryRoutes);
 app.use("/transport", requireRole("ADMIN", "STAFF"), transportRoutes);
@@ -119,6 +120,7 @@ app.use("/elearning", elearningRoutes);
 app.use("/billing", requireRole("ADMIN"), billingRoutes);
 app.use("/fees", requireRole("ADMIN"), feesRoutes);
 app.use("/api/admin/website/domain", requireRole("ADMIN"), websiteDomainRoutes);
+app.use("/ai", requireRole("ADMIN", "TEACHER", "PARENT"), aiRoutes);
 
 app.use(errorHandler);
 

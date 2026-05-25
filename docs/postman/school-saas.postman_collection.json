@@ -216,6 +216,9 @@
                 "value": "application/json"
               }
             ],
+            "auth": {
+              "type": "noauth"
+            },
             "body": {
               "mode": "raw",
               "raw": "{}",
@@ -238,7 +241,7 @@
                 "initiate"
               ]
             },
-            "description": "Create Initiate. Requires a valid bearer token. Mounted with role restrictions: ADMIN."
+            "description": "Create Initiate. Public endpoint. Mounted with role restrictions: ADMIN."
           },
           "response": []
         },
@@ -247,6 +250,9 @@
           "request": {
             "method": "GET",
             "header": [],
+            "auth": {
+              "type": "noauth"
+            },
             "url": {
               "raw": "{{baseUrl}}/api/admin/website/domain/ssl-status",
               "host": [
@@ -260,7 +266,7 @@
                 "ssl-status"
               ]
             },
-            "description": "List Ssl Statu. Requires a valid bearer token. Mounted with role restrictions: ADMIN."
+            "description": "List Ssl Statu. Public endpoint. Mounted with role restrictions: ADMIN."
           },
           "response": []
         },
@@ -274,6 +280,9 @@
                 "value": "application/json"
               }
             ],
+            "auth": {
+              "type": "noauth"
+            },
             "body": {
               "mode": "raw",
               "raw": "{}",
@@ -296,7 +305,7 @@
                 "verify"
               ]
             },
-            "description": "Create Verify. Requires a valid bearer token. Mounted with role restrictions: ADMIN."
+            "description": "Create Verify. Public endpoint. Mounted with role restrictions: ADMIN."
           },
           "response": []
         }
@@ -315,6 +324,9 @@
                 "value": "application/json"
               }
             ],
+            "auth": {
+              "type": "noauth"
+            },
             "body": {
               "mode": "raw",
               "raw": "{\n  \"studentId\": \"{{studentId}}\",\n  \"date\": \"2026-03-16\",\n  \"status\": \"PRESENT\",\n  \"remarks\": \"Arrived on time\"\n}",
@@ -333,7 +345,7 @@
                 "attendance"
               ]
             },
-            "description": "Create Attendance. Requires a valid bearer token. Mounted with role restrictions: ADMIN, TEACHER."
+            "description": "Create Attendance. Public endpoint. Mounted with role restrictions: ADMIN, TEACHER."
           },
           "response": []
         },
@@ -342,6 +354,9 @@
           "request": {
             "method": "GET",
             "header": [],
+            "auth": {
+              "type": "noauth"
+            },
             "url": {
               "raw": "{{baseUrl}}/attendance/student/{{studentId}}",
               "host": [
@@ -353,7 +368,7 @@
                 "{{studentId}}"
               ]
             },
-            "description": "Get Student Attendance. Requires a valid bearer token. Mounted with role restrictions: ADMIN, TEACHER."
+            "description": "Get Student Attendance. Public endpoint. Mounted with role restrictions: ADMIN, TEACHER."
           },
           "response": []
         }
@@ -408,7 +423,7 @@
                 }
               ]
             },
-            "description": "List Attendances. Requires a valid bearer token."
+            "description": "List Attendances. Requires a valid bearer token. Mounted with role restrictions: ADMIN, TEACHER."
           },
           "response": []
         },
@@ -440,7 +455,7 @@
                 "attendances"
               ]
             },
-            "description": "Create Attendance. Requires a valid bearer token."
+            "description": "Create Attendance. Requires a valid bearer token. Mounted with role restrictions: ADMIN, TEACHER."
           },
           "response": []
         },
@@ -473,7 +488,7 @@
                 "bulk"
               ]
             },
-            "description": "Create Bulk. Requires a valid bearer token."
+            "description": "Create Bulk. Requires a valid bearer token. Mounted with role restrictions: ADMIN, TEACHER."
           },
           "response": []
         },
@@ -502,7 +517,7 @@
                 }
               ]
             },
-            "description": "Get Class Attendance Report. Requires a valid bearer token."
+            "description": "Get Class Attendance Report. Requires a valid bearer token. Mounted with role restrictions: ADMIN, TEACHER."
           },
           "response": []
         },
@@ -536,7 +551,30 @@
                 }
               ]
             },
-            "description": "Get Attendance Statistics. Requires a valid bearer token."
+            "description": "Get Attendance Statistics. Requires a valid bearer token. Mounted with role restrictions: ADMIN, TEACHER."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Audit Logs",
+      "item": [
+        {
+          "name": "List Audit Logs",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/audit-logs",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "audit-logs"
+              ]
+            },
+            "description": "List Audit Logs. Requires a valid bearer token. Mounted with role restrictions: ADMIN."
           },
           "response": []
         }
@@ -545,6 +583,78 @@
     {
       "name": "Auth",
       "item": [
+        {
+          "name": "Create Change Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/change-password",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "change-password"
+              ]
+            },
+            "description": "Create Change Password. Public endpoint."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Forgot Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/forgot-password",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "forgot-password"
+              ]
+            },
+            "description": "Create Forgot Password. Public endpoint."
+          },
+          "response": []
+        },
         {
           "name": "Login",
           "request": {
@@ -578,6 +688,78 @@
               ]
             },
             "description": "Login. Public endpoint."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/logout",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "logout"
+              ]
+            },
+            "description": "Create Logout. Public endpoint."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Refresh",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/refresh",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "refresh"
+              ]
+            },
+            "description": "Create Refresh. Public endpoint."
           },
           "response": []
         },
@@ -618,6 +800,42 @@
           "response": []
         },
         {
+          "name": "Create Reset Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/reset-password",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "reset-password"
+              ]
+            },
+            "description": "Create Reset Password. Public endpoint."
+          },
+          "response": []
+        },
+        {
           "name": "Create Student Login",
           "request": {
             "method": "POST",
@@ -650,6 +868,28 @@
               ]
             },
             "description": "Create Student Login. Public endpoint."
+          },
+          "response": []
+        },
+        {
+          "name": "List Verify Email",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/verify-email",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "verify-email"
+              ]
+            },
+            "description": "List Verify Email. Public endpoint."
           },
           "response": []
         }
@@ -772,6 +1012,9 @@
           "request": {
             "method": "GET",
             "header": [],
+            "auth": {
+              "type": "noauth"
+            },
             "url": {
               "raw": "{{baseUrl}}/candidates",
               "host": [
@@ -781,7 +1024,7 @@
                 "candidates"
               ]
             },
-            "description": "List Candidates. Requires a valid bearer token. Mounted with role restrictions: ADMIN."
+            "description": "List Candidates. Public endpoint. Mounted with role restrictions: ADMIN."
           },
           "response": []
         },
@@ -795,6 +1038,9 @@
                 "value": "application/json"
               }
             ],
+            "auth": {
+              "type": "noauth"
+            },
             "body": {
               "mode": "raw",
               "raw": "{}",
@@ -813,7 +1059,7 @@
                 "candidates"
               ]
             },
-            "description": "Create Candidate. Requires a valid bearer token. Mounted with role restrictions: ADMIN."
+            "description": "Create Candidate. Public endpoint. Mounted with role restrictions: ADMIN."
           },
           "response": []
         },
@@ -822,6 +1068,9 @@
           "request": {
             "method": "GET",
             "header": [],
+            "auth": {
+              "type": "noauth"
+            },
             "url": {
               "raw": "{{baseUrl}}/candidates/{{id}}",
               "host": [
@@ -832,7 +1081,7 @@
                 "{{id}}"
               ]
             },
-            "description": "Get Candidate. Requires a valid bearer token. Mounted with role restrictions: ADMIN."
+            "description": "Get Candidate. Public endpoint. Mounted with role restrictions: ADMIN."
           },
           "response": []
         },
@@ -846,6 +1095,9 @@
                 "value": "application/json"
               }
             ],
+            "auth": {
+              "type": "noauth"
+            },
             "body": {
               "mode": "raw",
               "raw": "{}",
@@ -865,7 +1117,7 @@
                 "{{id}}"
               ]
             },
-            "description": "Update Candidate. Requires a valid bearer token. Mounted with role restrictions: ADMIN."
+            "description": "Update Candidate. Public endpoint. Mounted with role restrictions: ADMIN."
           },
           "response": []
         },
@@ -879,6 +1131,9 @@
                 "value": "application/json"
               }
             ],
+            "auth": {
+              "type": "noauth"
+            },
             "body": {
               "mode": "raw",
               "raw": "{}",
@@ -899,7 +1154,7 @@
                 "admit"
               ]
             },
-            "description": "Create Admit. Requires a valid bearer token. Mounted with role restrictions: ADMIN."
+            "description": "Create Admit. Public endpoint. Mounted with role restrictions: ADMIN."
           },
           "response": []
         }
@@ -913,6 +1168,9 @@
           "request": {
             "method": "GET",
             "header": [],
+            "auth": {
+              "type": "noauth"
+            },
             "url": {
               "raw": "{{baseUrl}}/classes",
               "host": [
@@ -922,7 +1180,7 @@
                 "classes"
               ]
             },
-            "description": "List Classes. Requires a valid bearer token. Mounted with role restrictions: ADMIN, TEACHER."
+            "description": "List Classes. Public endpoint. Mounted with role restrictions: ADMIN, TEACHER."
           },
           "response": []
         },
@@ -936,6 +1194,9 @@
                 "value": "application/json"
               }
             ],
+            "auth": {
+              "type": "noauth"
+            },
             "body": {
               "mode": "raw",
               "raw": "{\n  \"name\": \"JSS 1A\",\n  \"level\": \"JSS1\",\n  \"teacherId\": \"{{teacherId}}\"\n}",
@@ -954,7 +1215,7 @@
                 "classes"
               ]
             },
-            "description": "Create Class. Requires a valid bearer token. Mounted with role restrictions: ADMIN, TEACHER."
+            "description": "Create Class. Public endpoint. Mounted with role restrictions: ADMIN, TEACHER."
           },
           "response": []
         },
@@ -968,6 +1229,9 @@
                 "value": "application/json"
               }
             ],
+            "auth": {
+              "type": "noauth"
+            },
             "body": {
               "mode": "raw",
               "raw": "{\n  \"studentId\": \"{{studentId}}\"\n}",
@@ -988,7 +1252,7 @@
                 "enroll"
               ]
             },
-            "description": "Enroll Student In Class. Requires a valid bearer token. Mounted with role restrictions: ADMIN, TEACHER."
+            "description": "Enroll Student In Class. Public endpoint. Mounted with role restrictions: ADMIN, TEACHER."
           },
           "response": []
         },
@@ -997,6 +1261,9 @@
           "request": {
             "method": "DELETE",
             "header": [],
+            "auth": {
+              "type": "noauth"
+            },
             "url": {
               "raw": "{{baseUrl}}/classes/{{id}}",
               "host": [
@@ -1007,7 +1274,7 @@
                 "{{id}}"
               ]
             },
-            "description": "Delete Class. Requires a valid bearer token. Mounted with role restrictions: ADMIN, TEACHER."
+            "description": "Delete Class. Public endpoint. Mounted with role restrictions: ADMIN, TEACHER."
           },
           "response": []
         },
@@ -1021,6 +1288,9 @@
                 "value": "application/json"
               }
             ],
+            "auth": {
+              "type": "noauth"
+            },
             "body": {
               "mode": "raw",
               "raw": "{}",
@@ -1040,7 +1310,7 @@
                 "{{id}}"
               ]
             },
-            "description": "Update Class. Requires a valid bearer token. Mounted with role restrictions: ADMIN, TEACHER."
+            "description": "Update Class. Public endpoint. Mounted with role restrictions: ADMIN, TEACHER."
           },
           "response": []
         }
@@ -1054,6 +1324,9 @@
           "request": {
             "method": "GET",
             "header": [],
+            "auth": {
+              "type": "noauth"
+            },
             "url": {
               "raw": "{{baseUrl}}/courses?isPublished=true&teacherId={{teacherId}}",
               "host": [
@@ -1077,7 +1350,7 @@
                 }
               ]
             },
-            "description": "List Courses. Requires a valid bearer token. Mounted with role restrictions: ADMIN, TEACHER."
+            "description": "List Courses. Public endpoint. Mounted with role restrictions: ADMIN, TEACHER."
           },
           "response": []
         },
@@ -1091,6 +1364,9 @@
                 "value": "application/json"
               }
             ],
+            "auth": {
+              "type": "noauth"
+            },
             "body": {
               "mode": "raw",
               "raw": "{\n  \"title\": \"Basic Mathematics\",\n  \"description\": \"Self-paced online course\",\n  \"teacherId\": \"{{teacherId}}\",\n  \"isPublished\": true\n}",
@@ -1109,7 +1385,7 @@
                 "courses"
               ]
             },
-            "description": "Create Cours. Requires a valid bearer token. Mounted with role restrictions: ADMIN, TEACHER."
+            "description": "Create Cours. Public endpoint. Mounted with role restrictions: ADMIN, TEACHER."
           },
           "response": []
         },
@@ -1118,6 +1394,9 @@
           "request": {
             "method": "DELETE",
             "header": [],
+            "auth": {
+              "type": "noauth"
+            },
             "url": {
               "raw": "{{baseUrl}}/courses/{{id}}",
               "host": [
@@ -1128,7 +1407,7 @@
                 "{{id}}"
               ]
             },
-            "description": "Delete Cours. Requires a valid bearer token. Mounted with role restrictions: ADMIN, TEACHER."
+            "description": "Delete Cours. Public endpoint. Mounted with role restrictions: ADMIN, TEACHER."
           },
           "response": []
         },
@@ -1137,6 +1416,9 @@
           "request": {
             "method": "GET",
             "header": [],
+            "auth": {
+              "type": "noauth"
+            },
             "url": {
               "raw": "{{baseUrl}}/courses/{{id}}",
               "host": [
@@ -1147,7 +1429,7 @@
                 "{{id}}"
               ]
             },
-            "description": "Get Cours. Requires a valid bearer token. Mounted with role restrictions: ADMIN, TEACHER."
+            "description": "Get Cours. Public endpoint. Mounted with role restrictions: ADMIN, TEACHER."
           },
           "response": []
         },
@@ -1161,6 +1443,9 @@
                 "value": "application/json"
               }
             ],
+            "auth": {
+              "type": "noauth"
+            },
             "body": {
               "mode": "raw",
               "raw": "{}",
@@ -1180,7 +1465,7 @@
                 "{{id}}"
               ]
             },
-            "description": "Update Cours. Requires a valid bearer token. Mounted with role restrictions: ADMIN, TEACHER."
+            "description": "Update Cours. Public endpoint. Mounted with role restrictions: ADMIN, TEACHER."
           },
           "response": []
         },
@@ -1194,6 +1479,9 @@
                 "value": "application/json"
               }
             ],
+            "auth": {
+              "type": "noauth"
+            },
             "body": {
               "mode": "raw",
               "raw": "{\n  \"studentId\": \"{{studentId}}\"\n}",
@@ -1214,7 +1502,44 @@
                 "enroll"
               ]
             },
-            "description": "Enroll Student In Course. Requires a valid bearer token. Mounted with role restrictions: ADMIN, TEACHER."
+            "description": "Enroll Student In Course. Public endpoint. Mounted with role restrictions: ADMIN, TEACHER."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Enroll Csv",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/courses/{{id}}/enroll-csv",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "courses",
+                "{{id}}",
+                "enroll-csv"
+              ]
+            },
+            "description": "Create Enroll Csv. Public endpoint. Mounted with role restrictions: ADMIN, TEACHER."
           },
           "response": []
         },
@@ -1228,6 +1553,9 @@
                 "value": "application/json"
               }
             ],
+            "auth": {
+              "type": "noauth"
+            },
             "body": {
               "mode": "raw",
               "raw": "{}",
@@ -1248,7 +1576,7 @@
                 "modules"
               ]
             },
-            "description": "Create Module. Requires a valid bearer token. Mounted with role restrictions: ADMIN, TEACHER."
+            "description": "Create Module. Public endpoint. Mounted with role restrictions: ADMIN, TEACHER."
           },
           "response": []
         },
@@ -1257,6 +1585,9 @@
           "request": {
             "method": "DELETE",
             "header": [],
+            "auth": {
+              "type": "noauth"
+            },
             "url": {
               "raw": "{{baseUrl}}/courses/{{id}}/modules/{{moduleId}}",
               "host": [
@@ -1269,7 +1600,7 @@
                 "{{moduleId}}"
               ]
             },
-            "description": "Delete Module. Requires a valid bearer token. Mounted with role restrictions: ADMIN, TEACHER."
+            "description": "Delete Module. Public endpoint. Mounted with role restrictions: ADMIN, TEACHER."
           },
           "response": []
         },
@@ -1283,6 +1614,9 @@
                 "value": "application/json"
               }
             ],
+            "auth": {
+              "type": "noauth"
+            },
             "body": {
               "mode": "raw",
               "raw": "{}",
@@ -1304,7 +1638,7 @@
                 "{{moduleId}}"
               ]
             },
-            "description": "Update Module. Requires a valid bearer token. Mounted with role restrictions: ADMIN, TEACHER."
+            "description": "Update Module. Public endpoint. Mounted with role restrictions: ADMIN, TEACHER."
           },
           "response": []
         },
@@ -1318,6 +1652,9 @@
                 "value": "application/json"
               }
             ],
+            "auth": {
+              "type": "noauth"
+            },
             "body": {
               "mode": "raw",
               "raw": "{}",
@@ -1340,7 +1677,7 @@
                 "lessons"
               ]
             },
-            "description": "Create Lesson. Requires a valid bearer token. Mounted with role restrictions: ADMIN, TEACHER."
+            "description": "Create Lesson. Public endpoint. Mounted with role restrictions: ADMIN, TEACHER."
           },
           "response": []
         },
@@ -1349,6 +1686,9 @@
           "request": {
             "method": "DELETE",
             "header": [],
+            "auth": {
+              "type": "noauth"
+            },
             "url": {
               "raw": "{{baseUrl}}/courses/{{id}}/modules/{{moduleId}}/lessons/{{lessonId}}",
               "host": [
@@ -1363,7 +1703,7 @@
                 "{{lessonId}}"
               ]
             },
-            "description": "Delete Lesson. Requires a valid bearer token. Mounted with role restrictions: ADMIN, TEACHER."
+            "description": "Delete Lesson. Public endpoint. Mounted with role restrictions: ADMIN, TEACHER."
           },
           "response": []
         },
@@ -1377,6 +1717,9 @@
                 "value": "application/json"
               }
             ],
+            "auth": {
+              "type": "noauth"
+            },
             "body": {
               "mode": "raw",
               "raw": "{}",
@@ -1400,7 +1743,7 @@
                 "{{lessonId}}"
               ]
             },
-            "description": "Update Lesson. Requires a valid bearer token. Mounted with role restrictions: ADMIN, TEACHER."
+            "description": "Update Lesson. Public endpoint. Mounted with role restrictions: ADMIN, TEACHER."
           },
           "response": []
         },
@@ -1414,6 +1757,9 @@
                 "value": "application/json"
               }
             ],
+            "auth": {
+              "type": "noauth"
+            },
             "body": {
               "mode": "raw",
               "raw": "{}",
@@ -1437,7 +1783,7 @@
                 "reorder"
               ]
             },
-            "description": "Update Reorder. Requires a valid bearer token. Mounted with role restrictions: ADMIN, TEACHER."
+            "description": "Update Reorder. Public endpoint. Mounted with role restrictions: ADMIN, TEACHER."
           },
           "response": []
         },
@@ -1451,6 +1797,9 @@
                 "value": "application/json"
               }
             ],
+            "auth": {
+              "type": "noauth"
+            },
             "body": {
               "mode": "raw",
               "raw": "{}",
@@ -1472,7 +1821,7 @@
                 "reorder"
               ]
             },
-            "description": "Update Reorder. Requires a valid bearer token. Mounted with role restrictions: ADMIN, TEACHER."
+            "description": "Update Reorder. Public endpoint. Mounted with role restrictions: ADMIN, TEACHER."
           },
           "response": []
         },
@@ -1481,6 +1830,9 @@
           "request": {
             "method": "GET",
             "header": [],
+            "auth": {
+              "type": "noauth"
+            },
             "url": {
               "raw": "{{baseUrl}}/courses/enrollments/{{studentId}}",
               "host": [
@@ -1492,7 +1844,7 @@
                 "{{studentId}}"
               ]
             },
-            "description": "Get Student Course Enrollments. Requires a valid bearer token. Mounted with role restrictions: ADMIN, TEACHER."
+            "description": "Get Student Course Enrollments. Public endpoint. Mounted with role restrictions: ADMIN, TEACHER."
           },
           "response": []
         },
@@ -1506,6 +1858,9 @@
                 "value": "application/json"
               }
             ],
+            "auth": {
+              "type": "noauth"
+            },
             "body": {
               "mode": "raw",
               "raw": "{\n  \"enrollmentId\": \"{{id}}\",\n  \"lessonId\": \"{{id}}\",\n  \"completed\": true,\n  \"timeSpent\": 35\n}",
@@ -1525,7 +1880,7 @@
                 "progress"
               ]
             },
-            "description": "Update Course Progress. Requires a valid bearer token. Mounted with role restrictions: ADMIN, TEACHER."
+            "description": "Update Course Progress. Public endpoint. Mounted with role restrictions: ADMIN, TEACHER."
           },
           "response": []
         }
@@ -2212,6 +2567,60 @@
           "response": []
         },
         {
+          "name": "Get Quizze",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/elearning/quizzes/{{id}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "elearning",
+                "quizzes",
+                "{{id}}"
+              ]
+            },
+            "description": "Get Quizze. Requires a valid bearer token."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Quizze",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/elearning/quizzes/{{id}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "elearning",
+                "quizzes",
+                "{{id}}"
+              ]
+            },
+            "description": "Update Quizze. Requires a valid bearer token."
+          },
+          "response": []
+        },
+        {
           "name": "Get Quiz Attempts",
           "request": {
             "method": "GET",
@@ -2237,6 +2646,146 @@
               ]
             },
             "description": "Get Quiz Attempts. Requires a valid bearer token."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Close",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/elearning/quizzes/{{id}}/close",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "elearning",
+                "quizzes",
+                "{{id}}",
+                "close"
+              ]
+            },
+            "description": "Create Close. Requires a valid bearer token."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Publish",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/elearning/quizzes/{{id}}/publish",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "elearning",
+                "quizzes",
+                "{{id}}",
+                "publish"
+              ]
+            },
+            "description": "Create Publish. Requires a valid bearer token."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Staff Submit",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/elearning/quizzes/{{id}}/staff-submit",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "elearning",
+                "quizzes",
+                "{{id}}",
+                "staff-submit"
+              ]
+            },
+            "description": "Create Staff Submit. Requires a valid bearer token."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Start",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/elearning/quizzes/{{id}}/start",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "elearning",
+                "quizzes",
+                "{{id}}",
+                "start"
+              ]
+            },
+            "description": "Create Start. Requires a valid bearer token."
           },
           "response": []
         },
@@ -2361,454 +2910,6 @@
             "description": "Grade Submission. Requires a valid bearer token."
           },
           "response": []
-        },
-        {
-          "name": "Get Quiz",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/elearning/quizzes/{{id}}",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "elearning",
-                "quizzes",
-                "{{id}}"
-              ]
-            },
-            "description": "Get Quiz details. Requires a valid bearer token."
-          },
-          "response": []
-        },
-        {
-          "name": "Update Quiz",
-          "request": {
-            "method": "PUT",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/elearning/quizzes/{{id}}",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "elearning",
-                "quizzes",
-                "{{id}}"
-              ]
-            },
-            "description": "Update Quiz. Requires a valid bearer token. Mounted with role restrictions: ADMIN, TEACHER.",
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"title\": \"Updated Quiz\",\n  \"passMark\": 70\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Publish Quiz",
-          "request": {
-            "method": "POST",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/elearning/quizzes/{{id}}/publish",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "elearning",
-                "quizzes",
-                "{{id}}",
-                "publish"
-              ]
-            },
-            "description": "Publish a draft quiz. Mounted with role restrictions: ADMIN, TEACHER."
-          },
-          "response": []
-        },
-        {
-          "name": "Close Quiz",
-          "request": {
-            "method": "POST",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/elearning/quizzes/{{id}}/close",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "elearning",
-                "quizzes",
-                "{{id}}",
-                "close"
-              ]
-            },
-            "description": "Close a quiz. Mounted with role restrictions: ADMIN, TEACHER."
-          },
-          "response": []
-        },
-        {
-          "name": "Start Quiz Attempt",
-          "request": {
-            "method": "POST",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/elearning/quizzes/{{id}}/start",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "elearning",
-                "quizzes",
-                "{{id}}",
-                "start"
-              ]
-            },
-            "description": "Start a new quiz attempt. Mounted with role restrictions: STUDENT."
-          },
-          "response": []
-        },
-        {
-          "name": "Staff Submit Quiz",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/elearning/quizzes/{{id}}/staff-submit",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "elearning",
-                "quizzes",
-                "{{id}}",
-                "staff-submit"
-              ]
-            },
-            "description": "Submit quiz on behalf of a student. Mounted with role restrictions: ADMIN, TEACHER.",
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"studentId\": \"{{studentId}}\",\n  \"answers\": [\n    {\n      \"questionId\": \"q1\",\n      \"answer\": \"A\"\n    }\n  ],\n  \"reason\": \"Student absent\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            }
-          },
-          "response": []
-        }
-      ]
-    },
-    {
-      "name": "E-Library",
-      "item": [
-        {
-          "name": "List E-Books",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/library/ebooks?search=&genre=",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "library",
-                "ebooks"
-              ]
-            },
-            "description": "List all e-books. Available to all authenticated users."
-          },
-          "response": []
-        },
-        {
-          "name": "Upload E-Book",
-          "request": {
-            "method": "POST",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/library/ebooks",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "library",
-                "ebooks"
-              ]
-            },
-            "description": "Upload e-book (PDF/EPUB, max 100MB). ADMIN, TEACHER.",
-            "body": {
-              "mode": "formdata",
-              "formdata": [
-                {
-                  "key": "file",
-                  "type": "file",
-                  "src": ""
-                },
-                {
-                  "key": "title",
-                  "value": "Things Fall Apart",
-                  "type": "text"
-                },
-                {
-                  "key": "author",
-                  "value": "Chinua Achebe",
-                  "type": "text"
-                },
-                {
-                  "key": "genre",
-                  "value": "Literature",
-                  "type": "text"
-                },
-                {
-                  "key": "isDownloadable",
-                  "value": "true",
-                  "type": "text"
-                }
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Get E-Book",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/library/ebooks/{{id}}",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "library",
-                "ebooks",
-                "{{id}}"
-              ]
-            },
-            "description": "Get e-book details."
-          },
-          "response": []
-        },
-        {
-          "name": "Update E-Book",
-          "request": {
-            "method": "PUT",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/library/ebooks/{{id}}",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "library",
-                "ebooks",
-                "{{id}}"
-              ]
-            },
-            "description": "Update e-book metadata. ADMIN, TEACHER.",
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"title\": \"Updated Title\",\n  \"isDownloadable\": false\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Delete E-Book",
-          "request": {
-            "method": "DELETE",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/library/ebooks/{{id}}",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "library",
-                "ebooks",
-                "{{id}}"
-              ]
-            },
-            "description": "Delete e-book and file. ADMIN, TEACHER."
-          },
-          "response": []
-        },
-        {
-          "name": "Replace E-Book File",
-          "request": {
-            "method": "PUT",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/library/ebooks/{{id}}/file",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "library",
-                "ebooks",
-                "{{id}}",
-                "file"
-              ]
-            },
-            "description": "Replace file. ADMIN, TEACHER.",
-            "body": {
-              "mode": "formdata",
-              "formdata": [
-                {
-                  "key": "file",
-                  "type": "file",
-                  "src": ""
-                }
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Get Read URL",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/library/ebooks/{{id}}/read",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "library",
-                "ebooks",
-                "{{id}}",
-                "read"
-              ]
-            },
-            "description": "Get signed URL for online reading."
-          },
-          "response": []
-        },
-        {
-          "name": "Get Download URL",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/library/ebooks/{{id}}/download",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "library",
-                "ebooks",
-                "{{id}}",
-                "download"
-              ]
-            },
-            "description": "Get signed URL for downloading."
-          },
-          "response": []
-        },
-        {
-          "name": "List E-Book Genres",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/library/ebooks/genres",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "library",
-                "ebooks",
-                "genres"
-              ]
-            },
-            "description": "Get distinct genres."
-          },
-          "response": []
-        },
-        {
-          "name": "Get Reading Progress",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/library/ebooks/{{id}}/progress",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "library",
-                "ebooks",
-                "{{id}}",
-                "progress"
-              ]
-            },
-            "description": "Get saved reading progress."
-          },
-          "response": []
-        },
-        {
-          "name": "Save Reading Progress",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/library/ebooks/{{id}}/progress",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "library",
-                "ebooks",
-                "{{id}}",
-                "progress"
-              ]
-            },
-            "description": "Save current page.",
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"currentPage\": 42,\n  \"totalPages\": 200\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            }
-          },
-          "response": []
         }
       ]
     },
@@ -2820,6 +2921,9 @@
           "request": {
             "method": "GET",
             "header": [],
+            "auth": {
+              "type": "noauth"
+            },
             "url": {
               "raw": "{{baseUrl}}/events?startDate=2026-03-16&endDate=2026-03-16&category={{category}}",
               "host": [
@@ -2849,7 +2953,7 @@
                 }
               ]
             },
-            "description": "List Events. Requires a valid bearer token. Mounted with role restrictions: ADMIN, TEACHER."
+            "description": "List Events. Public endpoint. Mounted with role restrictions: ADMIN, TEACHER."
           },
           "response": []
         },
@@ -2863,6 +2967,9 @@
                 "value": "application/json"
               }
             ],
+            "auth": {
+              "type": "noauth"
+            },
             "body": {
               "mode": "raw",
               "raw": "{\n  \"title\": \"Inter-house Sports\",\n  \"description\": \"Annual sports competition\",\n  \"startDate\": \"2026-04-10T09:00:00.000Z\",\n  \"endDate\": \"2026-04-10T17:00:00.000Z\",\n  \"venue\": \"Main Field\"\n}",
@@ -2881,7 +2988,7 @@
                 "events"
               ]
             },
-            "description": "Create Event. Requires a valid bearer token. Mounted with role restrictions: ADMIN, TEACHER."
+            "description": "Create Event. Public endpoint. Mounted with role restrictions: ADMIN, TEACHER."
           },
           "response": []
         },
@@ -2890,6 +2997,9 @@
           "request": {
             "method": "GET",
             "header": [],
+            "auth": {
+              "type": "noauth"
+            },
             "url": {
               "raw": "{{baseUrl}}/events/{{id}}/participants",
               "host": [
@@ -2901,7 +3011,7 @@
                 "participants"
               ]
             },
-            "description": "List Event Participants. Requires a valid bearer token. Mounted with role restrictions: ADMIN, TEACHER."
+            "description": "List Event Participants. Public endpoint. Mounted with role restrictions: ADMIN, TEACHER."
           },
           "response": []
         },
@@ -2915,6 +3025,9 @@
                 "value": "application/json"
               }
             ],
+            "auth": {
+              "type": "noauth"
+            },
             "body": {
               "mode": "raw",
               "raw": "{\n  \"participantId\": \"{{studentId}}\",\n  \"participantType\": \"STUDENT\"\n}",
@@ -2935,7 +3048,7 @@
                 "participants"
               ]
             },
-            "description": "Add Event Participant. Requires a valid bearer token. Mounted with role restrictions: ADMIN, TEACHER."
+            "description": "Add Event Participant. Public endpoint. Mounted with role restrictions: ADMIN, TEACHER."
           },
           "response": []
         },
@@ -2944,6 +3057,9 @@
           "request": {
             "method": "GET",
             "header": [],
+            "auth": {
+              "type": "noauth"
+            },
             "url": {
               "raw": "{{baseUrl}}/events/upcoming",
               "host": [
@@ -2954,7 +3070,484 @@
                 "upcoming"
               ]
             },
-            "description": "List Upcoming. Requires a valid bearer token. Mounted with role restrictions: ADMIN, TEACHER."
+            "description": "List Upcoming. Public endpoint. Mounted with role restrictions: ADMIN, TEACHER."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Fees",
+      "item": [
+        {
+          "name": "List Account",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/fees/account",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "fees",
+                "account"
+              ]
+            },
+            "description": "List Account. Public endpoint. Mounted with role restrictions: ADMIN."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Account",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/fees/account",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "fees",
+                "account"
+              ]
+            },
+            "description": "Create Account. Public endpoint. Mounted with role restrictions: ADMIN."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Change Request",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/fees/account/change-request",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "fees",
+                "account",
+                "change-request"
+              ]
+            },
+            "description": "Create Change Request. Public endpoint. Mounted with role restrictions: ADMIN."
+          },
+          "response": []
+        },
+        {
+          "name": "List Change Request",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/fees/account/change-requests",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "fees",
+                "account",
+                "change-requests"
+              ]
+            },
+            "description": "List Change Request. Public endpoint. Mounted with role restrictions: ADMIN."
+          },
+          "response": []
+        },
+        {
+          "name": "List Assignment",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/fees/assignments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "fees",
+                "assignments"
+              ]
+            },
+            "description": "List Assignment. Public endpoint. Mounted with role restrictions: ADMIN."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Invoice",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/fees/assignments/{{assignmentId}}/invoices",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "fees",
+                "assignments",
+                "{{assignmentId}}",
+                "invoices"
+              ]
+            },
+            "description": "Get Invoice. Public endpoint. Mounted with role restrictions: ADMIN."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Waive",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/fees/assignments/{{id}}/waive",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "fees",
+                "assignments",
+                "{{id}}",
+                "waive"
+              ]
+            },
+            "description": "Create Waive. Public endpoint. Mounted with role restrictions: ADMIN."
+          },
+          "response": []
+        },
+        {
+          "name": "List Bank",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/fees/banks",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "fees",
+                "banks"
+              ]
+            },
+            "description": "List Bank. Public endpoint. Mounted with role restrictions: ADMIN."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Invoice",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/fees/invoices/{{id}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "fees",
+                "invoices",
+                "{{id}}"
+              ]
+            },
+            "description": "Get Invoice. Public endpoint. Mounted with role restrictions: ADMIN."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Summary",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/fees/students/{{studentId}}/summary",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "fees",
+                "students",
+                "{{studentId}}",
+                "summary"
+              ]
+            },
+            "description": "Get Summary. Public endpoint. Mounted with role restrictions: ADMIN."
+          },
+          "response": []
+        },
+        {
+          "name": "List Template",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/fees/templates",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "fees",
+                "templates"
+              ]
+            },
+            "description": "List Template. Public endpoint. Mounted with role restrictions: ADMIN."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Template",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/fees/templates",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "fees",
+                "templates"
+              ]
+            },
+            "description": "Create Template. Public endpoint. Mounted with role restrictions: ADMIN."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Template",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/fees/templates/{{id}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "fees",
+                "templates",
+                "{{id}}"
+              ]
+            },
+            "description": "Delete Template. Public endpoint. Mounted with role restrictions: ADMIN."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Template",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/fees/templates/{{id}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "fees",
+                "templates",
+                "{{id}}"
+              ]
+            },
+            "description": "Get Template. Public endpoint. Mounted with role restrictions: ADMIN."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Template",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/fees/templates/{{id}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "fees",
+                "templates",
+                "{{id}}"
+              ]
+            },
+            "description": "Update Template. Public endpoint. Mounted with role restrictions: ADMIN."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Assign",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/fees/templates/{{id}}/assign",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "fees",
+                "templates",
+                "{{id}}",
+                "assign"
+              ]
+            },
+            "description": "Create Assign. Public endpoint. Mounted with role restrictions: ADMIN."
+          },
+          "response": []
+        },
+        {
+          "name": "List Verify Account",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/fees/verify-account",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "fees",
+                "verify-account"
+              ]
+            },
+            "description": "List Verify Account. Public endpoint. Mounted with role restrictions: ADMIN."
           },
           "response": []
         }
@@ -3096,6 +3689,60 @@
           "response": []
         },
         {
+          "name": "List Csv Template",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/gradebook/exam-results/csv-template",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "gradebook",
+                "exam-results",
+                "csv-template"
+              ]
+            },
+            "description": "List Csv Template. Requires a valid bearer token."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Upload Csv",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/gradebook/exam-results/upload-csv",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "gradebook",
+                "exam-results",
+                "upload-csv"
+              ]
+            },
+            "description": "Create Upload Csv. Requires a valid bearer token."
+          },
+          "response": []
+        },
+        {
           "name": "Create Examination",
           "request": {
             "method": "POST",
@@ -3196,6 +3843,26 @@
           "response": []
         },
         {
+          "name": "List Csv Template",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/gradebook/grades/csv-template",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "gradebook",
+                "grades",
+                "csv-template"
+              ]
+            },
+            "description": "List Csv Template. Requires a valid bearer token."
+          },
+          "response": []
+        },
+        {
           "name": "Get Student",
           "request": {
             "method": "GET",
@@ -3255,6 +3922,40 @@
           "response": []
         },
         {
+          "name": "Create Upload Csv",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/gradebook/grades/upload-csv",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "gradebook",
+                "grades",
+                "upload-csv"
+              ]
+            },
+            "description": "Create Upload Csv. Requires a valid bearer token."
+          },
+          "response": []
+        },
+        {
           "name": "Get Student Report Card",
           "request": {
             "method": "GET",
@@ -3291,6 +3992,9 @@
                 "value": "application/json"
               }
             ],
+            "auth": {
+              "type": "noauth"
+            },
             "body": {
               "mode": "raw",
               "raw": "{\n  \"healthRecordId\": \"{{healthRecordId}}\",\n  \"incidentType\": \"FEVER\",\n  \"description\": \"Reported high temperature\",\n  \"treatment\": \"Paracetamol administered\",\n  \"incidentDate\": \"2026-03-16T10:30:00.000Z\"\n}",
@@ -3310,7 +4014,7 @@
                 "incidents"
               ]
             },
-            "description": "Create Incident. Requires a valid bearer token. Mounted with role restrictions: ADMIN, STAFF."
+            "description": "Create Incident. Public endpoint. Mounted with role restrictions: ADMIN, STAFF."
           },
           "response": []
         },
@@ -3319,6 +4023,9 @@
           "request": {
             "method": "GET",
             "header": [],
+            "auth": {
+              "type": "noauth"
+            },
             "url": {
               "raw": "{{baseUrl}}/health/incidents/{{healthRecordId}}",
               "host": [
@@ -3330,7 +4037,7 @@
                 "{{healthRecordId}}"
               ]
             },
-            "description": "Get Incident. Requires a valid bearer token. Mounted with role restrictions: ADMIN, STAFF."
+            "description": "Get Incident. Public endpoint. Mounted with role restrictions: ADMIN, STAFF."
           },
           "response": []
         },
@@ -3344,6 +4051,9 @@
                 "value": "application/json"
               }
             ],
+            "auth": {
+              "type": "noauth"
+            },
             "body": {
               "mode": "raw",
               "raw": "{\n  \"studentId\": \"{{studentId}}\",\n  \"bloodGroup\": \"O+\",\n  \"genotype\": \"AA\",\n  \"allergies\": [\n    \"Dust\"\n  ],\n  \"notes\": \"Carries inhaler\"\n}",
@@ -3363,7 +4073,7 @@
                 "records"
               ]
             },
-            "description": "Create Record. Requires a valid bearer token. Mounted with role restrictions: ADMIN, STAFF."
+            "description": "Create Record. Public endpoint. Mounted with role restrictions: ADMIN, STAFF."
           },
           "response": []
         },
@@ -3372,6 +4082,9 @@
           "request": {
             "method": "GET",
             "header": [],
+            "auth": {
+              "type": "noauth"
+            },
             "url": {
               "raw": "{{baseUrl}}/health/records/{{studentId}}",
               "host": [
@@ -3383,7 +4096,7 @@
                 "{{studentId}}"
               ]
             },
-            "description": "Get Record. Requires a valid bearer token. Mounted with role restrictions: ADMIN, STAFF."
+            "description": "Get Record. Public endpoint. Mounted with role restrictions: ADMIN, STAFF."
           },
           "response": []
         },
@@ -3397,6 +4110,9 @@
                 "value": "application/json"
               }
             ],
+            "auth": {
+              "type": "noauth"
+            },
             "body": {
               "mode": "raw",
               "raw": "{\n  \"studentId\": \"{{studentId}}\",\n  \"bloodGroup\": \"O+\",\n  \"genotype\": \"AA\",\n  \"allergies\": [\n    \"Dust\"\n  ],\n  \"notes\": \"Carries inhaler\"\n}",
@@ -3417,7 +4133,7 @@
                 "{{studentId}}"
               ]
             },
-            "description": "Update Record. Requires a valid bearer token. Mounted with role restrictions: ADMIN, STAFF."
+            "description": "Update Record. Public endpoint. Mounted with role restrictions: ADMIN, STAFF."
           },
           "response": []
         },
@@ -3431,6 +4147,9 @@
                 "value": "application/json"
               }
             ],
+            "auth": {
+              "type": "noauth"
+            },
             "body": {
               "mode": "raw",
               "raw": "{\n  \"healthRecordId\": \"{{healthRecordId}}\",\n  \"vaccineName\": \"Tetanus\",\n  \"dateAdministered\": \"2026-03-01T00:00:00.000Z\",\n  \"administeredBy\": \"School Nurse\"\n}",
@@ -3450,7 +4169,7 @@
                 "vaccinations"
               ]
             },
-            "description": "Create Vaccination. Requires a valid bearer token. Mounted with role restrictions: ADMIN, STAFF."
+            "description": "Create Vaccination. Public endpoint. Mounted with role restrictions: ADMIN, STAFF."
           },
           "response": []
         },
@@ -3459,6 +4178,9 @@
           "request": {
             "method": "GET",
             "header": [],
+            "auth": {
+              "type": "noauth"
+            },
             "url": {
               "raw": "{{baseUrl}}/health/vaccinations/{{healthRecordId}}",
               "host": [
@@ -3470,7 +4192,7 @@
                 "{{healthRecordId}}"
               ]
             },
-            "description": "Get Vaccination. Requires a valid bearer token. Mounted with role restrictions: ADMIN, STAFF."
+            "description": "Get Vaccination. Public endpoint. Mounted with role restrictions: ADMIN, STAFF."
           },
           "response": []
         }
@@ -3484,6 +4206,9 @@
           "request": {
             "method": "GET",
             "header": [],
+            "auth": {
+              "type": "noauth"
+            },
             "url": {
               "raw": "{{baseUrl}}/hostel/assignments",
               "host": [
@@ -3494,7 +4219,7 @@
                 "assignments"
               ]
             },
-            "description": "List Assignment. Requires a valid bearer token. Mounted with role restrictions: ADMIN, STAFF."
+            "description": "List Assignment. Public endpoint. Mounted with role restrictions: ADMIN, STAFF."
           },
           "response": []
         },
@@ -3508,6 +4233,9 @@
                 "value": "application/json"
               }
             ],
+            "auth": {
+              "type": "noauth"
+            },
             "body": {
               "mode": "raw",
               "raw": "{\n  \"roomId\": \"{{id}}\",\n  \"studentId\": \"{{studentId}}\",\n  \"bedNumber\": \"B2\"\n}",
@@ -3527,7 +4255,7 @@
                 "assignments"
               ]
             },
-            "description": "Create Assignment. Requires a valid bearer token. Mounted with role restrictions: ADMIN, STAFF."
+            "description": "Create Assignment. Public endpoint. Mounted with role restrictions: ADMIN, STAFF."
           },
           "response": []
         },
@@ -3536,6 +4264,9 @@
           "request": {
             "method": "GET",
             "header": [],
+            "auth": {
+              "type": "noauth"
+            },
             "url": {
               "raw": "{{baseUrl}}/hostel/meal-plans",
               "host": [
@@ -3546,7 +4277,7 @@
                 "meal-plans"
               ]
             },
-            "description": "List Meal Plan. Requires a valid bearer token. Mounted with role restrictions: ADMIN, STAFF."
+            "description": "List Meal Plan. Public endpoint. Mounted with role restrictions: ADMIN, STAFF."
           },
           "response": []
         },
@@ -3560,6 +4291,9 @@
                 "value": "application/json"
               }
             ],
+            "auth": {
+              "type": "noauth"
+            },
             "body": {
               "mode": "raw",
               "raw": "{\n  \"name\": \"Standard Plan\",\n  \"mealsPerDay\": 3,\n  \"dietaryNotes\": \"No peanuts\"\n}",
@@ -3579,7 +4313,7 @@
                 "meal-plans"
               ]
             },
-            "description": "Create Meal Plan. Requires a valid bearer token. Mounted with role restrictions: ADMIN, STAFF."
+            "description": "Create Meal Plan. Public endpoint. Mounted with role restrictions: ADMIN, STAFF."
           },
           "response": []
         },
@@ -3588,6 +4322,9 @@
           "request": {
             "method": "GET",
             "header": [],
+            "auth": {
+              "type": "noauth"
+            },
             "url": {
               "raw": "{{baseUrl}}/hostel/rooms",
               "host": [
@@ -3598,7 +4335,7 @@
                 "rooms"
               ]
             },
-            "description": "List Room. Requires a valid bearer token. Mounted with role restrictions: ADMIN, STAFF."
+            "description": "List Room. Public endpoint. Mounted with role restrictions: ADMIN, STAFF."
           },
           "response": []
         },
@@ -3612,6 +4349,9 @@
                 "value": "application/json"
               }
             ],
+            "auth": {
+              "type": "noauth"
+            },
             "body": {
               "mode": "raw",
               "raw": "{\n  \"roomNumber\": \"A12\",\n  \"hostelBlock\": \"Girls Hostel\",\n  \"capacity\": 6,\n  \"occupied\": 0\n}",
@@ -3631,7 +4371,7 @@
                 "rooms"
               ]
             },
-            "description": "Create Room. Requires a valid bearer token. Mounted with role restrictions: ADMIN, STAFF."
+            "description": "Create Room. Public endpoint. Mounted with role restrictions: ADMIN, STAFF."
           },
           "response": []
         },
@@ -3640,6 +4380,9 @@
           "request": {
             "method": "GET",
             "header": [],
+            "auth": {
+              "type": "noauth"
+            },
             "url": {
               "raw": "{{baseUrl}}/hostel/visitors",
               "host": [
@@ -3650,7 +4393,7 @@
                 "visitors"
               ]
             },
-            "description": "List Visitor. Requires a valid bearer token. Mounted with role restrictions: ADMIN, STAFF."
+            "description": "List Visitor. Public endpoint. Mounted with role restrictions: ADMIN, STAFF."
           },
           "response": []
         },
@@ -3664,6 +4407,9 @@
                 "value": "application/json"
               }
             ],
+            "auth": {
+              "type": "noauth"
+            },
             "body": {
               "mode": "raw",
               "raw": "{\n  \"studentId\": \"{{studentId}}\",\n  \"visitorName\": \"Jane Doe\",\n  \"relationship\": \"Parent\",\n  \"checkInTime\": \"2026-03-16T14:00:00.000Z\"\n}",
@@ -3683,7 +4429,7 @@
                 "visitors"
               ]
             },
-            "description": "Create Visitor. Requires a valid bearer token. Mounted with role restrictions: ADMIN, STAFF."
+            "description": "Create Visitor. Public endpoint. Mounted with role restrictions: ADMIN, STAFF."
           },
           "response": []
         },
@@ -3697,6 +4443,9 @@
                 "value": "application/json"
               }
             ],
+            "auth": {
+              "type": "noauth"
+            },
             "body": {
               "mode": "raw",
               "raw": "{}",
@@ -3718,7 +4467,7 @@
                 "checkout"
               ]
             },
-            "description": "Check Out Visitor. Requires a valid bearer token. Mounted with role restrictions: ADMIN, STAFF."
+            "description": "Check Out Visitor. Public endpoint. Mounted with role restrictions: ADMIN, STAFF."
           },
           "response": []
         }
@@ -3732,6 +4481,9 @@
           "request": {
             "method": "GET",
             "header": [],
+            "auth": {
+              "type": "noauth"
+            },
             "url": {
               "raw": "{{baseUrl}}/inventory/assets?category={{category}}",
               "host": [
@@ -3750,7 +4502,7 @@
                 }
               ]
             },
-            "description": "List Asset. Requires a valid bearer token. Mounted with role restrictions: ADMIN, STAFF."
+            "description": "List Asset. Public endpoint. Mounted with role restrictions: ADMIN, STAFF."
           },
           "response": []
         },
@@ -3764,6 +4516,9 @@
                 "value": "application/json"
               }
             ],
+            "auth": {
+              "type": "noauth"
+            },
             "body": {
               "mode": "raw",
               "raw": "{\n  \"name\": \"Desktop Computer\",\n  \"category\": \"IT\",\n  \"quantity\": 10,\n  \"unitPrice\": 250000,\n  \"location\": \"ICT Lab\"\n}",
@@ -3783,7 +4538,7 @@
                 "assets"
               ]
             },
-            "description": "Create Asset. Requires a valid bearer token. Mounted with role restrictions: ADMIN, STAFF."
+            "description": "Create Asset. Public endpoint. Mounted with role restrictions: ADMIN, STAFF."
           },
           "response": []
         },
@@ -3792,6 +4547,9 @@
           "request": {
             "method": "GET",
             "header": [],
+            "auth": {
+              "type": "noauth"
+            },
             "url": {
               "raw": "{{baseUrl}}/inventory/transactions?assetId={{assetId}}",
               "host": [
@@ -3810,7 +4568,7 @@
                 }
               ]
             },
-            "description": "List Transaction. Requires a valid bearer token. Mounted with role restrictions: ADMIN, STAFF."
+            "description": "List Transaction. Public endpoint. Mounted with role restrictions: ADMIN, STAFF."
           },
           "response": []
         },
@@ -3824,6 +4582,9 @@
                 "value": "application/json"
               }
             ],
+            "auth": {
+              "type": "noauth"
+            },
             "body": {
               "mode": "raw",
               "raw": "{\n  \"assetId\": \"{{id}}\",\n  \"type\": \"ALLOCATED\",\n  \"quantity\": 2,\n  \"recipientId\": \"{{teacherId}}\",\n  \"notes\": \"Assigned to ICT department\"\n}",
@@ -3843,97 +4604,7 @@
                 "transactions"
               ]
             },
-            "description": "Create Transaction. Requires a valid bearer token. Mounted with role restrictions: ADMIN, STAFF."
-          },
-          "response": []
-        }
-      ]
-    },
-    {
-      "name": "Legacy Grades",
-      "item": [
-        {
-          "name": "Create Grade",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{baseUrl}}/grades",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "grades"
-              ]
-            },
-            "description": "Create Grade. Requires a valid bearer token. Mounted with role restrictions: ADMIN, TEACHER. Legacy endpoint retained for compatibility. Use the gradebook routes instead."
-          },
-          "response": []
-        },
-        {
-          "name": "Create Exam",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{baseUrl}}/grades/exams",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "grades",
-                "exams"
-              ]
-            },
-            "description": "Create Exam. Requires a valid bearer token. Mounted with role restrictions: ADMIN, TEACHER. Legacy endpoint retained for compatibility. Use the gradebook routes instead."
-          },
-          "response": []
-        },
-        {
-          "name": "Get Student",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/grades/student/{{studentId}}",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "grades",
-                "student",
-                "{{studentId}}"
-              ]
-            },
-            "description": "Get Student. Requires a valid bearer token. Mounted with role restrictions: ADMIN, TEACHER. Legacy endpoint retained for compatibility. Use the gradebook routes instead."
+            "description": "Create Transaction. Public endpoint. Mounted with role restrictions: ADMIN, STAFF."
           },
           "response": []
         }
@@ -3947,6 +4618,9 @@
           "request": {
             "method": "GET",
             "header": [],
+            "auth": {
+              "type": "noauth"
+            },
             "url": {
               "raw": "{{baseUrl}}/library/books?title={{title}}&author={{author}}&genre={{genre}}&available={{available}}",
               "host": [
@@ -3983,7 +4657,7 @@
                 }
               ]
             },
-            "description": "List Book. Requires a valid bearer token. Mounted with role restrictions: ADMIN, TEACHER, STAFF."
+            "description": "List Book. Public endpoint."
           },
           "response": []
         },
@@ -3997,6 +4671,9 @@
                 "value": "application/json"
               }
             ],
+            "auth": {
+              "type": "noauth"
+            },
             "body": {
               "mode": "raw",
               "raw": "{\n  \"title\": \"Things Fall Apart\",\n  \"author\": \"Chinua Achebe\",\n  \"isbn\": \"9780385474542\",\n  \"genre\": \"Literature\",\n  \"copies\": 5\n}",
@@ -4016,7 +4693,7 @@
                 "books"
               ]
             },
-            "description": "Create Book. Requires a valid bearer token. Mounted with role restrictions: ADMIN, TEACHER, STAFF."
+            "description": "Create Book. Public endpoint."
           },
           "response": []
         },
@@ -4030,6 +4707,9 @@
                 "value": "application/json"
               }
             ],
+            "auth": {
+              "type": "noauth"
+            },
             "body": {
               "mode": "raw",
               "raw": "{\n  \"bookId\": \"{{id}}\",\n  \"borrowerId\": \"{{studentId}}\",\n  \"borrowerType\": \"STUDENT\",\n  \"dueDate\": \"2026-03-30T00:00:00.000Z\"\n}",
@@ -4049,7 +4729,319 @@
                 "borrow"
               ]
             },
-            "description": "Create Borrow. Requires a valid bearer token. Mounted with role restrictions: ADMIN, TEACHER, STAFF."
+            "description": "Create Borrow. Public endpoint."
+          },
+          "response": []
+        },
+        {
+          "name": "List Ebook",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/library/ebooks",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "library",
+                "ebooks"
+              ]
+            },
+            "description": "List Ebook. Public endpoint."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Ebook",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/library/ebooks",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "library",
+                "ebooks"
+              ]
+            },
+            "description": "Create Ebook. Public endpoint."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Ebook",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/library/ebooks/{{id}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "library",
+                "ebooks",
+                "{{id}}"
+              ]
+            },
+            "description": "Delete Ebook. Public endpoint."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Ebook",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/library/ebooks/{{id}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "library",
+                "ebooks",
+                "{{id}}"
+              ]
+            },
+            "description": "Get Ebook. Public endpoint."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Ebook",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/library/ebooks/{{id}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "library",
+                "ebooks",
+                "{{id}}"
+              ]
+            },
+            "description": "Update Ebook. Public endpoint."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Download",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/library/ebooks/{{id}}/download",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "library",
+                "ebooks",
+                "{{id}}",
+                "download"
+              ]
+            },
+            "description": "Get Download. Public endpoint."
+          },
+          "response": []
+        },
+        {
+          "name": "Update File",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/library/ebooks/{{id}}/file",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "library",
+                "ebooks",
+                "{{id}}",
+                "file"
+              ]
+            },
+            "description": "Update File. Public endpoint."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Progres",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/library/ebooks/{{id}}/progress",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "library",
+                "ebooks",
+                "{{id}}",
+                "progress"
+              ]
+            },
+            "description": "Get Progres. Public endpoint."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Progres",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/library/ebooks/{{id}}/progress",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "library",
+                "ebooks",
+                "{{id}}",
+                "progress"
+              ]
+            },
+            "description": "Create Progres. Public endpoint."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Read",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/library/ebooks/{{id}}/read",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "library",
+                "ebooks",
+                "{{id}}",
+                "read"
+              ]
+            },
+            "description": "Get Read. Public endpoint."
+          },
+          "response": []
+        },
+        {
+          "name": "List Genre",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/library/ebooks/genres",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "library",
+                "ebooks",
+                "genres"
+              ]
+            },
+            "description": "List Genre. Public endpoint."
           },
           "response": []
         },
@@ -4063,6 +5055,9 @@
                 "value": "application/json"
               }
             ],
+            "auth": {
+              "type": "noauth"
+            },
             "body": {
               "mode": "raw",
               "raw": "{\n  \"fine\": 0\n}",
@@ -4083,7 +5078,7 @@
                 "{{id}}"
               ]
             },
-            "description": "Create Return. Requires a valid bearer token. Mounted with role restrictions: ADMIN, TEACHER, STAFF."
+            "description": "Create Return. Public endpoint."
           },
           "response": []
         },
@@ -4092,6 +5087,9 @@
           "request": {
             "method": "GET",
             "header": [],
+            "auth": {
+              "type": "noauth"
+            },
             "url": {
               "raw": "{{baseUrl}}/library/stats",
               "host": [
@@ -4102,7 +5100,7 @@
                 "stats"
               ]
             },
-            "description": "List Stat. Requires a valid bearer token. Mounted with role restrictions: ADMIN, TEACHER, STAFF."
+            "description": "List Stat. Public endpoint."
           },
           "response": []
         },
@@ -4111,6 +5109,9 @@
           "request": {
             "method": "GET",
             "header": [],
+            "auth": {
+              "type": "noauth"
+            },
             "url": {
               "raw": "{{baseUrl}}/library/transactions?bookId={{bookId}}&borrowerId={{borrowerId}}&status={{status}}",
               "host": [
@@ -4141,7 +5142,7 @@
                 }
               ]
             },
-            "description": "List Transaction. Requires a valid bearer token. Mounted with role restrictions: ADMIN, TEACHER, STAFF."
+            "description": "List Transaction. Public endpoint."
           },
           "response": []
         }
@@ -4155,6 +5156,9 @@
           "request": {
             "method": "GET",
             "header": [],
+            "auth": {
+              "type": "noauth"
+            },
             "url": {
               "raw": "{{baseUrl}}/notices",
               "host": [
@@ -4164,7 +5168,7 @@
                 "notices"
               ]
             },
-            "description": "List Notices. Requires a valid bearer token."
+            "description": "List Notices. Public endpoint. This feature currently returns HTTP 501 and is not implemented yet."
           },
           "response": []
         },
@@ -4178,6 +5182,9 @@
                 "value": "application/json"
               }
             ],
+            "auth": {
+              "type": "noauth"
+            },
             "body": {
               "mode": "raw",
               "raw": "{\n  \"title\": \"This feature is not implemented\",\n  \"content\": \"The notice endpoints currently return HTTP 501.\"\n}",
@@ -4196,7 +5203,29 @@
                 "notices"
               ]
             },
-            "description": "Create Notice. Requires a valid bearer token."
+            "description": "Create Notice. Public endpoint. This feature currently returns HTTP 501 and is not implemented yet."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Notice",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/notices/{{id}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "notices",
+                "{{id}}"
+              ]
+            },
+            "description": "Delete Notice. Public endpoint. This feature currently returns HTTP 501 and is not implemented yet."
           },
           "response": []
         },
@@ -4210,34 +5239,18 @@
                 "value": "application/json"
               }
             ],
-            "url": {
-              "raw": "{{baseUrl}}/notices/{{id}}",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "notices",
-                "{{id}}"
-              ]
+            "auth": {
+              "type": "noauth"
             },
-            "description": "Update Notice. Requires a valid bearer token. Mounted with role restrictions: ADMIN, PRINCIPAL, TEACHER.",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"title\": \"Updated Notice\",\n  \"content\": \"Updated content\",\n  \"targetRoles\": [\n    \"STUDENT\",\n    \"PARENT\"\n  ]\n}",
+              "raw": "{}",
               "options": {
                 "raw": {
                   "language": "json"
                 }
               }
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Delete Notice",
-          "request": {
-            "method": "DELETE",
-            "header": [],
+            },
             "url": {
               "raw": "{{baseUrl}}/notices/{{id}}",
               "host": [
@@ -4248,7 +5261,223 @@
                 "{{id}}"
               ]
             },
-            "description": "Delete Notice. Requires a valid bearer token. Mounted with role restrictions: ADMIN, PRINCIPAL, TEACHER."
+            "description": "Update Notice. Public endpoint. This feature currently returns HTTP 501 and is not implemented yet."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Notifications",
+      "item": [
+        {
+          "name": "List Notifications",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/notifications",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "notifications"
+              ]
+            },
+            "description": "List Notifications. Public endpoint."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Mark All Read",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/notifications/mark-all-read",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "notifications",
+                "mark-all-read"
+              ]
+            },
+            "description": "Create Mark All Read. Public endpoint."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Mark Read",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/notifications/mark-read",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "notifications",
+                "mark-read"
+              ]
+            },
+            "description": "Create Mark Read. Public endpoint."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Subscribe",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/notifications/push/subscribe",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "notifications",
+                "push",
+                "subscribe"
+              ]
+            },
+            "description": "Create Subscribe. Public endpoint."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Unsubscribe",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/notifications/push/unsubscribe",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "notifications",
+                "push",
+                "unsubscribe"
+              ]
+            },
+            "description": "Create Unsubscribe. Public endpoint."
+          },
+          "response": []
+        },
+        {
+          "name": "List Unread Count",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/notifications/unread-count",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "notifications",
+                "unread-count"
+              ]
+            },
+            "description": "List Unread Count. Public endpoint."
+          },
+          "response": []
+        },
+        {
+          "name": "List Vapid Key",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/notifications/vapid-key",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "notifications",
+                "vapid-key"
+              ]
+            },
+            "description": "List Vapid Key. Public endpoint."
           },
           "response": []
         }
@@ -4330,6 +5559,9 @@
                 "value": "application/json"
               }
             ],
+            "auth": {
+              "type": "noauth"
+            },
             "body": {
               "mode": "raw",
               "raw": "{}",
@@ -4348,7 +5580,7 @@
                 "parent"
               ]
             },
-            "description": "Create Parent. Requires a valid bearer token. Mounted with role restrictions: PARENT."
+            "description": "Create Parent. Public endpoint. Mounted with role restrictions: PARENT."
           },
           "response": []
         },
@@ -4357,6 +5589,9 @@
           "request": {
             "method": "GET",
             "header": [],
+            "auth": {
+              "type": "noauth"
+            },
             "url": {
               "raw": "{{baseUrl}}/parent/children",
               "host": [
@@ -4367,7 +5602,7 @@
                 "children"
               ]
             },
-            "description": "List Children. Requires a valid bearer token. Mounted with role restrictions: PARENT."
+            "description": "List Children. Public endpoint. Mounted with role restrictions: PARENT."
           },
           "response": []
         },
@@ -4376,6 +5611,9 @@
           "request": {
             "method": "GET",
             "header": [],
+            "auth": {
+              "type": "noauth"
+            },
             "url": {
               "raw": "{{baseUrl}}/parent/children/{{studentId}}/attendance",
               "host": [
@@ -4388,7 +5626,7 @@
                 "attendance"
               ]
             },
-            "description": "Get Attendance. Requires a valid bearer token. Mounted with role restrictions: PARENT."
+            "description": "Get Attendance. Public endpoint. Mounted with role restrictions: PARENT."
           },
           "response": []
         },
@@ -4397,6 +5635,9 @@
           "request": {
             "method": "GET",
             "header": [],
+            "auth": {
+              "type": "noauth"
+            },
             "url": {
               "raw": "{{baseUrl}}/parent/children/{{studentId}}/grades",
               "host": [
@@ -4409,7 +5650,7 @@
                 "grades"
               ]
             },
-            "description": "Get Grade. Requires a valid bearer token. Mounted with role restrictions: PARENT."
+            "description": "Get Grade. Public endpoint. Mounted with role restrictions: PARENT."
           },
           "response": []
         },
@@ -4418,6 +5659,9 @@
           "request": {
             "method": "GET",
             "header": [],
+            "auth": {
+              "type": "noauth"
+            },
             "url": {
               "raw": "{{baseUrl}}/parent/children/{{studentId}}/payments",
               "host": [
@@ -4430,7 +5674,151 @@
                 "payments"
               ]
             },
-            "description": "Get Payment. Requires a valid bearer token. Mounted with role restrictions: PARENT."
+            "description": "Get Payment. Public endpoint. Mounted with role restrictions: PARENT."
+          },
+          "response": []
+        },
+        {
+          "name": "List Fee",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/parent/fees",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "parent",
+                "fees"
+              ]
+            },
+            "description": "List Fee. Public endpoint. Mounted with role restrictions: PARENT."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Fee",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/parent/fees/{{studentId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "parent",
+                "fees",
+                "{{studentId}}"
+              ]
+            },
+            "description": "Get Fee. Public endpoint. Mounted with role restrictions: PARENT."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Opt In",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/parent/fees/{{studentId}}/opt-in",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "parent",
+                "fees",
+                "{{studentId}}",
+                "opt-in"
+              ]
+            },
+            "description": "Get Opt In. Public endpoint. Mounted with role restrictions: PARENT."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Opt In",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/parent/fees/{{studentId}}/opt-in",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "parent",
+                "fees",
+                "{{studentId}}",
+                "opt-in"
+              ]
+            },
+            "description": "Create Opt In. Public endpoint. Mounted with role restrictions: PARENT."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Pay",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/parent/fees/pay",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "parent",
+                "fees",
+                "pay"
+              ]
+            },
+            "description": "Create Pay. Public endpoint. Mounted with role restrictions: PARENT."
           },
           "response": []
         }
@@ -4449,6 +5837,9 @@
                 "value": "application/json"
               }
             ],
+            "auth": {
+              "type": "noauth"
+            },
             "body": {
               "mode": "raw",
               "raw": "{}",
@@ -4467,7 +5858,7 @@
                 "parents"
               ]
             },
-            "description": "Create Parent. Requires a valid bearer token. Mounted with role restrictions: ADMIN."
+            "description": "Create Parent. Public endpoint. Mounted with role restrictions: ADMIN."
           },
           "response": []
         },
@@ -4476,6 +5867,9 @@
           "request": {
             "method": "GET",
             "header": [],
+            "auth": {
+              "type": "noauth"
+            },
             "url": {
               "raw": "{{baseUrl}}/parents/children",
               "host": [
@@ -4486,7 +5880,7 @@
                 "children"
               ]
             },
-            "description": "List Children. Requires a valid bearer token. Mounted with role restrictions: ADMIN."
+            "description": "List Children. Public endpoint. Mounted with role restrictions: ADMIN."
           },
           "response": []
         },
@@ -4495,6 +5889,9 @@
           "request": {
             "method": "GET",
             "header": [],
+            "auth": {
+              "type": "noauth"
+            },
             "url": {
               "raw": "{{baseUrl}}/parents/children/{{studentId}}/attendance",
               "host": [
@@ -4507,7 +5904,7 @@
                 "attendance"
               ]
             },
-            "description": "Get Attendance. Requires a valid bearer token. Mounted with role restrictions: ADMIN."
+            "description": "Get Attendance. Public endpoint. Mounted with role restrictions: ADMIN."
           },
           "response": []
         },
@@ -4516,6 +5913,9 @@
           "request": {
             "method": "GET",
             "header": [],
+            "auth": {
+              "type": "noauth"
+            },
             "url": {
               "raw": "{{baseUrl}}/parents/children/{{studentId}}/grades",
               "host": [
@@ -4528,7 +5928,7 @@
                 "grades"
               ]
             },
-            "description": "Get Grade. Requires a valid bearer token. Mounted with role restrictions: ADMIN."
+            "description": "Get Grade. Public endpoint. Mounted with role restrictions: ADMIN."
           },
           "response": []
         },
@@ -4537,6 +5937,9 @@
           "request": {
             "method": "GET",
             "header": [],
+            "auth": {
+              "type": "noauth"
+            },
             "url": {
               "raw": "{{baseUrl}}/parents/children/{{studentId}}/payments",
               "host": [
@@ -4549,7 +5952,151 @@
                 "payments"
               ]
             },
-            "description": "Get Payment. Requires a valid bearer token. Mounted with role restrictions: ADMIN."
+            "description": "Get Payment. Public endpoint. Mounted with role restrictions: ADMIN."
+          },
+          "response": []
+        },
+        {
+          "name": "List Fee",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/parents/fees",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "parents",
+                "fees"
+              ]
+            },
+            "description": "List Fee. Public endpoint. Mounted with role restrictions: ADMIN."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Fee",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/parents/fees/{{studentId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "parents",
+                "fees",
+                "{{studentId}}"
+              ]
+            },
+            "description": "Get Fee. Public endpoint. Mounted with role restrictions: ADMIN."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Opt In",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/parents/fees/{{studentId}}/opt-in",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "parents",
+                "fees",
+                "{{studentId}}",
+                "opt-in"
+              ]
+            },
+            "description": "Get Opt In. Public endpoint. Mounted with role restrictions: ADMIN."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Opt In",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/parents/fees/{{studentId}}/opt-in",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "parents",
+                "fees",
+                "{{studentId}}",
+                "opt-in"
+              ]
+            },
+            "description": "Create Opt In. Public endpoint. Mounted with role restrictions: ADMIN."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Pay",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/parents/fees/pay",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "parents",
+                "fees",
+                "pay"
+              ]
+            },
+            "description": "Create Pay. Public endpoint. Mounted with role restrictions: ADMIN."
           },
           "response": []
         }
@@ -4559,7 +6106,7 @@
       "name": "Payments",
       "item": [
         {
-          "name": "Create Payment",
+          "name": "Create Initiate",
           "request": {
             "method": "POST",
             "header": [
@@ -4568,9 +6115,12 @@
                 "value": "application/json"
               }
             ],
+            "auth": {
+              "type": "noauth"
+            },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"feeId\": \"{{id}}\",\n  \"studentId\": \"{{studentId}}\",\n  \"amount\": 45000,\n  \"method\": \"CARD\"\n}",
+              "raw": "{}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -4578,68 +6128,259 @@
               }
             },
             "url": {
-              "raw": "{{baseUrl}}/payments",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "payments"
-              ]
-            },
-            "description": "Create Payment. Requires a valid bearer token. Mounted with role restrictions: ADMIN."
-          },
-          "response": []
-        },
-        {
-          "name": "Create Fee",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"name\": \"Second Term Tuition\",\n  \"amount\": 45000,\n  \"dueDate\": \"2026-04-01\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{baseUrl}}/payments/fees",
+              "raw": "{{baseUrl}}/payments/initiate",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "payments",
-                "fees"
+                "initiate"
               ]
             },
-            "description": "Create Fee. Requires a valid bearer token. Mounted with role restrictions: ADMIN."
+            "description": "Create Initiate. Public endpoint. Mounted with role restrictions: ADMIN."
           },
           "response": []
         },
         {
-          "name": "Get Student",
+          "name": "Get Invoice",
           "request": {
             "method": "GET",
             "header": [],
+            "auth": {
+              "type": "noauth"
+            },
             "url": {
-              "raw": "{{baseUrl}}/payments/student/{{studentId}}",
+              "raw": "{{baseUrl}}/payments/invoices/{{id}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "payments",
+                "invoices",
+                "{{id}}"
+              ]
+            },
+            "description": "Get Invoice. Public endpoint. Mounted with role restrictions: ADMIN."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Invoice",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/payments/student/{{studentId}}/invoices",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "payments",
                 "student",
-                "{{studentId}}"
+                "{{studentId}}",
+                "invoices"
               ]
             },
-            "description": "Get Student. Requires a valid bearer token. Mounted with role restrictions: ADMIN."
+            "description": "Get Invoice. Public endpoint. Mounted with role restrictions: ADMIN."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Platform",
+      "item": [
+        {
+          "name": "List Bank Account Request",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/platform/bank-account-requests",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "platform",
+                "bank-account-requests"
+              ]
+            },
+            "description": "List Bank Account Request. Public endpoint."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Review",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/platform/bank-account-requests/{{id}}/review",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "platform",
+                "bank-account-requests",
+                "{{id}}",
+                "review"
+              ]
+            },
+            "description": "Create Review. Public endpoint."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Run Service Denial",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/platform/run-service-denial",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "platform",
+                "run-service-denial"
+              ]
+            },
+            "description": "Create Run Service Denial. Public endpoint."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Schedule Service Denial Cron",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/platform/schedule-service-denial-cron",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "platform",
+                "schedule-service-denial-cron"
+              ]
+            },
+            "description": "Create Schedule Service Denial Cron. Public endpoint."
+          },
+          "response": []
+        },
+        {
+          "name": "List Tenant",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/platform/tenants",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "platform",
+                "tenants"
+              ]
+            },
+            "description": "List Tenant. Public endpoint."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Tenant",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/platform/tenants/{{tenantId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "platform",
+                "tenants",
+                "{{tenantId}}"
+              ]
+            },
+            "description": "Update Tenant. Public endpoint."
           },
           "response": []
         }
@@ -4681,6 +6422,42 @@
               ]
             },
             "description": "Process Report Webhook. Public endpoint."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Service Denial",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/queue/service-denial",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "queue",
+                "service-denial"
+              ]
+            },
+            "description": "Create Service Denial. Public endpoint."
           },
           "response": []
         }
@@ -4865,6 +6642,67 @@
       ]
     },
     {
+      "name": "Settings",
+      "item": [
+        {
+          "name": "List Settings",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/settings",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "settings"
+              ]
+            },
+            "description": "List Settings. Public endpoint."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Setting",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/settings",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "settings"
+              ]
+            },
+            "description": "Update Setting. Public endpoint."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
       "name": "Sports",
       "item": [
         {
@@ -4872,6 +6710,9 @@
           "request": {
             "method": "GET",
             "header": [],
+            "auth": {
+              "type": "noauth"
+            },
             "url": {
               "raw": "{{baseUrl}}/sports/activities?type={{type}}",
               "host": [
@@ -4890,7 +6731,7 @@
                 }
               ]
             },
-            "description": "List Activity. Requires a valid bearer token. Mounted with role restrictions: ADMIN, TEACHER."
+            "description": "List Activity. Public endpoint. Mounted with role restrictions: ADMIN, TEACHER."
           },
           "response": []
         },
@@ -4904,6 +6745,9 @@
                 "value": "application/json"
               }
             ],
+            "auth": {
+              "type": "noauth"
+            },
             "body": {
               "mode": "raw",
               "raw": "{\n  \"name\": \"Football\",\n  \"type\": \"TEAM\",\n  \"coachId\": \"{{teacherId}}\",\n  \"schedule\": \"Tue/Thu 16:00\"\n}",
@@ -4923,7 +6767,7 @@
                 "activities"
               ]
             },
-            "description": "Create Activity. Requires a valid bearer token. Mounted with role restrictions: ADMIN, TEACHER."
+            "description": "Create Activity. Public endpoint. Mounted with role restrictions: ADMIN, TEACHER."
           },
           "response": []
         },
@@ -4932,6 +6776,9 @@
           "request": {
             "method": "GET",
             "header": [],
+            "auth": {
+              "type": "noauth"
+            },
             "url": {
               "raw": "{{baseUrl}}/sports/competitions?activityId={{activityId}}",
               "host": [
@@ -4950,7 +6797,7 @@
                 }
               ]
             },
-            "description": "List Competition. Requires a valid bearer token. Mounted with role restrictions: ADMIN, TEACHER."
+            "description": "List Competition. Public endpoint. Mounted with role restrictions: ADMIN, TEACHER."
           },
           "response": []
         },
@@ -4964,6 +6811,9 @@
                 "value": "application/json"
               }
             ],
+            "auth": {
+              "type": "noauth"
+            },
             "body": {
               "mode": "raw",
               "raw": "{\n  \"activityId\": \"{{id}}\",\n  \"name\": \"Regional Finals\",\n  \"competitionDate\": \"2026-05-03T10:00:00.000Z\",\n  \"venue\": \"City Stadium\"\n}",
@@ -4983,7 +6833,7 @@
                 "competitions"
               ]
             },
-            "description": "Create Competition. Requires a valid bearer token. Mounted with role restrictions: ADMIN, TEACHER."
+            "description": "Create Competition. Public endpoint. Mounted with role restrictions: ADMIN, TEACHER."
           },
           "response": []
         },
@@ -4997,6 +6847,9 @@
                 "value": "application/json"
               }
             ],
+            "auth": {
+              "type": "noauth"
+            },
             "body": {
               "mode": "raw",
               "raw": "{\n  \"studentId\": \"{{studentId}}\",\n  \"activityId\": \"{{id}}\"\n}",
@@ -5016,7 +6869,150 @@
                 "enrollments"
               ]
             },
-            "description": "Create Enrollment. Requires a valid bearer token. Mounted with role restrictions: ADMIN, TEACHER."
+            "description": "Create Enrollment. Public endpoint. Mounted with role restrictions: ADMIN, TEACHER."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Student",
+      "item": [
+        {
+          "name": "List Attendance",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/student/me/attendance",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "student",
+                "me",
+                "attendance"
+              ]
+            },
+            "description": "List Attendance. Public endpoint. Mounted with role restrictions: STUDENT."
+          },
+          "response": []
+        },
+        {
+          "name": "List Fee",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/student/me/fees",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "student",
+                "me",
+                "fees"
+              ]
+            },
+            "description": "List Fee. Public endpoint. Mounted with role restrictions: STUDENT."
+          },
+          "response": []
+        },
+        {
+          "name": "List Grade",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/student/me/grades",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "student",
+                "me",
+                "grades"
+              ]
+            },
+            "description": "List Grade. Public endpoint. Mounted with role restrictions: STUDENT."
+          },
+          "response": []
+        },
+        {
+          "name": "List Profile",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/student/me/profile",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "student",
+                "me",
+                "profile"
+              ]
+            },
+            "description": "List Profile. Public endpoint. Mounted with role restrictions: STUDENT."
+          },
+          "response": []
+        },
+        {
+          "name": "List Report Card",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/student/me/report-card",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "student",
+                "me",
+                "report-card"
+              ]
+            },
+            "description": "List Report Card. Public endpoint. Mounted with role restrictions: STUDENT."
+          },
+          "response": []
+        },
+        {
+          "name": "List Timetable",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/student/me/timetable",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "student",
+                "me",
+                "timetable"
+              ]
+            },
+            "description": "List Timetable. Public endpoint. Mounted with role restrictions: STUDENT."
           },
           "response": []
         }
@@ -5030,6 +7026,9 @@
           "request": {
             "method": "GET",
             "header": [],
+            "auth": {
+              "type": "noauth"
+            },
             "url": {
               "raw": "{{baseUrl}}/students",
               "host": [
@@ -5039,7 +7038,7 @@
                 "students"
               ]
             },
-            "description": "List Students. Requires a valid bearer token. Mounted with role restrictions: ADMIN, TEACHER."
+            "description": "List Students. Public endpoint. Mounted with role restrictions: ADMIN, TEACHER."
           },
           "response": []
         },
@@ -5053,6 +7052,9 @@
                 "value": "application/json"
               }
             ],
+            "auth": {
+              "type": "noauth"
+            },
             "body": {
               "mode": "raw",
               "raw": "{\n  \"firstName\": \"Ada\",\n  \"lastName\": \"Nwosu\",\n  \"dateOfBirth\": \"2012-05-20\",\n  \"email\": \"ada.student@demo.com\",\n  \"phone\": \"+2348000000000\",\n  \"address\": \"12 Palm Avenue\",\n  \"classId\": \"{{classId}}\"\n}",
@@ -5071,7 +7073,7 @@
                 "students"
               ]
             },
-            "description": "Create Student. Requires a valid bearer token. Mounted with role restrictions: ADMIN, TEACHER."
+            "description": "Create Student. Public endpoint. Mounted with role restrictions: ADMIN, TEACHER."
           },
           "response": []
         },
@@ -5080,6 +7082,9 @@
           "request": {
             "method": "DELETE",
             "header": [],
+            "auth": {
+              "type": "noauth"
+            },
             "url": {
               "raw": "{{baseUrl}}/students/{{id}}",
               "host": [
@@ -5090,7 +7095,7 @@
                 "{{id}}"
               ]
             },
-            "description": "Delete Student. Requires a valid bearer token. Mounted with role restrictions: ADMIN, TEACHER."
+            "description": "Delete Student. Public endpoint. Mounted with role restrictions: ADMIN, TEACHER."
           },
           "response": []
         },
@@ -5099,6 +7104,9 @@
           "request": {
             "method": "GET",
             "header": [],
+            "auth": {
+              "type": "noauth"
+            },
             "url": {
               "raw": "{{baseUrl}}/students/{{id}}",
               "host": [
@@ -5109,7 +7117,7 @@
                 "{{id}}"
               ]
             },
-            "description": "Get Student. Requires a valid bearer token. Mounted with role restrictions: ADMIN, TEACHER."
+            "description": "Get Student. Public endpoint. Mounted with role restrictions: ADMIN, TEACHER."
           },
           "response": []
         },
@@ -5123,6 +7131,9 @@
                 "value": "application/json"
               }
             ],
+            "auth": {
+              "type": "noauth"
+            },
             "body": {
               "mode": "raw",
               "raw": "{}",
@@ -5142,7 +7153,65 @@
                 "{{id}}"
               ]
             },
-            "description": "Update Student. Requires a valid bearer token. Mounted with role restrictions: ADMIN, TEACHER."
+            "description": "Update Student. Public endpoint. Mounted with role restrictions: ADMIN, TEACHER."
+          },
+          "response": []
+        },
+        {
+          "name": "List Csv Template",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/students/csv-template",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "students",
+                "csv-template"
+              ]
+            },
+            "description": "List Csv Template. Public endpoint. Mounted with role restrictions: ADMIN, TEACHER."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Upload Csv",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/students/upload-csv",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "students",
+                "upload-csv"
+              ]
+            },
+            "description": "Create Upload Csv. Public endpoint. Mounted with role restrictions: ADMIN, TEACHER."
           },
           "response": []
         }
@@ -5362,6 +7431,9 @@
           "request": {
             "method": "GET",
             "header": [],
+            "auth": {
+              "type": "noauth"
+            },
             "url": {
               "raw": "{{baseUrl}}/teachers",
               "host": [
@@ -5371,7 +7443,7 @@
                 "teachers"
               ]
             },
-            "description": "List Teachers. Requires a valid bearer token. Mounted with role restrictions: ADMIN."
+            "description": "List Teachers. Public endpoint. Mounted with role restrictions: ADMIN."
           },
           "response": []
         },
@@ -5385,6 +7457,9 @@
                 "value": "application/json"
               }
             ],
+            "auth": {
+              "type": "noauth"
+            },
             "body": {
               "mode": "raw",
               "raw": "{\n  \"firstName\": \"Emeka\",\n  \"lastName\": \"Okafor\",\n  \"email\": \"emeka.teacher@demo.com\",\n  \"phone\": \"+2348000000001\",\n  \"subjectIds\": [\n    \"{{subjectId}}\"\n  ]\n}",
@@ -5403,7 +7478,7 @@
                 "teachers"
               ]
             },
-            "description": "Create Teacher. Requires a valid bearer token. Mounted with role restrictions: ADMIN."
+            "description": "Create Teacher. Public endpoint. Mounted with role restrictions: ADMIN."
           },
           "response": []
         },
@@ -5412,6 +7487,9 @@
           "request": {
             "method": "DELETE",
             "header": [],
+            "auth": {
+              "type": "noauth"
+            },
             "url": {
               "raw": "{{baseUrl}}/teachers/{{id}}",
               "host": [
@@ -5422,7 +7500,7 @@
                 "{{id}}"
               ]
             },
-            "description": "Delete Teacher. Requires a valid bearer token. Mounted with role restrictions: ADMIN."
+            "description": "Delete Teacher. Public endpoint. Mounted with role restrictions: ADMIN."
           },
           "response": []
         },
@@ -5431,6 +7509,9 @@
           "request": {
             "method": "GET",
             "header": [],
+            "auth": {
+              "type": "noauth"
+            },
             "url": {
               "raw": "{{baseUrl}}/teachers/{{id}}",
               "host": [
@@ -5441,7 +7522,7 @@
                 "{{id}}"
               ]
             },
-            "description": "Get Teacher. Requires a valid bearer token. Mounted with role restrictions: ADMIN."
+            "description": "Get Teacher. Public endpoint. Mounted with role restrictions: ADMIN."
           },
           "response": []
         },
@@ -5455,6 +7536,9 @@
                 "value": "application/json"
               }
             ],
+            "auth": {
+              "type": "noauth"
+            },
             "body": {
               "mode": "raw",
               "raw": "{}",
@@ -5474,7 +7558,65 @@
                 "{{id}}"
               ]
             },
-            "description": "Update Teacher. Requires a valid bearer token. Mounted with role restrictions: ADMIN."
+            "description": "Update Teacher. Public endpoint. Mounted with role restrictions: ADMIN."
+          },
+          "response": []
+        },
+        {
+          "name": "List Csv Template",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/teachers/csv-template",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "teachers",
+                "csv-template"
+              ]
+            },
+            "description": "List Csv Template. Public endpoint. Mounted with role restrictions: ADMIN."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Upload Csv",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/teachers/upload-csv",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "teachers",
+                "upload-csv"
+              ]
+            },
+            "description": "Create Upload Csv. Public endpoint. Mounted with role restrictions: ADMIN."
           },
           "response": []
         }
@@ -5767,6 +7909,9 @@
           "request": {
             "method": "GET",
             "header": [],
+            "auth": {
+              "type": "noauth"
+            },
             "url": {
               "raw": "{{baseUrl}}/transport/assignments?studentId={{studentId}}",
               "host": [
@@ -5785,7 +7930,7 @@
                 }
               ]
             },
-            "description": "List Assignment. Requires a valid bearer token. Mounted with role restrictions: ADMIN, STAFF."
+            "description": "List Assignment. Public endpoint. Mounted with role restrictions: ADMIN, STAFF."
           },
           "response": []
         },
@@ -5799,6 +7944,9 @@
                 "value": "application/json"
               }
             ],
+            "auth": {
+              "type": "noauth"
+            },
             "body": {
               "mode": "raw",
               "raw": "{\n  \"studentId\": \"{{studentId}}\",\n  \"routeId\": \"{{id}}\",\n  \"pickupStop\": \"Ojodu\",\n  \"dropoffStop\": \"Ojodu\"\n}",
@@ -5818,7 +7966,7 @@
                 "assignments"
               ]
             },
-            "description": "Create Assignment. Requires a valid bearer token. Mounted with role restrictions: ADMIN, STAFF."
+            "description": "Create Assignment. Public endpoint. Mounted with role restrictions: ADMIN, STAFF."
           },
           "response": []
         },
@@ -5827,6 +7975,9 @@
           "request": {
             "method": "GET",
             "header": [],
+            "auth": {
+              "type": "noauth"
+            },
             "url": {
               "raw": "{{baseUrl}}/transport/buses",
               "host": [
@@ -5837,7 +7988,7 @@
                 "buses"
               ]
             },
-            "description": "List Bus. Requires a valid bearer token. Mounted with role restrictions: ADMIN, STAFF."
+            "description": "List Bus. Public endpoint. Mounted with role restrictions: ADMIN, STAFF."
           },
           "response": []
         },
@@ -5851,6 +8002,9 @@
                 "value": "application/json"
               }
             ],
+            "auth": {
+              "type": "noauth"
+            },
             "body": {
               "mode": "raw",
               "raw": "{\n  \"busNumber\": \"BUS-001\",\n  \"capacity\": 40,\n  \"driverName\": \"Mr Adewale\",\n  \"driverPhone\": \"+2348000000002\"\n}",
@@ -5870,7 +8024,7 @@
                 "buses"
               ]
             },
-            "description": "Create Bus. Requires a valid bearer token. Mounted with role restrictions: ADMIN, STAFF."
+            "description": "Create Bus. Public endpoint. Mounted with role restrictions: ADMIN, STAFF."
           },
           "response": []
         },
@@ -5879,6 +8033,9 @@
           "request": {
             "method": "GET",
             "header": [],
+            "auth": {
+              "type": "noauth"
+            },
             "url": {
               "raw": "{{baseUrl}}/transport/routes?busId={{busId}}",
               "host": [
@@ -5897,7 +8054,7 @@
                 }
               ]
             },
-            "description": "List Route. Requires a valid bearer token. Mounted with role restrictions: ADMIN, STAFF."
+            "description": "List Route. Public endpoint. Mounted with role restrictions: ADMIN, STAFF."
           },
           "response": []
         },
@@ -5911,6 +8068,9 @@
                 "value": "application/json"
               }
             ],
+            "auth": {
+              "type": "noauth"
+            },
             "body": {
               "mode": "raw",
               "raw": "{\n  \"busId\": \"{{id}}\",\n  \"routeName\": \"North Route\",\n  \"stops\": [\n    \"Ikeja\",\n    \"Ojodu\",\n    \"Berger\"\n  ],\n  \"pickupTime\": \"06:30\"\n}",
@@ -5930,7 +8090,7 @@
                 "routes"
               ]
             },
-            "description": "Create Route. Requires a valid bearer token. Mounted with role restrictions: ADMIN, STAFF."
+            "description": "Create Route. Public endpoint. Mounted with role restrictions: ADMIN, STAFF."
           },
           "response": []
         }
@@ -5944,6 +8104,9 @@
           "request": {
             "method": "DELETE",
             "header": [],
+            "auth": {
+              "type": "noauth"
+            },
             "url": {
               "raw": "{{baseUrl}}/upload",
               "host": [
@@ -5953,7 +8116,7 @@
                 "upload"
               ]
             },
-            "description": "Delete Upload. Requires a valid bearer token."
+            "description": "Delete Upload. Public endpoint."
           },
           "response": []
         },
@@ -5962,6 +8125,9 @@
           "request": {
             "method": "POST",
             "header": [],
+            "auth": {
+              "type": "noauth"
+            },
             "body": {
               "mode": "formdata",
               "formdata": [
@@ -5981,7 +8147,7 @@
                 "upload"
               ]
             },
-            "description": "Upload File. Requires a valid bearer token."
+            "description": "Upload File. Public endpoint."
           },
           "response": []
         },
@@ -5990,6 +8156,9 @@
           "request": {
             "method": "DELETE",
             "header": [],
+            "auth": {
+              "type": "noauth"
+            },
             "url": {
               "raw": "{{baseUrl}}/upload/{{key}}",
               "host": [
@@ -6000,7 +8169,7 @@
                 "{{key}}"
               ]
             },
-            "description": "Delete Uploaded File. Requires a valid bearer token."
+            "description": "Delete Uploaded File. Public endpoint."
           },
           "response": []
         },
@@ -6009,6 +8178,9 @@
           "request": {
             "method": "GET",
             "header": [],
+            "auth": {
+              "type": "noauth"
+            },
             "url": {
               "raw": "{{baseUrl}}/upload/signed-url",
               "host": [
@@ -6019,7 +8191,7 @@
                 "signed-url"
               ]
             },
-            "description": "List Signed Url. Requires a valid bearer token."
+            "description": "List Signed Url. Public endpoint."
           },
           "response": []
         },
@@ -6028,6 +8200,9 @@
           "request": {
             "method": "GET",
             "header": [],
+            "auth": {
+              "type": "noauth"
+            },
             "url": {
               "raw": "{{baseUrl}}/upload/signed-url/{{key}}",
               "host": [
@@ -6039,7 +8214,7 @@
                 "{{key}}"
               ]
             },
-            "description": "Get Signed File URL. Requires a valid bearer token."
+            "description": "Get Signed File URL. Public endpoint."
           },
           "response": []
         },
@@ -6053,6 +8228,9 @@
                 "value": "application/json"
               }
             ],
+            "auth": {
+              "type": "noauth"
+            },
             "body": {
               "mode": "raw",
               "raw": "{\n  \"key\": \"schools/demo/lessons/{{id}}/2026/04/1713990200000_calculus-intro.mp4\",\n  \"uploadId\": \"replace-with-upload-id\"\n}",
@@ -6073,7 +8251,7 @@
                 "abort"
               ]
             },
-            "description": "Abort Large Video Upload. Requires a valid bearer token."
+            "description": "Abort Large Video Upload. Public endpoint."
           },
           "response": []
         },
@@ -6087,6 +8265,9 @@
                 "value": "application/json"
               }
             ],
+            "auth": {
+              "type": "noauth"
+            },
             "body": {
               "mode": "raw",
               "raw": "{\n  \"key\": \"schools/demo/lessons/{{id}}/2026/04/1713990200000_calculus-intro.mp4\",\n  \"uploadId\": \"replace-with-upload-id\",\n  \"parts\": [\n    {\n      \"partNumber\": 1,\n      \"etag\": \"replace-with-etag-1\"\n    },\n    {\n      \"partNumber\": 2,\n      \"etag\": \"replace-with-etag-2\"\n    }\n  ]\n}",
@@ -6107,7 +8288,7 @@
                 "complete"
               ]
             },
-            "description": "Complete Large Video Upload. Requires a valid bearer token."
+            "description": "Complete Large Video Upload. Public endpoint."
           },
           "response": []
         },
@@ -6121,6 +8302,9 @@
                 "value": "application/json"
               }
             ],
+            "auth": {
+              "type": "noauth"
+            },
             "body": {
               "mode": "raw",
               "raw": "{\n  \"domain\": \"lessons\",\n  \"entityId\": \"{{id}}\",\n  \"fileName\": \"calculus-intro.mp4\",\n  \"contentType\": \"video/mp4\",\n  \"fileSize\": 73400320\n}",
@@ -6141,7 +8325,7 @@
                 "initiate"
               ]
             },
-            "description": "Create Large Video Upload. Requires a valid bearer token."
+            "description": "Create Large Video Upload. Public endpoint."
           },
           "response": []
         },
@@ -6150,6 +8334,9 @@
           "request": {
             "method": "GET",
             "header": [],
+            "auth": {
+              "type": "noauth"
+            },
             "url": {
               "raw": "{{baseUrl}}/upload/videos/part-url?key={{key}}&uploadId={{uploadId}}&partNumber={{partNumber}}",
               "host": [
@@ -6181,7 +8368,7 @@
                 }
               ]
             },
-            "description": "Get Large Video Upload Part URL. Requires a valid bearer token."
+            "description": "Get Large Video Upload Part URL. Public endpoint."
           },
           "response": []
         }
