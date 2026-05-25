@@ -73,7 +73,7 @@ All controllers follow a consistent structure:
 
 | Controller | Methods |
 |---|---|
-| `studentController` | `list` (query params: `classId?` filters via Enrollment join; `limit?` int pagination; `StudentService.list(tenantId, { classId?, limit? })`), `create` (schema: `firstName`, `lastName`, `dob?` date, `guardian?` object), `getById`, `update` (all fields partial), `delete`, `bulkCreate` (CSV), `exportCsv` |
+| `studentController` | `list` (query params: `classId?` filters via Enrollment join — `where.enrollments = { some: { classId } }`; `limit?` int mapped to Prisma `take`; delegates to `StudentService.list(tenantId, { classId?, limit? })`; when `classId` provided: includes `enrollments` relation + bypasses cache — no per-classId cache key), `create` (schema: `firstName`, `lastName`, `dob?` date, `guardian?` object; auto-creates linked `User` account in transaction: generates `studentCode` via `StudentIdService.generateStudentId()` using tenant's `schoolCode`, sets both `Student.studentCode` and `Student.studentId` to the generated code, sets `Student.userId`; default password = `DDMMYYYY` from dob if provided, else `"change123"`; assigns Student role), `getById`, `update` (all fields partial), `delete`, `bulkCreate` (CSV), `exportCsv` |
 | `roleController` | `createRole`, `getRoles`, `getRole`, `updateRole`, `deleteRole`, `getPermissions`, `assignRole` |
 | `academicYearController` | `create` (schema: `name`, `startDate`/`endDate` string→Date, `isCurrent?`), `list`, `getCurrent`, `update` (all fields partial), `delete` |
 | `termController` | `create` (schema: `name`, `academicYearId` UUID, `startDate`/`endDate` string→Date, `isCurrent?`), `list` (filter: `?academicYearId`), `getCurrent`, `update` (omits `academicYearId` — immutable; rest partial), `delete` |
@@ -81,6 +81,8 @@ All controllers follow a consistent structure:
 | `timetableController` | `create` (schema: `academicYearId`, `subjectId`, `classId`, `teacherId` UUIDs; `dayOfWeek` 0–6; `startTime`/`endTime` HH:MM regex; `room?`), `listByClass` (`GET /timetable/class/:classId?academicYearId=`), `listByTeacher` (`GET /timetable/teacher/:teacherId?academicYearId=`), `update` (omits `academicYearId`, `subjectId`, `classId`, `teacherId` — all immutable; remaining fields partial), `delete` |
 | `attendanceController` | `markAttendance` (schema: `studentId` uuid, `date` string→Date, `status` enum, `remarks?`), `bulkMarkAttendance` (array of same), `getAttendance` (filters: `studentId?`, `classId?`, `date?`, `startDate?`, `endDate?`), `getStudentAttendance` (params: `studentId`; returns all records for student, no date filter; used by legacy route `GET /attendance/student/:studentId`), `getAttendanceStats` (params: `studentId`; query: `startDate`, `endDate`), `getClassAttendanceReport` (params: `classId`; query: `date`) |
 | `gradebookController` | `createAssignment` (schema: `academicYearId`, `termId`, `subjectId` UUIDs, `title`, `description?`, `maxScore` positive, `weight?` positive, `dueDate?` string→Date), `listAssignments` (filters: `subjectId`, `termId`), `recordGrade` (schema: `studentId`, `subjectId` UUIDs, `assignmentId?` UUID, `score` min 0, `maxScore` positive, `remarks?`, `gradedBy?` **string** — any string, not UUID), `bulkRecordGrades`, `getStudentGrades`, `calculateSubjectAverage`, `getStudentReportCard`, `createExamination` (schema: `academicYearId`, `termId`, `subjectId` UUIDs, `name`, `examDate` string→Date, `duration?` positive, `maxScore` positive, `passingScore?` positive, `room?`), `recordExamResult` (schema: `examinationId`, `studentId` UUIDs, `score` min 0, `grade?` string, `remarks?`), `getExamResults` |
+| `parentController` | `getChildren` (uses `ParentService.getChildren` — queries `Parent` model first, falls back to legacy `guardian.email` JSON query), `getChildAttendance` (params: `studentId`; last 30 records desc), `getChildGrades` (includes subject + assignment), `getChildPayments` (includes fee), `getChildTimetable` (resolves class via Enrollment first), `createParent` (body: `parentSchema`; creates `User` + `Parent` record in transaction); **Fee endpoints via `ParentFeeService`**: `getFeeSummaries` (`GET /fees`), `getChildFeeDetails` (`GET /fees/:studentId`), `initiatePayment` (`POST /fees/pay`; body: `{ feeAssignmentId: uuid, amount: positive, payerEmail: email }`), `listOptInTemplates` (`GET /fees/:studentId/opt-in`), `optIn` (`POST /fees/:studentId/opt-in`) |
+| `aiController` | `getStudentInsights` (params: `studentId` uuid; query: `refresh=true` bypasses cache; PARENT role receives response **without** `teacherRecommendations` field; returns 503 if `ANTHROPIC_API_KEY` missing; uses `AIInsightsService` with `buildInsightPrompt` from `src/modules/ai/prompts.ts`) |
 
 ### Authorization (RBAC)
 
@@ -131,7 +133,7 @@ Routes mounted in `src/app.ts` (no-auth routes before `tenantMiddleware`; auth r
 | `/terms` | `authMiddleware` | none extra |
 | `/subjects` | `authMiddleware` | none extra |
 | `/timetables` | `authMiddleware` | none extra |
-| `/attendances` | `authMiddleware` | none extra |
+| `/attendances` | `authMiddleware` | ADMIN, TEACHER |
 | `/gradebook` | `authMiddleware` | none extra |
 | `/library` | `authMiddleware` | ADMIN, TEACHER, STAFF |
 | `/transport` | `authMiddleware` | ADMIN, STAFF |
@@ -147,6 +149,7 @@ Routes mounted in `src/app.ts` (no-auth routes before `tenantMiddleware`; auth r
 | `/candidates` | `authMiddleware` | ADMIN |
 | `/courses` | `authMiddleware` | ADMIN, TEACHER |
 | `/elearning` | `authMiddleware` | none extra |
+| `/ai` | `authMiddleware` | ADMIN, TEACHER, PARENT |
 
 Note: server mounts timetable at `/timetables` (plural); client calls `/timetable` (singular) — this is an intentional naming split between server mount path and client API base.
 
@@ -190,6 +193,7 @@ Validated at startup by Zod schema in `src/server.ts`; process exits on failure.
 - `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` — web push notifications (generate with `npx web-push generate-vapid-keys`)
 - `JITSI_APP_ID`, `JITSI_APP_SECRET`, `JITSI_BASE_URL` — live classes via Jitsi (primary, self-hosted)
 - `HUNDREDMS_APP_ACCESS_KEY` — 100ms live class fallback/scalable provider
+- `ANTHROPIC_API_KEY` — Claude API key for AI student insights (`/ai` routes); service returns 503 if missing
 <!-- END AUTO-MANAGED -->
 
 <!-- AUTO-MANAGED: dependencies -->
@@ -204,7 +208,10 @@ Validated at startup by Zod schema in `src/server.ts`; process exits on failure.
 - `src/modules/timetables/service.ts` - `TimetableService`: timetable entries; query by class or teacher
 - `src/modules/gradebook/service.ts` - `GradebookService`: assignments, grades (bulk), examinations, exam results, report cards
 - `src/modules/attendance/service.ts` - `AttendanceService`: mark/bulk-mark attendance, stats, class reports; statuses: `PRESENT`, `ABSENT`, `LATE`, `EXCUSED`
-- `src/config/index.ts` - typed `config` object wrapping all env vars into structured groups: `database`, `upstash`, `brevo`, `jwt`, `storage` (includes `publicEndpoint`), `payments`, `cloudflare` (`{ apiToken, zoneId, cnameTarget }`); available as an alternative to reading `process.env` directly; `config.brevo.fromName` defaults to `'School SaaS'`
+- `src/modules/parent/service.ts` - `ParentService`: `getChildren` (Parent model + legacy guardian.email fallback), `getChildAttendance/Grades/Payments/Timetable`, `createParent` (User + Parent transaction)
+- `src/modules/fees/parentFeeService.ts` - `ParentFeeService`: parent-facing fee self-service — `getChildrenFeeSummaries`, `getChildFeeDetails`, `initiatePayment`, `listOptInTemplates`, `optIn`
+- `src/modules/ai/service.ts` - `AIInsightsService`: `getStudentInsights(tenantId, studentId, { refresh? })` — fetches attendance + grade data, calls Claude API via `buildInsightPrompt`, caches result; returns `{ strengths, concerns, parentRecommendations, teacherRecommendations }`
+- `src/config/index.ts` - typed `config` object wrapping all env vars into structured groups: `database`, `upstash`, `brevo`, `jwt`, `storage` (includes `publicEndpoint`), `payments`, `cloudflare` (`{ apiToken, zoneId, cnameTarget }`), `ai` (`{ anthropicApiKey }`); available as an alternative to reading `process.env` directly; `config.brevo.fromName` defaults to `'School SaaS'`
 - `prisma/seed.ts` - idempotent demo seed (`npm run seed`); creates subdomain `greenwood` (Greenwood Academy, `schoolCode: 'GWD'`) with `config.gradingSystem` bands (A=70–100, B=60–69, C=50–59, D=45–49, F=0–44); patches `schoolCode` on existing tenant if missing; 6 system roles (Admin/Principal/Teacher/Staff/Parent/Student, all `isSystem: true`); 4 demo users: admin `admin@greenwood.edu`/`Admin@1234` (Grace Adeyemi), teacher `teacher@greenwood.edu`/`Teacher@1234` (Samuel Okafor), parent `parent@greenwood.edu`/`Parent@1234` (Funke Obi — linked to student Emeka Obi via `guardian.email`), student `student@greenwood.edu`/`Student@1234` (Chisom Nkem); academic year `2025/2026` with 3 terms; 4 classes (Primary 1, Primary 3, JSS 1, SS 1); 3 teachers; 8 students with enrollments; 13 subjects; 5 timetable slots for JSS 1; attendance records; 1 assignment + grades; 1 fee + payment; 5 events; library (6 books), hostel (4 rooms + assignments), transport (2 buses + routes), inventory (6 assets), sports (4 activities), health (4 records), 3 courses, disciplinary (2 records); skips any domain that already exists. Role default permissions: Admin=all; Principal=read-only (students/teachers/classes/attendance/fees/payments/roles); Teacher=students+classes read + attendance CRUD; Staff=students/classes/fees/payments/attendance read; Parent+Student=none
 - `src/utils/seedTier1.ts` - alternative tier-1 seed (`npm run seed:tier1`); separate from the demo seed
 - `src/services/studentIdService.ts` - `StudentIdService.extractSchoolCode(studentId: string): string | null`: parses the school code prefix from a student ID (e.g. `"GWD250042"` → `"GWD"`); used by `/auth/student-login` to resolve tenant without a tenant header
