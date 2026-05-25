@@ -48,6 +48,7 @@ import uploadRoutes from "./modules/upload/routes";
 import platformRoutes from "./modules/platform/routes";
 import { platformController } from "./modules/platform/controller";
 import feesRoutes from "./modules/fees/routes";
+import aiRoutes from "./modules/ai/routes";
 import websiteDomainRoutes from "./modules/school-website/domain.routes";
 import { CacheService } from "./utils/cache";
 import { buildCorsOptions } from "./utils/cors";
@@ -119,6 +120,7 @@ app.use("/elearning", elearningRoutes);
 app.use("/billing", requireRole("ADMIN"), billingRoutes);
 app.use("/fees", requireRole("ADMIN"), feesRoutes);
 app.use("/api/admin/website/domain", requireRole("ADMIN"), websiteDomainRoutes);
+app.use("/ai", requireRole("ADMIN", "TEACHER", "PARENT"), aiRoutes);
 
 app.use(errorHandler);
 
