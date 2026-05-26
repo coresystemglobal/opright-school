@@ -1,7 +1,6 @@
-import { NodeSDK } from '@opentelemetry/sdk-node';
+import { NodeSDK, resources } from '@opentelemetry/sdk-node';
 import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentations-node';
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
-import { Resource } from '@opentelemetry/resources';
 import { SEMRESATTRS_SERVICE_NAME, SEMRESATTRS_SERVICE_VERSION } from '@opentelemetry/semantic-conventions';
 
 const SERVICE_NAME = process.env.SERVICE_NAME ?? 'smp-server';
@@ -12,7 +11,7 @@ const exporter = new OTLPTraceExporter({
 });
 
 export const sdk = new NodeSDK({
-  resource: new Resource({
+  resource: resources.resourceFromAttributes({
     [SEMRESATTRS_SERVICE_NAME]: SERVICE_NAME,
     [SEMRESATTRS_SERVICE_VERSION]: SERVICE_VERSION,
   }),
@@ -23,9 +22,8 @@ export const sdk = new NodeSDK({
       '@opentelemetry/instrumentation-http': { enabled: true },
       '@opentelemetry/instrumentation-express': { enabled: true },
       // Upstash Redis uses HTTP REST calls — not a socket client, skip socket-level instrumentation
-      '@opentelemetry/instrumentation-redis-4': { enabled: false },
       '@opentelemetry/instrumentation-ioredis': { enabled: false },
-    }),
+    } as Parameters<typeof getNodeAutoInstrumentations>[0]),
   ],
 });
 

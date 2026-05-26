@@ -1,3 +1,5 @@
+// MUST BE FIRST — registers OTel patches on http/express/pg before they load
+import './observability/instrument';
 import "dotenv/config";
 import app from "./app";
 import prisma from "./prisma/client";
@@ -31,6 +33,13 @@ const envSchema = z.object({
   CLOUDFLARE_API_TOKEN: z.string().optional(),
   CLOUDFLARE_ZONE_ID: z.string().optional(),
   CLOUDFLARE_CNAME_TARGET: z.string().optional(),
+  // Observability (all optional — app runs without them)
+  SERVICE_NAME: z.string().optional(),
+  SERVICE_VERSION: z.string().optional(),
+  LOG_LEVEL: z.enum(["trace", "debug", "info", "warn", "error", "fatal"]).optional(),
+  LOKI_URL: z.string().url().optional(),
+  OTEL_EXPORTER_OTLP_ENDPOINT: z.string().url().optional(),
+  SLOW_QUERY_THRESHOLD_MS: z.coerce.number().positive().optional(),
 });
 
 const parsedEnv = envSchema.safeParse(process.env);
