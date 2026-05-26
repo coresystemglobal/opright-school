@@ -2,12 +2,15 @@ import { Request, Response, NextFunction } from 'express';
 import { AppError } from '../utils/errors';
 import { ZodError } from 'zod';
 import { Prisma } from '@prisma/client';
+import { logger } from '../observability';
+
+const errorLog = logger.child({ module: 'errorHandler' });
 
 export const errorHandler = (
   err: Error,
   req: Request,
   res: Response,
-  next: NextFunction
+  _next: NextFunction,
 ) => {
   if (err instanceof AppError) {
     return res.status(err.statusCode).json({ error: err.message });
@@ -26,6 +29,14 @@ export const errorHandler = (
     }
   }
 
-  console.error('Unhandled error:', err);
+  errorLog.error({
+    msg: 'Unhandled error',
+    err: { message: err.message, name: err.name, stack: err.stack },
+    method: req.method,
+    path: req.path,
+    tenantId: req.tenantId,
+    userId: req.user?.userId,
+  });
+
   res.status(500).json({ error: 'Internal server error' });
 };
