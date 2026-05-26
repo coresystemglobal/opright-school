@@ -52,6 +52,8 @@ import aiRoutes from "./modules/ai/routes";
 import websiteDomainRoutes from "./modules/school-website/domain.routes";
 import { CacheService } from "./utils/cache";
 import { buildCorsOptions } from "./utils/cors";
+import { appMetrics } from "./observability";
+import prisma from "./prisma/client";
 
 const app = express();
 app.use(helmet());
@@ -63,11 +65,24 @@ app.use(monitoringMiddleware);
 app.use(domainRewriteMiddleware);
 
 app.get("/health", async (_req, res) => {
-  const cache = await Promise.race<string>([
-    CacheService.ping().then(() => "ok").catch(() => "unavailable"),
-    new Promise((resolve) => setTimeout(() => resolve("timeout"), 1500)),
+  const [cache, db] = await Promise.all([
+    Promise.race<string>([
+      CacheService.ping().then(() => "ok").catch(() => "unavailable"),
+      new Promise<string>((resolve) => setTimeout(() => resolve("timeout"), 1500)),
+    ]),
+    Promise.race<string>([
+      prisma.$queryRaw`SELECT 1`.then(() => "ok").catch(() => "unavailable"),
+      new Promise<string>((resolve) => setTimeout(() => resolve("timeout"), 2000)),
+    ]),
   ]);
-  res.json({ status: 'ok', cache });
+  const status = db === "ok" ? "ok" : "degraded";
+  res.status(status === "ok" ? 200 : 503).json({ status, cache, db });
+});
+
+// Prometheus scrape endpoint — no auth required, restrict at network/firewall level
+app.get("/metrics", async (_req, res) => {
+  res.set("Content-Type", appMetrics.registry.contentType);
+  res.send(await appMetrics.registry.metrics());
 });
 
 app.use("/docs", docsRoutes);
