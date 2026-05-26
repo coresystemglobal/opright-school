@@ -1,21 +1,23 @@
-import { Request, Response, NextFunction } from "express";
+import { pinoHttp } from 'pino-http';
+import { logger } from '../observability';
 
-export function loggingMiddleware(req: Request, res: Response, next: NextFunction) {
-  const start = Date.now();
-  
-  res.on('finish', () => {
-    const duration = Date.now() - start;
-    console.log(JSON.stringify({
-      timestamp: new Date().toISOString(),
-      // method: req.method,
-      url: req.url,
-      statusCode: res.statusCode,
-      duration,
-      // tenantId: req.tenantId,
-      // userId: req.user?.userId,
-      // userAgent: req.get('User-Agent')
-    }));
-  });
-  
-  next();
-}
+export const loggingMiddleware = pinoHttp({
+  logger: logger.child({ module: 'http' }),
+  // Redact sensitive fields from logs
+  redact: {
+    paths: ['req.headers.authorization', 'req.headers.cookie'],
+    censor: '[REDACTED]',
+  },
+  // Add tenant + user context to every request log
+  customProps(req) {
+    return {
+      tenantId: (req as any).tenantId,
+      userId: (req as any).user?.userId,
+    };
+  },
+  customLogLevel(_req, res) {
+    if (res.statusCode >= 500) return 'error';
+    if (res.statusCode >= 400) return 'warn';
+    return 'info';
+  },
+});
