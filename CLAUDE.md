@@ -8,7 +8,7 @@ Multi-tenant SaaS school management platform backend (Express + TypeScript + Pri
 - `npm run dev` — start dev server with hot reload (`tsx watch src/server.ts`)
 - `npm run build` — compile TypeScript to `dist/`
 - `npm start` — build + run production server
-- `npm test` / `npm run test:watch` — Jest test suite
+- `npm test` / `npm run test:watch` — Jest test suite (`ts-jest` preset, roots: `src/` + `tests/`, uses `tsconfig.jest.json`)
 - `npm run db:generate` — regenerate Prisma client
 - `npm run db:push` — push schema to DB
 - `npm run db:migrate` — run Prisma migrations
@@ -111,23 +111,28 @@ const result = await withTenant(tenantId, (tx) => tx.student.findMany());
 
 ### App Route Summary
 
-Routes mounted in `src/app.ts` (no-auth routes before `tenantMiddleware`; auth routes after):
+Routes mounted in `src/app.ts` (no-auth routes before `tenantMiddleware`; auth routes after; `auditMiddleware` applied globally alongside `authMiddleware` for all authenticated routes):
 
 | Route prefix | Auth | Role guard |
 |---|---|---|
 | `GET /health` | none | none |
+| `GET /metrics` | none | none (Prometheus scrape — restrict at network/firewall level) |
 | `/docs` | none | none |
 | `/onboarding` | none | none |
 | `/queue` | none | none (QStash webhook receiver — no `X-Tenant-ID` required) |
 | `/payments/webhook` | none | none (Paystack webhook receiver — mounted before `tenantMiddleware` with `express.raw` body parser) |
+| `POST /master/login` | none | none (platform-level MASTER auth — no tenant header required) |
 | `/auth` | none | none |
 | `/roles` | none | none |
+| `/audit-logs` | `authMiddleware` | ADMIN |
+| `/platform` | own `masterAuthMiddleware` | MASTER-only (no tenant required) |
 | `/students` | `authMiddleware` | ADMIN, TEACHER |
 | `/teachers` | `authMiddleware` | ADMIN |
 | `/classes` | `authMiddleware` | ADMIN, TEACHER |
 | `/attendance` | `authMiddleware` | ADMIN, TEACHER (legacy routes: `POST /` markAttendance, `GET /student/:studentId` getStudentAttendance) |
-| `/grades` | `authMiddleware` | ADMIN, TEACHER |
 | `/notices` | `authMiddleware` | none extra |
+| `/notifications` | `authMiddleware` | none extra |
+| `/settings` | `authMiddleware` | none extra |
 | `/payments` | `authMiddleware` | ADMIN |
 | `/academic-years` | `authMiddleware` | none extra |
 | `/terms` | `authMiddleware` | none extra |
@@ -146,12 +151,16 @@ Routes mounted in `src/app.ts` (no-auth routes before `tenantMiddleware`; auth r
 | `/upload` | `authMiddleware` | none extra |
 | `/parent` | `authMiddleware` | PARENT (both `/parent` and `/parents` use the same `parentRoutes` handler) |
 | `/parents` | `authMiddleware` | ADMIN |
+| `/student/me` | `authMiddleware` | STUDENT |
 | `/candidates` | `authMiddleware` | ADMIN |
 | `/courses` | `authMiddleware` | ADMIN, TEACHER |
 | `/elearning` | `authMiddleware` | none extra |
+| `/billing` | `authMiddleware` | ADMIN |
+| `/fees` | `authMiddleware` | ADMIN |
+| `/api/admin/website/domain` | `authMiddleware` | ADMIN |
 | `/ai` | `authMiddleware` | ADMIN, TEACHER, PARENT |
 
-Note: server mounts timetable at `/timetables` (plural); client calls `/timetable` (singular) — this is an intentional naming split between server mount path and client API base.
+Note: server mounts timetable at `/timetables` (plural); client calls `/timetable` (singular) — this is an intentional naming split between server mount path and client API base. `/grades` route is not present in `app.ts` — gradebook is served under `/gradebook`. `domainRewriteMiddleware` runs before `tenantMiddleware`.
 
 ### Auth Routes
 
@@ -192,8 +201,10 @@ Validated at startup by Zod schema in `src/server.ts`; process exits on failure.
 - `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ZONE_ID`, `CLOUDFLARE_CNAME_TARGET` — custom subdomain provisioning via Cloudflare DNS
 - `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` — web push notifications (generate with `npx web-push generate-vapid-keys`)
 - `JITSI_APP_ID`, `JITSI_APP_SECRET`, `JITSI_BASE_URL` — live classes via Jitsi (primary, self-hosted)
-- `HUNDREDMS_APP_ACCESS_KEY` — 100ms live class fallback/scalable provider
+- `HUNDREDMS_APP_ACCESS_KEY`, `HUNDREDMS_APP_SECRET` — 100ms live class fallback/scalable provider
 - `ANTHROPIC_API_KEY` — Claude API key for AI student insights (`/ai` routes); service returns 503 if missing
+- `MASTER_EMAIL`, `MASTER_PASSWORD` — used only for the `seed:master` script (platform-level seed)
+- Observability (all optional, app runs without them): `SERVICE_NAME`, `SERVICE_VERSION` (shown in Grafana/traces); `LOG_LEVEL` (trace|debug|info|warn|error|fatal, default `info`); `LOKI_URL` (Loki push URL — omit to log to stdout only); `OTEL_EXPORTER_OTLP_ENDPOINT` (OpenTelemetry OTLP trace endpoint — omit to disable tracing); `SLOW_QUERY_THRESHOLD_MS` (Prisma slow query warning threshold, default `500`)
 <!-- END AUTO-MANAGED -->
 
 <!-- AUTO-MANAGED: dependencies -->
@@ -211,7 +222,7 @@ Validated at startup by Zod schema in `src/server.ts`; process exits on failure.
 - `src/modules/parent/service.ts` - `ParentService`: `getChildren` (Parent model + legacy guardian.email fallback), `getChildAttendance/Grades/Payments/Timetable`, `createParent` (User + Parent transaction)
 - `src/modules/fees/parentFeeService.ts` - `ParentFeeService`: parent-facing fee self-service — `getChildrenFeeSummaries`, `getChildFeeDetails`, `initiatePayment`, `listOptInTemplates`, `optIn`
 - `src/modules/ai/service.ts` - `AIInsightsService`: `getStudentInsights(tenantId, studentId, { refresh? })` — fetches attendance + grade data, calls Claude API via `buildInsightPrompt`, caches result; returns `{ strengths, concerns, parentRecommendations, teacherRecommendations }`
-- `src/config/index.ts` - typed `config` object wrapping all env vars into structured groups: `database`, `upstash`, `brevo`, `jwt`, `storage` (includes `publicEndpoint`), `payments`, `cloudflare` (`{ apiToken, zoneId, cnameTarget }`), `ai` (`{ anthropicApiKey }`); available as an alternative to reading `process.env` directly; `config.brevo.fromName` defaults to `'School SaaS'`
+- `src/config/index.ts` - typed `config` object wrapping all env vars into structured groups: `database`, `upstash`, `brevo`, `jwt`, `storage` (includes `publicEndpoint`), `payments`, `cloudflare` (`{ apiToken, zoneId, cnameTarget }`), `ai` (`{ anthropicApiKey }`); available as an alternative to reading `process.env` directly; `config.brevo.fromName` defaults to `'School SaaS'` in code; `.env.example` recommends `BREVO_FROM_NAME=SchoolOS`
 - `prisma/seed.ts` - idempotent demo seed (`npm run seed`); creates subdomain `greenwood` (Greenwood Academy, `schoolCode: 'GWD'`) with `config.gradingSystem` bands (A=70–100, B=60–69, C=50–59, D=45–49, F=0–44); patches `schoolCode` on existing tenant if missing; 6 system roles (Admin/Principal/Teacher/Staff/Parent/Student, all `isSystem: true`); 4 demo users: admin `admin@greenwood.edu`/`Admin@1234` (Grace Adeyemi), teacher `teacher@greenwood.edu`/`Teacher@1234` (Samuel Okafor), parent `parent@greenwood.edu`/`Parent@1234` (Funke Obi — linked to student Emeka Obi via `guardian.email`), student `student@greenwood.edu`/`Student@1234` (Chisom Nkem); academic year `2025/2026` with 3 terms; 4 classes (Primary 1, Primary 3, JSS 1, SS 1); 3 teachers; 8 students with enrollments; 13 subjects; 5 timetable slots for JSS 1; attendance records; 1 assignment + grades; 1 fee + payment; 5 events; library (6 books), hostel (4 rooms + assignments), transport (2 buses + routes), inventory (6 assets), sports (4 activities), health (4 records), 3 courses, disciplinary (2 records); skips any domain that already exists. Role default permissions: Admin=all; Principal=read-only (students/teachers/classes/attendance/fees/payments/roles); Teacher=students+classes read + attendance CRUD; Staff=students/classes/fees/payments/attendance read; Parent+Student=none
 - `src/utils/seedTier1.ts` - alternative tier-1 seed (`npm run seed:tier1`); separate from the demo seed
 - `src/services/studentIdService.ts` - `StudentIdService.extractSchoolCode(studentId: string): string | null`: parses the school code prefix from a student ID (e.g. `"GWD250042"` → `"GWD"`); used by `/auth/student-login` to resolve tenant without a tenant header
