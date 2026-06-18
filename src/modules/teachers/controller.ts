@@ -11,76 +11,109 @@ const createSchema = z.object({
   firstName: z.string().min(1),
   lastName: z.string().min(1),
   subject: z.string().min(1).nullable().optional(),
+  userId: z.string().nullable().optional(),
+  phone: z.string().nullable().optional(),
+  email: z.string().email().nullable().optional(),
+  bio: z.string().nullable().optional(),
+  qualification: z.string().nullable().optional(),
+  employmentDate: z.string().datetime().nullable().optional().transform((v) => v ? new Date(v) : undefined),
 });
 
-const updateSchema = createSchema.partial();
+const updateSchema = z.object({
+  firstName: z.string().min(1).optional(),
+  lastName: z.string().min(1).optional(),
+  subject: z.string().min(1).nullable().optional(),
+  phone: z.string().nullable().optional(),
+  email: z.string().email().nullable().optional(),
+  bio: z.string().nullable().optional(),
+  qualification: z.string().nullable().optional(),
+  employmentDate: z.string().datetime().nullable().optional().transform((v) => v ? new Date(v) : undefined),
+});
 
 export const teacherController = {
   async list(req: Request, res: Response) {
     try {
-      if (!req.tenantId) {
-        return res.status(400).json({ error: "Tenant ID required" });
-      }
-
+      if (!req.tenantId) return res.status(400).json({ error: "Tenant ID required" });
       const teachers = await service.list(req.tenantId);
       res.json(teachers);
     } catch (error) {
-      res.status(500).json({
-        error: error instanceof Error ? error.message : "Unknown error",
-      });
+      res.status(500).json({ error: error instanceof Error ? error.message : "Unknown error" });
     }
   },
 
   async create(req: Request, res: Response) {
     try {
-      if (!req.tenantId) {
-        return res.status(400).json({ error: "Tenant ID required" });
-      }
-
+      if (!req.tenantId) return res.status(400).json({ error: "Tenant ID required" });
       const data = createSchema.parse(req.body);
       const teacher = await service.create(req.tenantId, data);
       res.status(201).json(teacher);
     } catch (error) {
-      res.status(400).json({
-        error: error instanceof Error ? error.message : "Unknown error",
-      });
+      res.status(400).json({ error: error instanceof Error ? error.message : "Unknown error" });
     }
   },
 
   async getById(req: Request, res: Response) {
     try {
-      if (!req.tenantId) {
-        return res.status(400).json({ error: "Tenant ID required" });
-      }
-
+      if (!req.tenantId) return res.status(400).json({ error: "Tenant ID required" });
       const { id } = idParamSchema.parse(req.params);
       const teacher = await service.getById(req.tenantId, id);
-      if (!teacher) {
-        return res.status(404).json({ error: "Teacher not found" });
-      }
-
+      if (!teacher) return res.status(404).json({ error: "Teacher not found" });
       res.json(teacher);
     } catch (error) {
-      res.status(500).json({
-        error: error instanceof Error ? error.message : "Unknown error",
-      });
+      res.status(500).json({ error: error instanceof Error ? error.message : "Unknown error" });
+    }
+  },
+
+  async getProfile(req: Request, res: Response) {
+    try {
+      if (!req.tenantId) return res.status(400).json({ error: "Tenant ID required" });
+      const { id } = idParamSchema.parse(req.params);
+      const teacher = await service.getProfile(req.tenantId, id);
+      if (!teacher) return res.status(404).json({ error: "Teacher not found" });
+      res.json(teacher);
+    } catch (error) {
+      res.status(500).json({ error: error instanceof Error ? error.message : "Unknown error" });
+    }
+  },
+
+  async getMe(req: Request, res: Response) {
+    try {
+      if (!req.tenantId) return res.status(400).json({ error: "Tenant ID required" });
+      if (!req.user?.userId) return res.status(401).json({ error: "Unauthorized" });
+
+      const teacher = await service.getByUserId(req.tenantId, req.user.userId);
+      if (!teacher) return res.status(404).json({ error: "Teacher profile not found for this user" });
+      res.json(teacher);
+    } catch (error) {
+      res.status(500).json({ error: error instanceof Error ? error.message : "Unknown error" });
+    }
+  },
+
+  async updateMe(req: Request, res: Response) {
+    try {
+      if (!req.tenantId) return res.status(400).json({ error: "Tenant ID required" });
+      if (!req.user?.userId) return res.status(401).json({ error: "Unauthorized" });
+
+      const teacher = await service.getByUserId(req.tenantId, req.user.userId);
+      if (!teacher) return res.status(404).json({ error: "Teacher profile not found for this user" });
+
+      const data = updateSchema.parse(req.body);
+      const updated = await service.update(req.tenantId, teacher.id, data);
+      res.json(updated);
+    } catch (error) {
+      res.status(400).json({ error: error instanceof Error ? error.message : "Unknown error" });
     }
   },
 
   async update(req: Request, res: Response) {
     try {
-      if (!req.tenantId) {
-        return res.status(400).json({ error: "Tenant ID required" });
-      }
-
+      if (!req.tenantId) return res.status(400).json({ error: "Tenant ID required" });
       const data = updateSchema.parse(req.body);
       const { id } = idParamSchema.parse(req.params);
       const teacher = await service.update(req.tenantId, id, data);
       res.json(teacher);
     } catch (error) {
-      res.status(400).json({
-        error: error instanceof Error ? error.message : "Unknown error",
-      });
+      res.status(400).json({ error: error instanceof Error ? error.message : "Unknown error" });
     }
   },
 
@@ -95,6 +128,68 @@ export const teacherController = {
     }
   },
 
+  async getSubjects(req: Request, res: Response) {
+    try {
+      if (!req.tenantId) return res.status(400).json({ error: "Tenant ID required" });
+      const { id } = idParamSchema.parse(req.params);
+      const academicYearId = typeof req.query.academicYearId === "string" ? req.query.academicYearId : undefined;
+
+      const teacher = await service.getById(req.tenantId, id);
+      if (!teacher) return res.status(404).json({ error: "Teacher not found" });
+
+      const subjects = await service.getSubjects(req.tenantId, id, academicYearId);
+      res.json(subjects);
+    } catch (error) {
+      res.status(500).json({ error: error instanceof Error ? error.message : "Unknown error" });
+    }
+  },
+
+  async getTimetable(req: Request, res: Response) {
+    try {
+      if (!req.tenantId) return res.status(400).json({ error: "Tenant ID required" });
+      const { id } = idParamSchema.parse(req.params);
+      const academicYearId = typeof req.query.academicYearId === "string" ? req.query.academicYearId : undefined;
+
+      const teacher = await service.getById(req.tenantId, id);
+      if (!teacher) return res.status(404).json({ error: "Teacher not found" });
+
+      const timetable = await service.getTimetable(req.tenantId, id, academicYearId);
+      res.json(timetable);
+    } catch (error) {
+      res.status(500).json({ error: error instanceof Error ? error.message : "Unknown error" });
+    }
+  },
+
+  async getStudents(req: Request, res: Response) {
+    try {
+      if (!req.tenantId) return res.status(400).json({ error: "Tenant ID required" });
+      const { id } = idParamSchema.parse(req.params);
+
+      const teacher = await service.getById(req.tenantId, id);
+      if (!teacher) return res.status(404).json({ error: "Teacher not found" });
+
+      const students = await service.getStudents(req.tenantId, id);
+      res.json(students);
+    } catch (error) {
+      res.status(500).json({ error: error instanceof Error ? error.message : "Unknown error" });
+    }
+  },
+
+  async getCourses(req: Request, res: Response) {
+    try {
+      if (!req.tenantId) return res.status(400).json({ error: "Tenant ID required" });
+      const { id } = idParamSchema.parse(req.params);
+
+      const teacher = await service.getById(req.tenantId, id);
+      if (!teacher) return res.status(404).json({ error: "Teacher not found" });
+
+      const courses = await service.getCourses(req.tenantId, id);
+      res.json(courses);
+    } catch (error) {
+      res.status(500).json({ error: error instanceof Error ? error.message : "Unknown error" });
+    }
+  },
+
   async uploadCsv(req: Request, res: Response) {
     try {
       if (!req.tenantId) return res.status(400).json({ error: "Tenant ID required" });
@@ -104,7 +199,7 @@ export const teacherController = {
       if (!rows.length) return res.status(400).json({ error: "CSV is empty" });
 
       const errors: string[] = [];
-      const created: any[] = [];
+      const created: unknown[] = [];
 
       for (let i = 0; i < rows.length; i++) {
         const row = rows[i];
@@ -115,12 +210,16 @@ export const teacherController = {
 
         try {
           const teacher = await service.create(req.tenantId, {
-            firstName, lastName,
+            firstName,
+            lastName,
             subject: (row.subject || '').trim() || null,
+            phone: (row.phone || '').trim() || null,
+            email: (row.email || '').trim() || null,
+            qualification: (row.qualification || '').trim() || null,
           });
           created.push(teacher);
-        } catch (e: any) {
-          errors.push(`Row ${ln}: ${e.message}`);
+        } catch (e: unknown) {
+          errors.push(`Row ${ln}: ${e instanceof Error ? e.message : String(e)}`);
         }
       }
 
@@ -132,10 +231,10 @@ export const teacherController = {
 
   async downloadCsvTemplate(req: Request, res: Response) {
     try {
-      const headers = ['first_name', 'last_name', 'subject'];
+      const headers = ['first_name', 'last_name', 'subject', 'phone', 'email', 'qualification'];
       const rows = [
-        ['Chidi', 'Eze', 'Mathematics'],
-        ['Amaka', 'Nwosu', 'English Language'],
+        ['Chidi', 'Eze', 'Mathematics', '+2348012345678', 'chidi.eze@school.edu', 'B.Sc. Mathematics'],
+        ['Amaka', 'Nwosu', 'English Language', '+2348087654321', 'amaka.nwosu@school.edu', 'B.A. English'],
       ];
       const csv = buildCsv(headers, rows);
       res.setHeader('Content-Type', 'text/csv');
