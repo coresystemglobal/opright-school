@@ -127,6 +127,7 @@ model User {
 
   student     Student?  // back-relation
   parent      Parent?   // back-relation
+  teacher     Teacher?  // back-relation
   noticesAuthored Notice[]
   refreshTokens  RefreshToken[]
   notifications  Notification[]
@@ -354,16 +355,25 @@ model Teacher {
   tenantId  String   @db.Uuid
   tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
-  firstName String
-  lastName  String
-  subject   String?
+  userId    String?  @unique  // FK to User (teacher's login account)
+  user      User?    @relation(fields: [userId], references: [id])
+
+  firstName       String
+  lastName        String
+  subject         String?   // free-text specialty e.g. "Mathematics"
+  phone           String?
+  email           String?
+  bio             String?
+  qualification   String?
+  employmentDate  DateTime?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  classes   Class[]
-  subjects  Subject[]
+  classes    Class[]
+  subjects   Subject[]
   timetables Timetable[]
-  courses Course[]
+  courses    Course[]
 
   @@index([tenantId])
 }
