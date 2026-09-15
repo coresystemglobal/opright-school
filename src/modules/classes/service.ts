@@ -15,6 +15,10 @@ export class ClassService {
     return this.prisma.class.findMany({
       where: { tenantId },
       orderBy: { createdAt: "desc" },
+      include: {
+        teacher: { select: { id: true, firstName: true, lastName: true } },
+        _count: { select: { enrollments: true } },
+      },
     });
   }
 
