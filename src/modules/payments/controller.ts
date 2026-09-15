@@ -19,6 +19,35 @@ const studentIdParamSchema = z.object({
 });
 
 export const paymentController = {
+  async listPayments(req: Request, res: Response) {
+    try {
+      if (!req.tenantId) return res.status(400).json({ error: "Tenant ID required" });
+      const payments = await prisma.payment.findMany({
+        where: { tenantId: req.tenantId },
+        include: { student: true, fee: true },
+        orderBy: { createdAt: "desc" },
+      });
+      res.json(payments);
+    } catch (error) {
+      res.status(500).json({ error: error instanceof Error ? error.message : "Unknown error" });
+    }
+  },
+
+  async listStudentPayments(req: Request, res: Response) {
+    try {
+      if (!req.tenantId) return res.status(400).json({ error: "Tenant ID required" });
+      const { studentId } = studentIdParamSchema.parse(req.params);
+      const payments = await prisma.payment.findMany({
+        where: { tenantId: req.tenantId, studentId },
+        include: { fee: true },
+        orderBy: { createdAt: "desc" },
+      });
+      res.json(payments);
+    } catch (error) {
+      res.status(500).json({ error: error instanceof Error ? error.message : "Unknown error" });
+    }
+  },
+
   async initiatePayment(req: Request, res: Response) {
     try {
       if (!req.tenantId) return res.status(400).json({ error: "Tenant ID required" });
