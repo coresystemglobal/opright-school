@@ -9,22 +9,50 @@ const redis = new Redis({
 const key = (tenantId: string, resource: string, id?: string) =>
   id ? `smp:${tenantId}:${resource}:${id}` : `smp:${tenantId}:${resource}`;
 
+// The cache is an optimization, never a hard dependency. If Redis is down,
+// over quota, or slow, every operation degrades gracefully (a miss / no-op)
+// so requests still succeed instead of returning 500.
+let cacheWarned = false;
+function onCacheError(op: string, err: unknown) {
+  if (!cacheWarned) {
+    cacheWarned = true;
+    console.warn(`[cache] disabled for now — ${op} failed:`, err instanceof Error ? err.message : err);
+  }
+}
+
 export const CacheService = {
   async get<T>(tenantId: string, resource: string, id?: string): Promise<T | null> {
-    return redis.get<T>(key(tenantId, resource, id));
+    try {
+      return await redis.get<T>(key(tenantId, resource, id));
+    } catch (err) {
+      onCacheError('get', err);
+      return null;
+    }
   },
 
   async set(tenantId: string, resource: string, data: any, ttl = 300, id?: string) {
-    await redis.set(key(tenantId, resource, id), data, { ex: ttl });
+    try {
+      await redis.set(key(tenantId, resource, id), data, { ex: ttl });
+    } catch (err) {
+      onCacheError('set', err);
+    }
   },
 
   async del(tenantId: string, resource: string, id?: string) {
-    await redis.del(key(tenantId, resource, id));
+    try {
+      await redis.del(key(tenantId, resource, id));
+    } catch (err) {
+      onCacheError('del', err);
+    }
   },
 
   async invalidate(tenantId: string, resource: string) {
-    const keys = await redis.keys(`smp:${tenantId}:${resource}*`);
-    if (keys.length) await redis.del(...keys);
+    try {
+      const keys = await redis.keys(`smp:${tenantId}:${resource}*`);
+      if (keys.length) await redis.del(...keys);
+    } catch (err) {
+      onCacheError('invalidate', err);
+    }
   },
 
   async ping() {
