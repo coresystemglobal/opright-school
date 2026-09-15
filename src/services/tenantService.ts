@@ -180,24 +180,20 @@ async function seedSchoolDefaults(db: DbClient, tenantId: string, schoolType: Sc
     )
   );
 
-  let subjectCount = 0;
-  for (const classItem of classes) {
+  // Build every subject row up front and insert them in a single query,
+  // rather than one round-trip per subject (which dominated the seed time).
+  const subjectRows = classes.flatMap((classItem) => {
     const templates = subjectTemplates[classItem.level ?? 'Primary'] ?? subjectTemplates.Primary;
-    await Promise.all(
-      templates.map((subjectName) =>
-        db.subject.create({
-          data: {
-            tenantId,
-            academicYearId: academicYear.id,
-            classId: classItem.id,
-            name: subjectName,
-            code: buildSubjectCode(classItem.name, subjectName),
-          },
-        })
-      )
-    );
-    subjectCount += templates.length;
-  }
+    return templates.map((subjectName) => ({
+      tenantId,
+      academicYearId: academicYear.id,
+      classId: classItem.id,
+      name: subjectName,
+      code: buildSubjectCode(classItem.name, subjectName),
+    }));
+  });
+  await db.subject.createMany({ data: subjectRows });
+  const subjectCount = subjectRows.length;
 
   return {
     academicYear,
@@ -311,6 +307,12 @@ export class TenantService {
         adminUser,
         setup,
       };
+    }, {
+      // School creation seeds roles, calendar, classes and subjects in one
+      // atomic transaction; the default 5s interactive-transaction timeout is
+      // too tight for the full seed, so give it generous head-room.
+      maxWait: 15_000,
+      timeout: 30_000,
     });
   }
 
