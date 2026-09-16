@@ -6,8 +6,10 @@
 
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
+import { StudentIdService } from '../src/services/studentIdService';
 
 const prisma = new PrismaClient();
+const idService = new StudentIdService(prisma);
 
 const DEMO_SUBDOMAIN = 'greenwood';
 
@@ -257,10 +259,12 @@ async function main() {
     if (!existingStudentNames.has(`${s.firstName} ${s.lastName}`)) {
       const guardianData: Record<string, string> = { name: `${s.lastName} Family`, phone: '0803000000' };
       if (s.guardianEmail) guardianData.email = s.guardianEmail;
+      const studentId = await idService.generateStudentId(tid, (tenant as any).schoolCode ?? 'GWD');
       const student = await prisma.student.create({
         data: {
           tenantId: tid,
           firstName: s.firstName, lastName: s.lastName, dob: s.dob,
+          studentId, studentCode: studentId,
           guardian: guardianData,
         },
       });
