@@ -512,6 +512,25 @@ async function main() {
     console.log(`  · Events: ${eventCount} already exist`);
   }
 
+  // ── 13b. Notices ──────────────────────────────────────────────────────────
+  const noticeCount = await prisma.notice.count({ where: { tenantId: tid } });
+  if (noticeCount === 0) {
+    const author = await prisma.user.findFirst({ where: { tenantId: tid, email: 'admin@greenwood.edu' } });
+    if (author) {
+      const noticeData = [
+        { title: 'Resumption for Third Term', content: 'All students resume on Monday, 21 April 2026. Please ensure full uniform and complete textbooks.', targetRoles: [] as string[] },
+        { title: 'PTA Meeting Reminder', content: 'The Term 3 Parent-Teacher Association meeting holds on Saturday, 25 April. Parents are strongly encouraged to attend.', targetRoles: ['PARENT'] },
+        { title: 'Staff Briefing', content: 'A short staff briefing will hold on Friday after assembly to finalise the sports day roster.', targetRoles: ['TEACHER', 'STAFF'] },
+      ];
+      await Promise.all(noticeData.map(n => prisma.notice.create({ data: { tenantId: tid, authorId: author.id, ...n } })));
+      console.log(`  ✓ Notices: ${noticeData.length} created`);
+    } else {
+      console.log('  · Notices: skipped (admin author not found)');
+    }
+  } else {
+    console.log(`  · Notices: ${noticeCount} already exist`);
+  }
+
   // ── 14. Library (books + a borrow transaction) ────────────────────────────
   const bookCount = await prisma.book.count({ where: { tenantId: tid } });
   if (bookCount === 0) {
