@@ -28,6 +28,19 @@ type RecordVaccinationData = {
   nextDue?: Date;
 };
 
+// emergencyContact may be stored as an encrypted JSON string (created via the
+// API) or as a plain JSON object (legacy/seed data). Handle both without throwing.
+function safeParseEmergencyContact(value: unknown): unknown {
+  if (value && typeof value === "object") return value;
+  if (typeof value !== "string") return null;
+  const raw = EncryptionService.safeDecrypt(value);
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return raw;
+  }
+}
+
 export class HealthService {
   constructor(private prisma: PrismaClient) {}
 
@@ -61,10 +74,10 @@ export class HealthService {
     
     const decrypted = {
       ...record,
-      allergies: record.allergies ? EncryptionService.decrypt(record.allergies) : null,
-      conditions: record.conditions ? EncryptionService.decrypt(record.conditions) : null,
+      allergies: record.allergies ? EncryptionService.safeDecrypt(record.allergies) : null,
+      conditions: record.conditions ? EncryptionService.safeDecrypt(record.conditions) : null,
       emergencyContact: record.emergencyContact
-        ? JSON.parse(EncryptionService.decrypt(record.emergencyContact as string))
+        ? safeParseEmergencyContact(record.emergencyContact)
         : null,
     };
     await CacheService.set(tenantId, "health", decrypted, 300, studentId);

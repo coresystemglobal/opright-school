@@ -20,5 +20,22 @@ export const EncryptionService = {
     let decrypted = decipher.update(encrypted, 'hex', 'utf8');
     decrypted += decipher.final('utf8');
     return decrypted;
+  },
+
+  // Returns true when a value has the `iv:authTag:ciphertext` (all hex) shape
+  // produced by encrypt(). Legacy plaintext rows do not match.
+  isEncrypted(value: string): boolean {
+    return /^[0-9a-f]+:[0-9a-f]+:[0-9a-f]+$/i.test(value) && value.split(':').length === 3;
+  },
+
+  // Decrypts encrypted values but passes legacy/plaintext values through
+  // unchanged, so a row written before encryption was applied never throws.
+  safeDecrypt(value: string): string {
+    if (!EncryptionService.isEncrypted(value)) return value;
+    try {
+      return EncryptionService.decrypt(value);
+    } catch {
+      return value;
+    }
   }
 };

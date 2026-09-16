@@ -7,6 +7,7 @@
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import { StudentIdService } from '../src/services/studentIdService';
+import { EncryptionService } from '../src/utils/encryption';
 
 const prisma = new PrismaClient();
 const idService = new StudentIdService(prisma);
@@ -635,8 +636,12 @@ async function main() {
       students[h.idx] ? prisma.healthRecord.create({
         data: {
           tenantId: tid, studentId: students[h.idx].id,
-          bloodGroup: h.bloodGroup, allergies: h.allergies, conditions: h.conditions,
-          emergencyContact: { name: `${students[h.idx].lastName} Family`, phone: '08030000000', relation: 'Parent' },
+          bloodGroup: h.bloodGroup,
+          // allergies/conditions/emergencyContact are read back through
+          // EncryptionService.decrypt, so they must be stored encrypted.
+          allergies: h.allergies ? EncryptionService.encrypt(h.allergies) : null,
+          conditions: h.conditions ? EncryptionService.encrypt(h.conditions) : null,
+          emergencyContact: EncryptionService.encrypt(JSON.stringify({ name: `${students[h.idx].lastName} Family`, phone: '08030000000', relation: 'Parent' })),
         },
       }) : Promise.resolve(null)
     ));
