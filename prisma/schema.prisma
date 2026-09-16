@@ -469,6 +469,8 @@ model Payment {
   method      String    // cash | bank_transfer | paystack
   status      PaymentStatus
   paystackRef String?   @unique
+  reference   String?   // teller / transaction reference for manual payments
+  note        String?   // free-text remarks
   createdAt   DateTime  @default(now())
 
   @@index([tenantId])

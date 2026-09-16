@@ -72,6 +72,8 @@ export const paymentController = {
           amount: data.amount,
           method: data.method,
           status: data.status ?? PaymentStatus.SUCCESS,
+          reference: data.reference || null,
+          note: data.notes || null,
           ...(data.paymentDate ? { createdAt: new Date(data.paymentDate) } : {}),
         },
         include: { student: true, fee: true },
