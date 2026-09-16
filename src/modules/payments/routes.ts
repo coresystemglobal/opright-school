@@ -12,6 +12,7 @@ router.post(
 );
 
 router.get("/", paymentController.listPayments);
+router.post("/", paymentController.recordPayment);
 router.get("/student/:studentId", paymentController.listStudentPayments);
 router.post("/initiate", paymentController.initiatePayment);
 router.get("/invoices/:id", paymentController.getInvoice);
