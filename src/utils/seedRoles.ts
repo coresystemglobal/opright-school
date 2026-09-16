@@ -1,116 +1,91 @@
 import { Prisma, PrismaClient } from '@prisma/client';
+import { RESOURCES, ACTIONS } from './permissions';
 
 const prisma = new PrismaClient();
 
 type DbClient = Prisma.TransactionClient | PrismaClient;
 
-const defaultPermissions = [
-  { resource: 'students', action: 'create', description: 'Create new students' },
-  { resource: 'students', action: 'read', description: 'View student information' },
-  { resource: 'students', action: 'update', description: 'Update student information' },
-  { resource: 'students', action: 'delete', description: 'Delete students' },
-  { resource: 'teachers', action: 'create', description: 'Create new teachers' },
-  { resource: 'teachers', action: 'read', description: 'View teacher information' },
-  { resource: 'teachers', action: 'update', description: 'Update teacher information' },
-  { resource: 'teachers', action: 'delete', description: 'Delete teachers' },
-  { resource: 'classes', action: 'create', description: 'Create new classes' },
-  { resource: 'classes', action: 'read', description: 'View class information' },
-  { resource: 'classes', action: 'update', description: 'Update class information' },
-  { resource: 'classes', action: 'delete', description: 'Delete classes' },
-  { resource: 'attendance', action: 'create', description: 'Mark attendance' },
-  { resource: 'attendance', action: 'read', description: 'View attendance records' },
-  { resource: 'attendance', action: 'update', description: 'Update attendance records' },
-  { resource: 'fees', action: 'create', description: 'Create fee structures' },
-  { resource: 'fees', action: 'read', description: 'View fee information' },
-  { resource: 'fees', action: 'update', description: 'Update fee structures' },
-  { resource: 'payments', action: 'read', description: 'View payment records' },
-  { resource: 'roles', action: 'create', description: 'Create new roles' },
-  { resource: 'roles', action: 'read', description: 'View roles' },
-  { resource: 'roles', action: 'update', description: 'Update roles' },
-  { resource: 'roles', action: 'delete', description: 'Delete roles' },
-];
+// Full permission catalogue: every resource × every action. Admin is granted
+// all of these; other roles cherry-pick from the same map. Generating it from
+// RESOURCES keeps new domains (gradebook, subjects, timetables, …) covered
+// automatically instead of silently 403-ing.
+const ALL_ACTIONS = Object.values(ACTIONS);
+const defaultPermissions = Object.values(RESOURCES).flatMap((resource) =>
+  ALL_ACTIONS.map((action) => ({
+    resource,
+    action,
+    description: `${action[0].toUpperCase() + action.slice(1)} ${resource}`,
+  })),
+);
 
-async function ensureDefaultPermissions(db: DbClient) {
+// Additive: create any permissions that don't exist yet, so installs seeded
+// before a resource was added still gain it (Permission is global, un-scoped).
+export async function ensureDefaultPermissions(db: DbClient) {
   const existing = await db.permission.findMany();
-  if (existing.length > 0) {
-    return existing;
+  const have = new Set(existing.map((p) => `${p.resource}:${p.action}`));
+  const missing = defaultPermissions.filter((p) => !have.has(`${p.resource}:${p.action}`));
+  if (missing.length > 0) {
+    await db.permission.createMany({ data: missing, skipDuplicates: true });
   }
-
-  await db.permission.createMany({
-    data: defaultPermissions,
-  });
-
   return db.permission.findMany();
 }
 
 export async function seedDefaultRoles(tenantId: string, db: DbClient = prisma) {
   const permissions = await ensureDefaultPermissions(db);
-  
+
   const permissionMap = permissions.reduce((acc, p) => {
-    const key = `${p.resource}:${p.action}`;
-    acc[key] = p.id;
+    acc[`${p.resource}:${p.action}`] = p.id;
     return acc;
   }, {} as Record<string, string>);
+  const pick = (...keys: string[]) => keys.map((k) => permissionMap[k]).filter(Boolean);
 
-  // Create default roles
+  // Academic domains a teacher operates in day to day.
+  const teacherAcademic = pick(
+    'gradebook:create', 'gradebook:read', 'gradebook:update',
+    'subjects:read', 'timetables:read', 'academicYears:read', 'terms:read',
+    'courses:read', 'courses:create', 'courses:update', 'elearning:read',
+    'events:read',
+  );
+
   const roles = [
     {
       name: 'Admin',
       description: 'Full system access',
-      permissions: Object.values(permissionMap) // All permissions
+      permissions: Object.values(permissionMap), // every permission
     },
     {
       name: 'Principal',
       description: 'School management access',
-      permissions: [
-        permissionMap['students:read'],
-        permissionMap['students:update'],
-        permissionMap['teachers:read'],
-        permissionMap['teachers:create'],
-        permissionMap['teachers:update'],
-        permissionMap['classes:read'],
-        permissionMap['classes:create'],
-        permissionMap['classes:update'],
-        permissionMap['attendance:read'],
-        permissionMap['fees:read'],
-        permissionMap['fees:create'],
-        permissionMap['fees:update'],
-        permissionMap['payments:read'],
-        permissionMap['roles:read']
-      ].filter(Boolean)
+      permissions: pick(
+        'students:read', 'students:update',
+        'teachers:read', 'teachers:create', 'teachers:update',
+        'classes:read', 'classes:create', 'classes:update',
+        'attendance:read',
+        'fees:read', 'fees:create', 'fees:update', 'payments:read',
+        'gradebook:read', 'subjects:read', 'timetables:read',
+        'academicYears:read', 'academicYears:create', 'academicYears:update',
+        'terms:read', 'disciplinary:read',
+        'roles:read',
+      ),
     },
     {
       name: 'Teacher',
       description: 'Teaching and class management',
       permissions: [
-        permissionMap['students:read'],
-        permissionMap['classes:read'],
-        permissionMap['attendance:create'],
-        permissionMap['attendance:read'],
-        permissionMap['attendance:update']
-      ].filter(Boolean)
+        ...pick('students:read', 'classes:read', 'attendance:create', 'attendance:read', 'attendance:update'),
+        ...teacherAcademic,
+      ],
     },
     {
       name: 'Staff',
       description: 'Operational support access',
-      permissions: [
-        permissionMap['students:read'],
-        permissionMap['classes:read'],
-        permissionMap['fees:read'],
-        permissionMap['payments:read'],
-        permissionMap['attendance:read']
-      ].filter(Boolean)
+      permissions: pick(
+        'students:read', 'classes:read', 'fees:read', 'payments:read', 'attendance:read',
+        'library:read', 'transport:read', 'hostel:read', 'inventory:read', 'health:read',
+      ),
     },
-    {
-      name: 'Parent',
-      description: 'Parent portal access',
-      permissions: []
-    },
-    {
-      name: 'Student',
-      description: 'Student portal access',
-      permissions: []
-    }
+    { name: 'Parent', description: 'Parent portal access', permissions: [] },
+    { name: 'Student', description: 'Student portal access', permissions: [] },
   ];
 
   const createdRoles = [];
@@ -122,9 +97,9 @@ export async function seedDefaultRoles(tenantId: string, db: DbClient = prisma) 
         description: roleData.description,
         isSystem: true,
         permissions: {
-          create: roleData.permissions.map(permissionId => ({ permissionId }))
-        }
-      }
+          create: roleData.permissions.map((permissionId) => ({ permissionId })),
+        },
+      },
     });
     createdRoles.push(role);
   }
