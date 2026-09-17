@@ -3,12 +3,10 @@ import { logger } from '../observability';
 
 export const loggingMiddleware = pinoHttp({
   logger: logger.child({ module: 'http' }),
-  // Redact sensitive fields from logs
   redact: {
     paths: ['req.headers.authorization', 'req.headers.cookie'],
     censor: '[REDACTED]',
   },
-  // Add tenant + user context to every request log
   customProps(req) {
     return {
       tenantId: (req as any).tenantId,
@@ -19,5 +17,18 @@ export const loggingMiddleware = pinoHttp({
     if (res.statusCode >= 500) return 'error';
     if (res.statusCode >= 400) return 'warn';
     return 'info';
+  },
+  serializers: {
+    req(req) {
+      return {
+        method: req.method,
+        url: req.url,
+      };
+    },
+    res(res) {
+      return {
+        statusCode: res.statusCode,
+      };
+    },
   },
 });
