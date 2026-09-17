@@ -5,6 +5,8 @@ type TeacherCreateData = {
   firstName: string;
   lastName: string;
   subject?: string | null;
+  email?: string | null;
+  roleId?: string | null;
 };
 
 type TeacherUpdateData = Partial<TeacherCreateData>;
@@ -19,6 +21,7 @@ export class TeacherService {
     const teachers = await this.prisma.teacher.findMany({
       where: { tenantId },
       orderBy: { createdAt: "desc" },
+      include: { user: { include: { role: true } } }
     });
 
     await CacheService.set(tenantId, "teachers", teachers, 300);
@@ -26,13 +29,35 @@ export class TeacherService {
   }
 
   async create(tenantId: string, data: TeacherCreateData) {
+    let user = null;
+
+    if (data.email && data.roleId) {
+      const bcrypt = require('bcryptjs');
+      const password = await bcrypt.hash('welcome123', 10);
+      user = await this.prisma.user.create({
+        data: {
+          tenantId,
+          email: data.email,
+          password,
+          roleId: data.roleId,
+          firstName: data.firstName,
+          lastName: data.lastName,
+          mustChangePassword: true,
+          emailVerified: true
+        }
+      });
+    }
+
     const teacher = await this.prisma.teacher.create({
       data: {
         tenantId,
         firstName: data.firstName,
         lastName: data.lastName,
         subject: data.subject,
+        email: data.email,
+        userId: user ? user.id : undefined,
       },
+      include: { user: { include: { role: true } } }
     });
 
     await CacheService.invalidate(tenantId, "teachers");

@@ -11,6 +11,8 @@ const createSchema = z.object({
   firstName: z.string().min(1),
   lastName: z.string().min(1),
   subject: z.string().min(1).nullable().optional(),
+  email: z.string().email().optional().nullable(),
+  roleId: z.string().uuid().optional().nullable(),
 });
 
 const updateSchema = createSchema.partial();

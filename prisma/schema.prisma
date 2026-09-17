@@ -126,6 +126,7 @@ model User {
   updatedAt   DateTime @updatedAt
 
   student     Student?  // back-relation
+  teacher     Teacher?  // back-relation
   parent      Parent?   // back-relation
   noticesAuthored Notice[]
   refreshTokens  RefreshToken[]
@@ -357,6 +358,9 @@ model Teacher {
   firstName String
   lastName  String
   subject   String?
+  email     String?  @unique
+  userId    String?  @unique
+  user      User?    @relation(fields: [userId], references: [id])
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
