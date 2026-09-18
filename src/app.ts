@@ -104,7 +104,7 @@ app.use("/platform", platformRoutes);
 app.use(authMiddleware, auditMiddleware);
 
 app.use("/students", requireRole("ADMIN", "TEACHER"), studentRoutes);
-app.use("/teachers", requireRole("ADMIN"), teacherRoutes);
+app.use("/teachers", requireRole("ADMIN", "TEACHER"), teacherRoutes);
 app.use("/classes", requireRole("ADMIN", "TEACHER"), classRoutes);
 app.use("/attendance", requireRole("ADMIN", "TEACHER"), attendanceRoutes);
 app.use("/notices", noticeRoutes);

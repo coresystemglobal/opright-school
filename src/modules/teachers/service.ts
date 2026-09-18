@@ -5,8 +5,12 @@ type TeacherCreateData = {
   firstName: string;
   lastName: string;
   subject?: string | null;
+  userId?: string | null;
+  phone?: string | null;
   email?: string | null;
-  roleId?: string | null;
+  bio?: string | null;
+  qualification?: string | null;
+  employmentDate?: Date | null;
 };
 
 type TeacherUpdateData = Partial<TeacherCreateData>;
@@ -21,7 +25,9 @@ export class TeacherService {
     const teachers = await this.prisma.teacher.findMany({
       where: { tenantId },
       orderBy: { createdAt: "desc" },
-      include: { user: { include: { role: true } } }
+      include: {
+        _count: { select: { subjects: true, courses: true, timetables: true } },
+      },
     });
 
     await CacheService.set(tenantId, "teachers", teachers, 300);
@@ -54,8 +60,12 @@ export class TeacherService {
         firstName: data.firstName,
         lastName: data.lastName,
         subject: data.subject,
+        userId: data.userId,
+        phone: data.phone,
         email: data.email,
-        userId: user ? user.id : undefined,
+        bio: data.bio,
+        qualification: data.qualification,
+        employmentDate: data.employmentDate,
       },
       include: { user: { include: { role: true } } }
     });
@@ -67,6 +77,57 @@ export class TeacherService {
   async getById(tenantId: string, id: string) {
     return this.prisma.teacher.findFirst({
       where: { id, tenantId },
+      include: {
+        user: { select: { id: true, email: true } },
+        _count: { select: { subjects: true, courses: true, timetables: true, classes: true } },
+      },
+    });
+  }
+
+  async getByUserId(tenantId: string, userId: string) {
+    return this.prisma.teacher.findFirst({
+      where: { userId, tenantId },
+      include: {
+        user: { select: { id: true, email: true } },
+        _count: { select: { subjects: true, courses: true, timetables: true, classes: true } },
+      },
+    });
+  }
+
+  async getProfile(tenantId: string, id: string) {
+    return this.prisma.teacher.findFirst({
+      where: { id, tenantId },
+      include: {
+        user: { select: { id: true, email: true } },
+        classes: { select: { id: true, name: true, level: true } },
+        subjects: {
+          select: {
+            id: true,
+            name: true,
+            code: true,
+            class: { select: { id: true, name: true } },
+            academicYear: { select: { id: true, name: true } },
+          },
+        },
+        timetables: {
+          select: {
+            id: true,
+            dayOfWeek: true,
+            startTime: true,
+            endTime: true,
+            room: true,
+            subject: { select: { id: true, name: true } },
+            class: { select: { id: true, name: true } },
+            academicYear: { select: { id: true, name: true } },
+          },
+          orderBy: [{ dayOfWeek: "asc" }, { startTime: "asc" }],
+        },
+        courses: {
+          select: { id: true, title: true, isPublished: true, level: true },
+          orderBy: { createdAt: "desc" },
+        },
+        _count: { select: { subjects: true, courses: true, timetables: true, classes: true } },
+      },
     });
   }
 
@@ -86,5 +147,97 @@ export class TeacherService {
     });
 
     await CacheService.invalidate(tenantId, "teachers");
+  }
+
+  async getSubjects(tenantId: string, teacherId: string, academicYearId?: string) {
+    return this.prisma.subject.findMany({
+      where: {
+        tenantId,
+        teacherId,
+        ...(academicYearId ? { academicYearId } : {}),
+      },
+      include: {
+        class: { select: { id: true, name: true, level: true } },
+        academicYear: { select: { id: true, name: true } },
+        _count: { select: { assignments: true, examinations: true } },
+      },
+      orderBy: [{ academicYear: { startDate: "desc" } }, { name: "asc" }],
+    });
+  }
+
+  async getTimetable(tenantId: string, teacherId: string, academicYearId?: string) {
+    return this.prisma.timetable.findMany({
+      where: {
+        tenantId,
+        teacherId,
+        ...(academicYearId ? { academicYearId } : {}),
+      },
+      include: {
+        subject: { select: { id: true, name: true, code: true } },
+        class: { select: { id: true, name: true, level: true } },
+        academicYear: { select: { id: true, name: true } },
+      },
+      orderBy: [{ dayOfWeek: "asc" }, { startTime: "asc" }],
+    });
+  }
+
+  async getStudents(tenantId: string, teacherId: string) {
+    // Collect classIds from: homeroom classes + classes where teacher has subjects
+    const [homeroomClasses, subjectClasses] = await Promise.all([
+      this.prisma.class.findMany({
+        where: { tenantId, teacherId },
+        select: { id: true },
+      }),
+      this.prisma.subject.findMany({
+        where: { tenantId, teacherId },
+        select: { classId: true },
+        distinct: ["classId"],
+      }),
+    ]);
+
+    const classIds = [
+      ...new Set([
+        ...homeroomClasses.map((c) => c.id),
+        ...subjectClasses.map((s) => s.classId),
+      ]),
+    ];
+
+    if (!classIds.length) return [];
+
+    const enrollments = await this.prisma.enrollment.findMany({
+      where: { tenantId, classId: { in: classIds } },
+      include: {
+        student: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            studentCode: true,
+            status: true,
+          },
+        },
+        class: { select: { id: true, name: true } },
+      },
+      orderBy: [{ class: { name: "asc" } }, { student: { lastName: "asc" } }],
+    });
+
+    // Deduplicate students (same student may be in multiple matching classes)
+    const seen = new Set<string>();
+    return enrollments.filter((e) => {
+      if (seen.has(e.student.id)) return false;
+      seen.add(e.student.id);
+      return true;
+    });
+  }
+
+  async getCourses(tenantId: string, teacherId: string) {
+    return this.prisma.course.findMany({
+      where: { tenantId, teacherId },
+      include: {
+        subject: { select: { id: true, name: true } },
+        _count: { select: { modules: true, enrollments: true } },
+      },
+      orderBy: { createdAt: "desc" },
+    });
   }
 }
