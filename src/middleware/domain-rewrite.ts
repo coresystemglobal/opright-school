@@ -15,7 +15,10 @@ function isBypassHost(hostname: string) {
   return (
     hostname === 'localhost' ||
     hostname === '127.0.0.1' ||
+    hostname === '10.0.2.2' ||
     hostname === '::1' ||
+    hostname.startsWith('10.') ||
+    hostname.startsWith('192.168.') ||
     hostname.endsWith(SCHOOL_OS_HOST_SUFFIX)
   )
 }

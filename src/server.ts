@@ -65,9 +65,12 @@ async function checkDatabase() {
 }
 
 async function startServer() {
-  app.listen(port, async () => {
+  // Warm up DB before accepting traffic — prevents Neon cold-start on first request
+  await checkDatabase();
+  setInterval(() => prisma.$queryRaw`SELECT 1`.catch(() => {}), 4 * 60 * 1000);
+
+  app.listen(port, () => {
     console.log(`✔ Server running on port ${port} [${env.NODE_ENV}]`);
-    await checkDatabase();
   });
 }
 
