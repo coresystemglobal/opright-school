@@ -11,6 +11,7 @@ type TeacherCreateData = {
   bio?: string | null;
   qualification?: string | null;
   employmentDate?: Date | null;
+  roleId?: string | null;
 };
 
 type TeacherUpdateData = Partial<TeacherCreateData>;

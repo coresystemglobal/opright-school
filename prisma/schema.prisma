@@ -128,7 +128,6 @@ model User {
   student     Student?  // back-relation
   teacher     Teacher?  // back-relation
   parent      Parent?   // back-relation
-  teacher     Teacher?  // back-relation
   noticesAuthored Notice[]
   refreshTokens  RefreshToken[]
   notifications  Notification[]
