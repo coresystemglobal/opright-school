@@ -21,7 +21,7 @@ services:
     ports:
       - "${PORT:-4000}:${PORT:-4000}"
     environment:
-      NODE_ENV: ${NODE_ENV:-production}
+      NODE_ENV: ${NODE_ENV:-staging}
       PORT: ${PORT:-4000}
       DATABASE_URL: ${DATABASE_URL}
       PRISMA_DATABASE_URL: ${PRISMA_DATABASE_URL}
